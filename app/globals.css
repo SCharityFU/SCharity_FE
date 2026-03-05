@@ -1,0 +1,346 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /* ── Light Mode (default) ── */
+  :root {
+    --background: 0 0% 99%;
+    --foreground: 224 71% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+    --primary: 346 77% 49%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 262 83% 57%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 346 77% 49%;
+    --radius: 0.75rem;
+  }
+
+  /* ── Dark Mode ── */
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 346 77% 49%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 262 83% 57%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 346 77% 49%;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-space-mono), "Space Mono", monospace;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+   * Light mode text remapping:
+   * Pages use text-white / text-white/N for content on dark mode.
+   * In light mode we remap those to dark foreground colors so we don't
+   * need to add dark: variants to every JSX element.
+   */
+  :not(.dark) .text-white {
+    color: hsl(224 71% 8%) !important;
+  }
+
+  :not(.dark) .text-white\/80 {
+    color: hsl(224 71% 15%) !important;
+  }
+
+  :not(.dark) .text-white\/70 {
+    color: hsl(224 15% 35%) !important;
+  }
+
+  :not(.dark) .text-white\/60 {
+    color: hsl(224 15% 40%) !important;
+  }
+
+  :not(.dark) .text-white\/50 {
+    color: hsl(224 10% 48%) !important;
+  }
+
+  :not(.dark) .text-white\/40 {
+    color: hsl(224 10% 55%) !important;
+  }
+
+  :not(.dark) .text-white\/30 {
+    color: hsl(224 8% 65%) !important;
+  }
+
+  /* Bg overlays that should lighten in light mode */
+  :not(.dark) .bg-white\/10 {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+
+  :not(.dark) .bg-white\/20 {
+    background-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  :not(.dark) .hover\:bg-white\/10:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+
+  :not(.dark) .hover\:bg-white\/20:hover {
+    background-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* Border overrides */
+  :not(.dark) .border-white\/10 {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  :not(.dark) .border-white\/20 {
+    border-color: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 99px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+@layer components {
+
+  /* ── Glassmorphism — light mode ── */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  .glass-hover {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.3s;
+  }
+
+  .glass-hover:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Dark mode overrides */
+  .dark .glass {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dark .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: none;
+  }
+
+  .dark .glass-hover {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dark .glass-hover:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: none;
+  }
+
+  /* ── Gradient Text ── */
+  .gradient-text {
+    background: linear-gradient(135deg, #f43f5e 0%, #8b5cf6 50%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-warm {
+    background: linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Glow Effects ── */
+  .glow-rose {
+    box-shadow: 0 0 80px -20px rgba(244, 63, 94, 0.5);
+  }
+
+  .glow-violet {
+    box-shadow: 0 0 80px -20px rgba(139, 92, 246, 0.5);
+  }
+
+  .glow-sm-rose {
+    box-shadow: 0 0 30px -8px rgba(244, 63, 94, 0.4);
+  }
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    height: 5px;
+    border-radius: 99px;
+    background: rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+
+  .dark .progress-bar {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #f43f5e, #8b5cf6);
+    transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ── Hero gradient & patterns ── */
+  .hero-gradient {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(244, 63, 94, 0.2), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 20% 80%, rgba(59, 130, 246, 0.08), transparent),
+      hsl(var(--background));
+  }
+
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .dark .grid-pattern {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  /* ── Beam animations ── */
+  .beam-mask-rect {
+    animation: beam-flow var(--beam-duration, 2s) linear infinite;
+  }
+
+  .animated-beam-path {
+    stroke-dasharray: 20 1000;
+    stroke-dashoffset: 1000;
+    animation: beam-dash var(--beam-duration, 2s) linear infinite;
+  }
+}
+
+/* text-wrap balance utility */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* ── Space Mono utilities ── */
+.space-mono-regular {
+  font-family: "Space Mono", monospace;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.space-mono-bold {
+  font-family: "Space Mono", monospace;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.space-mono-regular-italic {
+  font-family: "Space Mono", monospace;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.space-mono-bold-italic {
+  font-family: "Space Mono", monospace;
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* ── Keyframes (outside layers to be global) ── */
+@keyframes beam-flow {
+  from {
+    transform: translateX(0%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes beam-dash {
+  from {
+    stroke-dashoffset: 1000;
+  }
+
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% center;
+  }
+
+  to {
+    background-position: 200% center;
+  }
+}
