@@ -5,7 +5,6 @@ const config: Config = {
         "./app/**/*.{js,ts,jsx,tsx,mdx}",
         "./components/**/*.{js,ts,jsx,tsx,mdx}",
     ],
-    darkMode: "class",
     theme: {
         extend: {
             colors: {
@@ -40,7 +39,7 @@ const config: Config = {
                 },
             },
             fontFamily: {
-                sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+                sans: ['"Google Sans"', '"Google Sans Text"', "system-ui", "sans-serif"],
             },
             borderRadius: {
                 lg: "var(--radius)",

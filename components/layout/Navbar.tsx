@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Heart, Menu, X } from "lucide-react";
-import { AnimatedThemeToggle } from "@/components/ui/animated-theme-toggle";
+import { Heart, Menu, X, LogOut } from "lucide-react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 
 const navLinks = [
@@ -14,31 +14,10 @@ const navLinks = [
 
 export function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [isDark, setIsDark] = useState(false);
-
-    // Persist theme across refreshes
-    useEffect(() => {
-        const stored = localStorage.getItem("theme");
-        if (stored === "dark") {
-            setIsDark(true);
-            document.documentElement.classList.add("dark");
-        }
-    }, []);
-
-    const toggleTheme = () => {
-        const next = !isDark;
-        setIsDark(next);
-        if (next) {
-            document.documentElement.classList.add("dark");
-            localStorage.setItem("theme", "dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-            localStorage.setItem("theme", "light");
-        }
-    };
+    const { data: session, status } = useSession();
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-black/5 dark:border-white/10">
+        <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-black/5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
@@ -55,7 +34,7 @@ export function Navbar() {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className="text-sm text-gray-600 dark:text-white/70 hover:text-gray-900 dark:hover:text-white transition-colors relative group"
+                                className="text-sm text-gray-600 hover:text-gray-900 transition-colors relative group"
                             >
                                 {link.label}
                                 <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-gradient-to-r from-rose-500 to-violet-500 group-hover:w-full transition-all duration-300" />
@@ -65,9 +44,31 @@ export function Navbar() {
 
                     {/* Right Actions */}
                     <div className="hidden md:flex items-center gap-3">
-                        <AnimatedThemeToggle isDark={isDark} onToggle={toggleTheme} />
-                        <Link href="/auth/login">
+                        {session ? (
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    {session.user?.image && (
+                                        <img
+                                            src={session.user.image}
+                                            alt={session.user.name ?? ""}
+                                            className="w-8 h-8 rounded-full border border-black/10"
+                                        />
+                                    )}
+                                    <span className="text-sm font-medium text-gray-700">
+                                        {session.user?.name}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => signOut()}
+                                    className="p-2 rounded-lg hover:bg-black/5 transition-colors text-gray-500 hover:text-gray-700"
+                                    title="Đăng xuất"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
                             <RainbowButton
+                                onClick={() => signIn("google")}
                                 colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
                                 duration={3}
                                 borderWidth={1.5}
@@ -75,7 +76,7 @@ export function Navbar() {
                             >
                                 Đăng Nhập
                             </RainbowButton>
-                        </Link>
+                        )}
                     </div>
 
                     {/* Mobile toggle */}
@@ -91,25 +92,44 @@ export function Navbar() {
 
             {/* Mobile menu */}
             {mobileOpen && (
-                <div className="md:hidden glass border-t border-black/5 dark:border-white/10 px-4 py-4 flex flex-col gap-3">
+                <div className="md:hidden glass border-t border-black/5 px-4 py-4 flex flex-col gap-3">
                     {navLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
-                            className="text-sm text-gray-600 dark:text-white/70 hover:text-gray-900 dark:hover:text-white py-2 transition-colors"
+                            className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors"
                             onClick={() => setMobileOpen(false)}
                         >
                             {link.label}
                         </Link>
                     ))}
-                    <div className="flex items-center gap-3 pt-2">
-                        <AnimatedThemeToggle isDark={isDark} onToggle={toggleTheme} />
-                        <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="flex-1">
-                            <RainbowButton colors={["#f43f5e", "#8b5cf6", "#f43f5e"]} duration={3} borderWidth={1.5} className="w-full text-xs">
-                                Đăng Nhập
-                            </RainbowButton>
-                        </Link>
-                    </div>
+                    {session ? (
+                        <div className="flex items-center justify-between pt-2">
+                            <div className="flex items-center gap-2">
+                                {session.user?.image && (
+                                    <img
+                                        src={session.user.image}
+                                        alt={session.user.name ?? ""}
+                                        className="w-7 h-7 rounded-full"
+                                    />
+                                )}
+                                <span className="text-sm text-gray-700">{session.user?.name}</span>
+                            </div>
+                            <button onClick={() => signOut()} className="text-sm text-gray-500">
+                                Đăng xuất
+                            </button>
+                        </div>
+                    ) : (
+                        <RainbowButton
+                            onClick={() => signIn("google")}
+                            colors={["#f43f5e", "#8b5cf6", "#f43f5e"]}
+                            duration={3}
+                            borderWidth={1.5}
+                            className="w-full text-xs"
+                        >
+                            Đăng Nhập
+                        </RainbowButton>
+                    )}
                 </div>
             )}
         </nav>

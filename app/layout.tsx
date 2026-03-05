@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
-import { Space_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-
-const spaceMono = Space_Mono({
-    subsets: ["latin"],
-    weight: ["400", "700"],
-    style: ["normal", "italic"],
-    variable: "--font-space-mono",
-});
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
     title: "SCharity – Nền Tảng Gây Quỹ Từ Thiện",
@@ -29,10 +22,20 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="vi" suppressHydrationWarning>
-            <body className={`${spaceMono.variable} antialiased`}>
-                <Navbar />
-                <main>{children}</main>
-                <Footer />
+            <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500;700&display=swap"
+                    rel="stylesheet"
+                />
+            </head>
+            <body className="antialiased">
+                <AuthProvider>
+                    <Navbar />
+                    <main>{children}</main>
+                    <Footer />
+                </AuthProvider>
             </body>
         </html>
     );
