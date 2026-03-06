@@ -3,6 +3,8 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import StoreProvider from "@/components/providers/StoreProvider";
+import GoogleProvider from "@/components/providers/GoogleProvider";
 
 export const metadata: Metadata = {
     title: "SCharity – Nền Tảng Gây Quỹ Từ Thiện",
@@ -31,11 +33,15 @@ export default function RootLayout({
                 />
             </head>
             <body className="antialiased">
-                <AuthProvider>
-                    <Navbar />
-                    <main>{children}</main>
-                    <Footer />
-                </AuthProvider>
+                <GoogleProvider>
+                    <StoreProvider>
+                        <AuthProvider>
+                            <Navbar />
+                            <main>{children}</main>
+                            <Footer />
+                        </AuthProvider>
+                    </StoreProvider>
+                </GoogleProvider>
             </body>
         </html>
     );

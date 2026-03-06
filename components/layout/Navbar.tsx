@@ -2,7 +2,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Heart, Menu, X, LogOut } from "lucide-react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
+import { logout } from "@/lib/store/features/auth/authSlice";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 
 const navLinks = [
@@ -14,7 +16,16 @@ const navLinks = [
 
 export function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { data: session, status } = useSession();
+    const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+    const dispatch = useAppDispatch();
+    const router = useRouter();
+
+    const handleLogout = () => {
+        dispatch(logout());
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_info");
+        router.push("/");
+    };
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-black/5">
@@ -44,22 +55,22 @@ export function Navbar() {
 
                     {/* Right Actions */}
                     <div className="hidden md:flex items-center gap-3">
-                        {session ? (
+                        {isAuthenticated ? (
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
-                                    {session.user?.image && (
+                                    {user?.avatar && (
                                         <img
-                                            src={session.user.image}
-                                            alt={session.user.name ?? ""}
+                                            src={user.avatar}
+                                            alt={user.name ?? ""}
                                             className="w-8 h-8 rounded-full border border-black/10"
                                         />
                                     )}
                                     <span className="text-sm font-medium text-gray-700">
-                                        {session.user?.name}
+                                        {user?.name}
                                     </span>
                                 </div>
                                 <button
-                                    onClick={() => signOut()}
+                                    onClick={handleLogout}
                                     className="p-2 rounded-lg hover:bg-black/5 transition-colors text-gray-500 hover:text-gray-700"
                                     title="Đăng xuất"
                                 >
@@ -68,7 +79,7 @@ export function Navbar() {
                             </div>
                         ) : (
                             <RainbowButton
-                                onClick={() => signIn("google")}
+                                onClick={() => router.push("/login")}
                                 colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
                                 duration={3}
                                 borderWidth={1.5}
@@ -103,25 +114,25 @@ export function Navbar() {
                             {link.label}
                         </Link>
                     ))}
-                    {session ? (
+                    {isAuthenticated ? (
                         <div className="flex items-center justify-between pt-2">
                             <div className="flex items-center gap-2">
-                                {session.user?.image && (
+                                {user?.avatar && (
                                     <img
-                                        src={session.user.image}
-                                        alt={session.user.name ?? ""}
+                                        src={user.avatar}
+                                        alt={user.name ?? ""}
                                         className="w-7 h-7 rounded-full"
                                     />
                                 )}
-                                <span className="text-sm text-gray-700">{session.user?.name}</span>
+                                <span className="text-sm text-gray-700">{user?.name}</span>
                             </div>
-                            <button onClick={() => signOut()} className="text-sm text-gray-500">
+                            <button onClick={handleLogout} className="text-sm text-gray-500">
                                 Đăng xuất
                             </button>
                         </div>
                     ) : (
                         <RainbowButton
-                            onClick={() => signIn("google")}
+                            onClick={() => router.push("/login")}
                             colors={["#f43f5e", "#8b5cf6", "#f43f5e"]}
                             duration={3}
                             borderWidth={1.5}
