@@ -18,6 +18,8 @@ const MorphingText = React.forwardRef<HTMLSpanElement, MorphingTextProps>(
             }, interval);
             return () => clearInterval(timer);
         }, [words.length, interval]);
+        // Kiet modify - Fix the gradient-text
+        let isGradient = className && className.includes("gradient-text")
         return (
             <span ref={ref} className={cn("relative inline-block", className)}>
                 <AnimatePresence mode="wait">
@@ -27,7 +29,7 @@ const MorphingText = React.forwardRef<HTMLSpanElement, MorphingTextProps>(
                         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                         exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
                         transition={{ duration: animationDuration, ease: "easeInOut" }}
-                        className="inline-block"
+                        className={cn("inline-block", isGradient ? "gradient-text" : undefined)}
                     >
                         {words[currentIndex]}
                     </motion.span>

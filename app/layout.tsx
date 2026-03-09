@@ -5,6 +5,10 @@ import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import StoreProvider from "@/components/providers/StoreProvider";
 import GoogleProvider from "@/components/providers/GoogleProvider";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
     title: "SCharity – Nền Tảng Gây Quỹ Từ Thiện",
@@ -23,7 +27,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="vi" suppressHydrationWarning>
+        <html lang="vi" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
             <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

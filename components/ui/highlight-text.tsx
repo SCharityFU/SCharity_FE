@@ -121,6 +121,8 @@ const HighlightText = React.forwardRef<HTMLSpanElement, HighlightTextProps>(
             }
         };
 
+        let isGradient = className && className.includes("gradient-text");
+
         return (
             <span
                 ref={(node) => {
@@ -132,7 +134,9 @@ const HighlightText = React.forwardRef<HTMLSpanElement, HighlightTextProps>(
                 {...props}
             >
                 {renderHighlight()}
-                <span className="relative z-10">{children}</span>
+                <span className={cn("relative z-10", isGradient ? "gradient-text" : undefined)}>
+                    {children}
+                </span>
             </span>
         );
     },

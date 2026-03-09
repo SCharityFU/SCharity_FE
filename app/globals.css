@@ -1,3 +1,5 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -38,8 +40,15 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: "Google Sans", "Google Sans Text", system-ui, -apple-system, sans-serif;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family:
+      "Google Sans",
+      "Google Sans Text",
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -49,57 +58,58 @@
    * Pages use text-white / text-white/N (originally for dark bg).
    * Remap those to dark foreground colors for light mode.
    */
-  .text-white {
+
+  .text-black {
     color: hsl(224 71% 8%) !important;
   }
 
-  .text-white\/80 {
+  .text-black\/80 {
     color: hsl(224 71% 15%) !important;
   }
 
-  .text-white\/70 {
+  .text-black\/70 {
     color: hsl(224 15% 35%) !important;
   }
 
-  .text-white\/60 {
+  .text-black\/60 {
     color: hsl(224 15% 40%) !important;
   }
 
-  .text-white\/50 {
+  .text-black\/50 {
     color: hsl(224 10% 48%) !important;
   }
 
-  .text-white\/40 {
+  .text-black\/40 {
     color: hsl(224 10% 55%) !important;
   }
 
-  .text-white\/30 {
+  .text-black\/30 {
     color: hsl(224 8% 65%) !important;
   }
 
   /* Bg overlays */
-  .bg-white\/10 {
+  .bg-black\/10 {
     background-color: rgba(0, 0, 0, 0.04) !important;
   }
 
-  .bg-white\/20 {
+  .bg-black\/20 {
     background-color: rgba(0, 0, 0, 0.06) !important;
   }
 
-  .hover\:bg-white\/10:hover {
+  .hover\:bg-black\/10:hover {
     background-color: rgba(0, 0, 0, 0.04) !important;
   }
 
-  .hover\:bg-white\/20:hover {
+  .hover\:bg-black\/20:hover {
     background-color: rgba(0, 0, 0, 0.06) !important;
   }
 
   /* Border overrides */
-  .border-white\/10 {
+  .border-black\/10 {
     border-color: rgba(0, 0, 0, 0.08) !important;
   }
 
-  .border-white\/20 {
+  .border-black\/20 {
     border-color: rgba(0, 0, 0, 0.12) !important;
   }
 
@@ -123,7 +133,6 @@
 }
 
 @layer components {
-
   /* ── Glassmorphism ── */
   .glass {
     background: rgba(255, 255, 255, 0.7);
@@ -137,7 +146,9 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(0, 0, 0, 0.07);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 20px rgba(0, 0, 0, 0.04);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.06),
+      0 4px 20px rgba(0, 0, 0, 0.04);
   }
 
   .glass-hover {
