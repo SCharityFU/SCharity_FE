@@ -4,8 +4,9 @@ interface AuthState {
   user: {
     id: string;
     email: string;
-    name: string;
-    avatar?: string;
+    fullName: string;
+    avatarUrl?: string;
+    role: string;
   } | null;
   token: string | null;
   isAuthenticated: boolean;
