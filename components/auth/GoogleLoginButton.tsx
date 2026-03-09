@@ -16,14 +16,12 @@ export function GoogleLoginButton({ fullWidth = false }: { fullWidth?: boolean }
     const login = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             try {
-                // Here we send the access token instead of id token to our backend
-                // The backend will need to fetch profile via googleapis OR we fetch it here 
-                // and exchange. Our current backend expects an idToken to verify, but 
-                // implicitly useGoogleLogin returns an access_token.
-                // We'll pass it to backend and let the backend handle the rest, or just send access_token.
-                // NOTE: Next line assumes your backend can handle `idToken: tokenResponse.access_token` or you rename the dto.
+                // Here we send the OAuth access token to our backend
+                // The backend will need to handle this as an access token (e.g. fetch profile via googleapis
+                // or exchange it appropriately), rather than treating it as an ID token.
+                // NOTE: Ensure your backend DTO and logic expect `accessToken` here.
                 const result = await loginWithGoogle({
-                    idToken: tokenResponse.access_token, // BE needs updating to accept access_token or fetch profile if using implicit flow
+                    accessToken: tokenResponse.access_token,
                 }).unwrap();
 
                 dispatch(setCredentials({
