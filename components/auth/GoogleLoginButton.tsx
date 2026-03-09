@@ -31,9 +31,6 @@ export function GoogleLoginButton({ fullWidth = false }: { fullWidth?: boolean }
                     token: result.data.accessToken
                 }));
 
-                localStorage.setItem("access_token", result.data.accessToken);
-                localStorage.setItem("user_info", JSON.stringify(result.data.user));
-
                 router.push("/");
             } catch (error) {
                 console.error("Login failed:", error);
