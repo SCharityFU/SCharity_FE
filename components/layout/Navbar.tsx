@@ -5,7 +5,7 @@ import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { logout } from "@/lib/store/features/auth/authSlice";
-import { RainbowButton } from "@/components/ui/rainbow-button";
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 
 const navLinks = [
     { href: "/campaigns", label: "Chiến Dịch" },
@@ -58,15 +58,15 @@ export function Navbar() {
                         {isAuthenticated ? (
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
-                                    {user?.avatar && (
+                                    {user?.avatarUrl && (
                                         <img
-                                            src={user.avatar}
-                                            alt={user.name ?? ""}
+                                            src={user.avatarUrl}
+                                            alt={user.fullName ?? ""}
                                             className="w-8 h-8 rounded-full border border-black/10"
                                         />
                                     )}
                                     <span className="text-sm font-medium text-gray-700">
-                                        {user?.name}
+                                        {user?.fullName}
                                     </span>
                                 </div>
                                 <button
@@ -78,15 +78,9 @@ export function Navbar() {
                                 </button>
                             </div>
                         ) : (
-                            <RainbowButton
-                                onClick={() => router.push("/login")}
-                                colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
-                                duration={3}
-                                borderWidth={1.5}
-                                className="text-xs"
-                            >
-                                Đăng Nhập
-                            </RainbowButton>
+                            <div className="scale-90 origin-right">
+                                <GoogleLoginButton />
+                            </div>
                         )}
                     </div>
 
@@ -117,29 +111,23 @@ export function Navbar() {
                     {isAuthenticated ? (
                         <div className="flex items-center justify-between pt-2">
                             <div className="flex items-center gap-2">
-                                {user?.avatar && (
+                                {user?.avatarUrl && (
                                     <img
-                                        src={user.avatar}
-                                        alt={user.name ?? ""}
+                                        src={user.avatarUrl}
+                                        alt={user.fullName ?? ""}
                                         className="w-7 h-7 rounded-full"
                                     />
                                 )}
-                                <span className="text-sm text-gray-700">{user?.name}</span>
+                                <span className="text-sm text-gray-700">{user?.fullName}</span>
                             </div>
                             <button onClick={handleLogout} className="text-sm text-gray-500">
                                 Đăng xuất
                             </button>
                         </div>
                     ) : (
-                        <RainbowButton
-                            onClick={() => router.push("/login")}
-                            colors={["#f43f5e", "#8b5cf6", "#f43f5e"]}
-                            duration={3}
-                            borderWidth={1.5}
-                            className="w-full text-xs"
-                        >
-                            Đăng Nhập
-                        </RainbowButton>
+                        <div className="flex justify-center w-full">
+                            <GoogleLoginButton />
+                        </div>
                     )}
                 </div>
             )}
