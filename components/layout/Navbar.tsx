@@ -34,7 +34,7 @@ export function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-violet-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                            <Heart className="w-4 h-4 text-white fill-white" />
+                            <Heart className="w-4 h-4 text-black fill-white" />
                         </div>
                         <span className="font-bold text-lg gradient-text">SCharity</span>
                     </Link>

@@ -26,8 +26,8 @@ export default function DashboardPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-12">
                     <div>
-                        <p className="text-white/40 text-sm mb-1">Chào mừng trở lại 👋</p>
-                        <h1 className="text-3xl md:text-4xl font-black text-white">
+                        <p className="text-black/40 text-sm mb-1">Chào mừng trở lại 👋</p>
+                        <h1 className="text-3xl md:text-4xl font-black text-black">
                             <HighlightText variant="underline" color="primary">Dashboard</HighlightText>
                         </h1>
                     </div>
@@ -50,11 +50,11 @@ export default function DashboardPage() {
                         { label: "Tác Động (Người)", value: 89, suffix: "+", icon: ArrowUpRight, color: "from-emerald-500/20" },
                     ].map((stat) => (
                         <div key={stat.label} className={`glass-card rounded-2xl p-6 bg-gradient-to-br ${stat.color} to-transparent`}>
-                            <stat.icon className="w-5 h-5 text-white/40 mb-3" />
-                            <div className="text-3xl font-black text-white mb-1">
+                            <stat.icon className="w-5 h-5 text-black/40 mb-3" />
+                            <div className="text-3xl font-black text-black mb-1">
                                 <RollingCounter value={stat.value} prefix={stat.prefix} suffix={stat.suffix} />
                             </div>
-                            <p className="text-sm text-white/50">{stat.label}</p>
+                            <p className="text-sm text-black/50">{stat.label}</p>
                         </div>
                     ))}
                 </BentoGrid>
@@ -63,20 +63,20 @@ export default function DashboardPage() {
                     {/* Recent Donations */}
                     <div className="glass-card rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="font-bold text-white">Quyên Góp Gần Đây</h2>
+                            <h2 className="font-bold text-black">Quyên Góp Gần Đây</h2>
                             <Link href="/campaigns" className="text-xs text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1">
                                 Xem tất cả <ArrowUpRight className="w-3 h-3" />
                             </Link>
                         </div>
                         <div className="space-y-4">
                             {recentDonations.map((d, i) => (
-                                <div key={i} className="flex items-center gap-4 pb-4 border-b border-white/10 last:border-0 last:pb-0">
+                                <div key={i} className="flex items-center gap-4 pb-4 border-b border-black/10 last:border-0 last:pb-0">
                                     <div className="w-10 h-10 rounded-xl glass flex items-center justify-center text-xl shrink-0">
                                         {d.emoji}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-white truncate">{d.campaign}</p>
-                                        <p className="text-xs text-white/40">{d.date}</p>
+                                        <p className="text-sm font-medium text-black truncate">{d.campaign}</p>
+                                        <p className="text-xs text-black/40">{d.date}</p>
                                     </div>
                                     <div className="text-rose-400 font-bold text-sm shrink-0">
                                         +₫{d.amount}k
@@ -89,7 +89,7 @@ export default function DashboardPage() {
                     {/* My Campaigns */}
                     <div className="glass-card rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="font-bold text-white">Chiến Dịch Của Tôi</h2>
+                            <h2 className="font-bold text-black">Chiến Dịch Của Tôi</h2>
                             <Link href="/campaigns/create" className="text-xs text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1">
                                 Tạo mới <Plus className="w-3 h-3" />
                             </Link>
@@ -100,8 +100,8 @@ export default function DashboardPage() {
                                     <div className="flex items-center gap-3 mb-3">
                                         <span className="text-2xl">{c.emoji}</span>
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium text-white">{c.title}</p>
-                                            <div className="flex gap-3 text-xs text-white/40 mt-0.5">
+                                            <p className="text-sm font-medium text-black">{c.title}</p>
+                                            <div className="flex gap-3 text-xs text-black/40 mt-0.5">
                                                 <span>{c.donors} nhà HT</span>
                                                 <span>{c.daysLeft} ngày còn lại</span>
                                             </div>
@@ -111,9 +111,9 @@ export default function DashboardPage() {
                                     <div className="progress-bar">
                                         <div className="progress-fill" style={{ width: `${c.progress}%` }} />
                                     </div>
-                                    <div className="flex justify-between items-center mt-2 text-xs text-white/40">
+                                    <div className="flex justify-between items-center mt-2 text-xs text-black/40">
                                         <span>
-                                            <StatCounter value={c.raised} prefix="₫" suffix="tr" label="" className="inline text-white/70 text-xs" />
+                                            <StatCounter value={c.raised} prefix="₫" suffix="tr" label="" className="inline text-black/70 text-xs" />
                                         </span>
                                         <span>Mục tiêu: ₫{c.goal}tr</span>
                                     </div>

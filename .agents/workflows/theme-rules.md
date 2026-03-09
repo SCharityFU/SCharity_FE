@@ -22,7 +22,7 @@ description: SCharity UI Theme Rules & Design System — guiding consistent UI a
 | Section title (h2) | 700 (bold) | `text-4xl md:text-5xl` | `font-bold` |
 | Card title (h3) | 600 (semibold) | `text-base` to `text-xl` | `font-semibold` |
 | Body text | 400 (regular) | `text-sm` to `text-base` | — |
-| Caption / label | 400–500 | `text-xs` to `text-sm` | `text-white/50` or `text-white/40` |
+| Caption / label | 400–500 | `text-xs` to `text-sm` | `text-black/50` or `text-black/40` |
 
 ---
 
