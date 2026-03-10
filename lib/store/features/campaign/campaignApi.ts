@@ -139,13 +139,45 @@ export const campaignApi = createApi({
                     deadline?: string;
                     category?: string;
                 };
+                thumbnail?: File[];
+                media?: File[];
+                proofDocuments?: File[];
             }
         >({
-            query: ({ requestId, data }) => ({
-                url: `/campaigns/requests/${requestId}`,
-                method: 'PUT',
-                body: data,
-            }),
+            query: ({ requestId, data, thumbnail, media, proofDocuments }) => {
+                const formData = new FormData();
+
+                if (data.title) formData.append('title', data.title);
+                if (data.story) formData.append('story', data.story);
+                if (data.goalAmount !== undefined) formData.append('goalAmount', String(data.goalAmount));
+                if (data.deadline) formData.append('deadline', data.deadline);
+                if (data.category) formData.append('category', data.category);
+
+                if (thumbnail) {
+                    thumbnail.forEach((file) => {
+                        formData.append('thumbnail', file);
+                    });
+                }
+
+                if (media && media.length > 0) {
+                    media.forEach((file) => {
+                        formData.append('media', file);
+                    });
+                }
+
+                if (proofDocuments && proofDocuments.length > 0) {
+                    proofDocuments.forEach((file) => {
+                        formData.append('proofDocuments', file);
+                    });
+                }
+
+                return {
+                    url: `/campaigns/requests/${requestId}`,
+                    method: 'PUT',
+                    body: formData,
+                    formData: true,
+                };
+            },
             invalidatesTags: ['CampaignRequest'],
         }),
     }),

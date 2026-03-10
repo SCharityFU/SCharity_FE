@@ -258,6 +258,11 @@ export default function MyRequestsPage() {
     const handleSaveEdit = async () => {
         if (!selectedReq) return;
         const storyHTML = getEditStoryHTML() || editStory;
+        // Only send actual File objects (not existing URL previews from server)
+        const newFiles = editMediaFiles.filter((f) => f instanceof File);
+        // Separate cover (thumbnail) from other media
+        const coverFile = newFiles[editCoverIndex] || undefined;
+        const otherMediaFiles = newFiles.filter((_, i) => i !== editCoverIndex);
         try {
             const result = await updateRequest({
                 requestId: selectedReq.id,
@@ -268,6 +273,8 @@ export default function MyRequestsPage() {
                     deadline: new Date(editDeadline).toISOString(),
                     category: editCategory,
                 },
+                thumbnail: coverFile ? [coverFile] : undefined,
+                media: otherMediaFiles.length > 0 ? otherMediaFiles : undefined,
             }).unwrap();
             setEditFeedback({ type: "success", text: "Cập nhật yêu cầu thành công!" });
             if (result.data) setSelectedReq(result.data);

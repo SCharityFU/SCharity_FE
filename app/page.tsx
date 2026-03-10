@@ -9,7 +9,7 @@ import { BentoGrid } from "@/components/ui/bento-grid";
 import { AnimatedBeam, BeamContainer, BeamNode } from "@/components/ui/animated-beam";
 import { Magnetic } from "@/components/ui/magnetic";
 import { HighlightText } from "@/components/ui/highlight-text";
-import { CampaignCard, type Campaign } from "@/components/CampaignCard";
+import { CampaignCard, type Campaign } from "@/components/campaigns/CampaignCard";
 import { Button } from "@/components/ui/button";
 
 /* ─── Mock Data ─── */

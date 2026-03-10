@@ -5,7 +5,7 @@ import { VercelTabs } from "@/components/ui/vercel-tabs";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Magnetic } from "@/components/ui/magnetic";
 import { HighlightText } from "@/components/ui/highlight-text";
-import { CampaignCard, type Campaign } from "@/components/CampaignCard";
+import { CampaignCard, type Campaign } from "@/components/campaigns/CampaignCard";
 
 const allCampaigns: Campaign[] = [
   {
