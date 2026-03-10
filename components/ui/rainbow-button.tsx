@@ -44,7 +44,7 @@ const RainbowButton = React.forwardRef<HTMLButtonElement, RainbowButtonProps>(
                 <motion.div
                     className="absolute inset-0"
                     style={{
-                        background: `linear-gradient(var(--gradient-angle, 0deg), ${gradientColors})`,
+                        background: `linear-gradient(var(--gradient-angle, 0deg))`,
                     }}
                     animate={
                         animated
