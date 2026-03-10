@@ -492,12 +492,12 @@ export default function CreateCampaignPage() {
                                     value={category}
                                     onValueChange={(val: string) => setCategory(val as CampaignCategory)}
                                 >
-                                    <SelectTrigger className="w-full h-11 px-4 rounded-xl glass border border-black/10 text-sm">
+                                    <SelectTrigger className="w-full h-11 px-4 rounded-xl bg-white border border-black/10 text-sm">
                                         <SelectValue placeholder="Chọn danh mục" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent  className="bg-white border border-black/10 rounded-xl shadow-lg">
                                         {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                                            <SelectItem key={key} value={key}>
+                                            <SelectItem key={key} value={key} className="rounded-lg text-black/70 focus:bg-black/[0.04] focus:text-black">
                                                 {label}
                                             </SelectItem>
                                         ))}
