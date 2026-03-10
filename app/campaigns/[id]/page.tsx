@@ -410,6 +410,12 @@ export default function CampaignDetailPage() {
                 className="justify-end flex"
             >
               <button
+                  onClick={() => setShowWithdrawForm(false)}
+                  className="px-4 py-2 mr-4 rounded-lg bg-gray-200 text-gray-700"
+              >
+                Huỷ
+              </button>
+              <button
                   disabled={!ekycStatus}
                   onClick={() => setShowWithdrawConfirm(true)}
                   className={`px-4 py-2 rounded-lg transition-colors
