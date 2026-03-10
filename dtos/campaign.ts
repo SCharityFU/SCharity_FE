@@ -50,6 +50,10 @@ export interface CreateCampaignUpdateRequestDto {
   // Files handled via multipart/form-data
 }
 
+export interface UpdateBankInfoDto {
+  bankInfo: BankInfoDto;
+}
+
 export interface CloseCampaignRequestDto {
   confirm: boolean;
 }

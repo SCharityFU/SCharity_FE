@@ -1,6 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { ApiResponseDto } from '@/dtos/common';
-import type { CampaignRequestResponseDto, SubmitCampaignRequestDto } from '@/dtos/campaign';
+import type { ApiResponseDto, PaginatedResponseDto } from '@/dtos/common';
+import type {
+    CampaignRequestResponseDto,
+    SubmitCampaignRequestDto,
+    CampaignDto,
+    BankInfoDto,
+} from '@/dtos/campaign';
 
 interface SubmitCampaignRequestArg {
     data: SubmitCampaignRequestDto;
@@ -22,7 +27,7 @@ export const campaignApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['CampaignRequest'],
+    tagTypes: ['CampaignRequest', 'MyCampaign'],
     endpoints: (builder) => ({
         submitCampaignRequest: builder.mutation<
             ApiResponseDto<CampaignRequestResponseDto>,
@@ -75,7 +80,59 @@ export const campaignApi = createApi({
             },
             invalidatesTags: ['CampaignRequest'],
         }),
+
+        // GET /campaigns/requests/mine — paginated list of own campaign requests
+        getMyRequests: builder.query<
+            PaginatedResponseDto<CampaignRequestResponseDto>,
+            { page?: number; limit?: number }
+        >({
+            query: ({ page = 1, limit = 10 } = {}) => ({
+                url: '/campaigns/requests/mine',
+                params: { page, limit },
+            }),
+            providesTags: ['CampaignRequest'],
+        }),
+
+        // GET /campaigns/requests/mine/:requestId — single request detail (owner only)
+        getMyRequestById: builder.query<
+            ApiResponseDto<CampaignRequestResponseDto>,
+            string
+        >({
+            query: (requestId) => `/campaigns/requests/mine/${requestId}`,
+            providesTags: ['CampaignRequest'],
+        }),
+
+        // GET /campaigns/mine — paginated list of own campaigns
+        getMyCampaigns: builder.query<
+            PaginatedResponseDto<CampaignDto>,
+            { page?: number; limit?: number }
+        >({
+            query: ({ page = 1, limit = 10 } = {}) => ({
+                url: '/campaigns/mine',
+                params: { page, limit },
+            }),
+            providesTags: ['MyCampaign'],
+        }),
+
+        // PUT /campaigns/requests/:requestId/bank-info — update bank info for a pending request
+        updateRequestBankInfo: builder.mutation<
+            ApiResponseDto<CampaignRequestResponseDto>,
+            { requestId: string; bankInfo: BankInfoDto }
+        >({
+            query: ({ requestId, bankInfo }) => ({
+                url: `/campaigns/requests/${requestId}/bank-info`,
+                method: 'PUT',
+                body: { bankInfo },
+            }),
+            invalidatesTags: ['CampaignRequest'],
+        }),
     }),
 });
 
-export const { useSubmitCampaignRequestMutation } = campaignApi;
+export const {
+    useSubmitCampaignRequestMutation,
+    useGetMyRequestsQuery,
+    useGetMyRequestByIdQuery,
+    useGetMyCampaignsQuery,
+    useUpdateRequestBankInfoMutation,
+} = campaignApi;
