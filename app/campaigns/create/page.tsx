@@ -27,6 +27,7 @@ import {
     Image as ImageLucide,
     Search,
     ChevronDown,
+    FileCheck,
 } from "lucide-react";
 import { CampaignCategory } from "@/dtos/enums";
 import { HighlightText } from "@/components/ui/highlight-text";
@@ -159,6 +160,12 @@ export default function CreateCampaignPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
+    // Proof documents
+    const [proofFiles, setProofFiles] = useState<File[]>([]);
+    const [proofPreviews, setProofPreviews] = useState<{ name: string; type: string; url: string }[]>([]);
+    const proofInputRef = useRef<HTMLInputElement>(null);
+    const [proofDragOver, setProofDragOver] = useState(false);
+
     // Dialog
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -263,6 +270,45 @@ export default function CreateCampaignPage() {
 
     const getStoryHTML = () => storyEditorRef.current?.innerHTML || "";
 
+    // Proof document handlers
+    const addProofFiles = useCallback((files: FileList | File[]) => {
+        const allowed = Array.from(files).filter(
+            (f) => f.type.startsWith("image/") || f.type === "application/pdf"
+        );
+        if (allowed.length === 0) return;
+        setProofFiles((prev) => [...prev, ...allowed]);
+        allowed.forEach((file) => {
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    setProofPreviews((prev) => [...prev, {
+                        name: file.name,
+                        type: "image",
+                        url: ev.target?.result as string,
+                    }]);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                setProofPreviews((prev) => [...prev, {
+                    name: file.name,
+                    type: "pdf",
+                    url: "",
+                }]);
+            }
+        });
+    }, []);
+
+    const removeProofFile = (idx: number) => {
+        setProofFiles((prev) => prev.filter((_, i) => i !== idx));
+        setProofPreviews((prev) => prev.filter((_, i) => i !== idx));
+    };
+
+    const handleProofDrop = (e: DragEvent) => {
+        e.preventDefault();
+        setProofDragOver(false);
+        if (e.dataTransfer.files) addProofFiles(e.dataTransfer.files);
+    };
+
     // ── Validation ─────────────────────────────────────────────────────────────
 
     const errors: string[] = [];
@@ -301,6 +347,7 @@ export default function CreateCampaignPage() {
                 },
                 thumbnail: thumbnailFile,
                 media: otherMediaFiles.length > 0 ? otherMediaFiles : undefined,
+                proofDocuments: proofFiles.length > 0 ? proofFiles : undefined,
             }).unwrap();
 
             // Clear saved draft on successful submit
@@ -495,7 +542,7 @@ export default function CreateCampaignPage() {
                                     <SelectTrigger className="w-full h-11 px-4 rounded-xl bg-white border border-black/10 text-sm">
                                         <SelectValue placeholder="Chọn danh mục" />
                                     </SelectTrigger>
-                                    <SelectContent  className="bg-white border border-black/10 rounded-xl shadow-lg">
+                                    <SelectContent className="bg-white border border-black/10 rounded-xl shadow-lg">
                                         {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                                             <SelectItem key={key} value={key} className="rounded-lg text-black/70 focus:bg-black/[0.04] focus:text-black">
                                                 {label}
@@ -570,31 +617,31 @@ export default function CreateCampaignPage() {
                                                     {/* Bank list */}
                                                     <div className="overflow-y-auto flex-1">
                                                         {filteredBanks.map((bank) => (
-                                                                <button
-                                                                    key={bank.id}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        selectBank(bank);
-                                                                        setBankName(bank.shortName);
-                                                                    }}
-                                                                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs hover:bg-black/[0.04] transition-colors ${selectedBank?.id === bank.id ? "bg-rose-50 text-rose-700" : "text-black/70"
-                                                                        }`}
-                                                                >
-                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                    <img
-                                                                        src={bank.logo}
-                                                                        alt={bank.shortName}
-                                                                        className="w-7 h-7 object-contain rounded bg-white p-0.5 border border-black/5"
-                                                                    />
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <p className="font-semibold truncate">{bank.shortName}</p>
-                                                                        <p className="text-[10px] text-black/40 truncate">{bank.name}</p>
-                                                                    </div>
-                                                                </button>
-                                                            ))}
+                                                            <button
+                                                                key={bank.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    selectBank(bank);
+                                                                    setBankName(bank.shortName);
+                                                                }}
+                                                                className={`w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs hover:bg-black/[0.04] transition-colors ${selectedBank?.id === bank.id ? "bg-rose-50 text-rose-700" : "text-black/70"
+                                                                    }`}
+                                                            >
+                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                <img
+                                                                    src={bank.logo}
+                                                                    alt={bank.shortName}
+                                                                    className="w-7 h-7 object-contain rounded bg-white p-0.5 border border-black/5"
+                                                                />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="font-semibold truncate">{bank.shortName}</p>
+                                                                    <p className="text-[10px] text-black/40 truncate">{bank.name}</p>
+                                                                </div>
+                                                            </button>
+                                                        ))}
                                                         {filteredBanks.length === 0 && (
-                                                                <p className="text-xs text-black/30 text-center py-4">Không tìm thấy ngân hàng</p>
-                                                            )}
+                                                            <p className="text-xs text-black/30 text-center py-4">Không tìm thấy ngân hàng</p>
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             )}
@@ -800,6 +847,84 @@ export default function CreateCampaignPage() {
                                     </p>
                                 )}
                             </div>
+
+                            {/* Proof Documents */}
+                            <div className="space-y-2">
+                                <Label className="text-black/70">
+                                    <FileCheck className="w-4 h-4 text-emerald-500" />
+                                    Tài liệu chứng minh
+                                </Label>
+                                <p className="text-xs text-black/40">Tải lên giấy tờ xác minh chiến dịch (ảnh hoặc PDF, tối đa 10MB)</p>
+
+                                {/* Drop zone */}
+                                <div
+                                    onDrop={handleProofDrop}
+                                    onDragOver={(e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setProofDragOver(true); }}
+                                    onDragLeave={() => setProofDragOver(false)}
+                                    onClick={() => proofInputRef.current?.click()}
+                                    className={`relative rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-all duration-300 ${proofDragOver
+                                        ? "border-emerald-400 bg-emerald-50/50"
+                                        : "border-black/10 hover:border-emerald-300 hover:bg-emerald-50/20"
+                                        }`}
+                                >
+                                    <input
+                                        ref={proofInputRef}
+                                        type="file"
+                                        multiple
+                                        accept="image/*,.pdf"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            if (e.target.files) addProofFiles(e.target.files);
+                                            e.target.value = "";
+                                        }}
+                                    />
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                                            <FileCheck className="w-6 h-6 text-emerald-500" />
+                                        </div>
+                                        <p className="text-sm text-black/50">
+                                            <span className="font-semibold text-emerald-600">Nhấn để chọn</span> hoặc kéo thả tài liệu
+                                        </p>
+                                        <p className="text-xs text-black/30">PNG, JPG, WEBP, PDF</p>
+                                    </div>
+                                </div>
+
+                                {/* Proof Previews */}
+                                {proofPreviews.length > 0 && (
+                                    <div className="space-y-2 mt-3">
+                                        {proofPreviews.map((proof, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="flex items-center gap-3 p-3 rounded-lg border border-black/10 bg-white/30 group"
+                                            >
+                                                {proof.type === "image" && proof.url ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={proof.url}
+                                                        alt={proof.name}
+                                                        className="w-10 h-10 rounded-md object-cover border border-black/10 flex-shrink-0"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-md bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-[10px] font-bold text-red-500">PDF</span>
+                                                    </div>
+                                                )}
+                                                <span className="text-xs text-black/60 truncate flex-1">{proof.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeProofFile(idx)}
+                                                    className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 flex-shrink-0"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <p className="text-xs text-black/40">
+                                            {proofPreviews.length} tài liệu đã chọn
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -891,6 +1016,41 @@ export default function CreateCampaignPage() {
                                 </span>
                             </div>
                         )}
+                    </div>
+
+                    {/* Bank Info Verification */}
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 space-y-2.5">
+                        <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+                            <Landmark className="w-3.5 h-3.5" />
+                            Thông tin ngân hàng nhận tiền
+                        </p>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-3">
+                                {selectedBank?.logo && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                        src={selectedBank.logo}
+                                        alt={bankName}
+                                        className="w-8 h-8 object-contain rounded bg-white p-0.5 border border-black/5 flex-shrink-0"
+                                    />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-black/80 truncate">{bankName || "Chưa chọn"}</p>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-black/50 text-xs">Số tài khoản:</span>
+                                <span className="font-mono font-semibold tracking-wider text-black/80">{accountNumber || "—"}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-black/50 text-xs">Chủ tài khoản:</span>
+                                <span className="font-semibold uppercase text-black/80">{accountHolderName || "—"}</span>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-amber-600 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            Vui lòng kiểm tra kỹ thông tin trước khi gửi
+                        </p>
                     </div>
 
                     <AlertDialogFooter>

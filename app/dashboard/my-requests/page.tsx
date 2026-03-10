@@ -180,6 +180,12 @@ export default function MyRequestsPage() {
     const editFileInputRef = useRef<HTMLInputElement>(null);
     const [editIsDragOver, setEditIsDragOver] = useState(false);
 
+    /* Proof documents state */
+    const [editProofFiles, setEditProofFiles] = useState<File[]>([]);
+    const [editProofPreviews, setEditProofPreviews] = useState<{ name: string; type: string; url: string }[]>([]);
+    const editProofInputRef = useRef<HTMLInputElement>(null);
+    const [editProofDragOver, setEditProofDragOver] = useState(false);
+
     const handleEditGoalChange = (e: ChangeEvent<HTMLInputElement>) => {
         const raw = e.target.value;
         const num = parseCurrencyInput(raw);
@@ -218,6 +224,45 @@ export default function MyRequestsPage() {
         if (e.dataTransfer.files) addEditFiles(e.dataTransfer.files);
     };
 
+    /* Proof document handlers */
+    const addProofFiles = useCallback((files: FileList | File[]) => {
+        const allowed = Array.from(files).filter(
+            (f) => f.type.startsWith("image/") || f.type === "application/pdf"
+        );
+        if (allowed.length === 0) return;
+        setEditProofFiles((prev) => [...prev, ...allowed]);
+        allowed.forEach((file) => {
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    setEditProofPreviews((prev) => [...prev, {
+                        name: file.name,
+                        type: "image",
+                        url: ev.target?.result as string,
+                    }]);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                setEditProofPreviews((prev) => [...prev, {
+                    name: file.name,
+                    type: "pdf",
+                    url: "",
+                }]);
+            }
+        });
+    }, []);
+
+    const removeProofFile = (idx: number) => {
+        setEditProofFiles((prev) => prev.filter((_, i) => i !== idx));
+        setEditProofPreviews((prev) => prev.filter((_, i) => i !== idx));
+    };
+
+    const handleProofDrop = (e: DragEvent) => {
+        e.preventDefault();
+        setEditProofDragOver(false);
+        if (e.dataTransfer.files) addProofFiles(e.dataTransfer.files);
+    };
+
     const editExecCmd = (cmd: string, value?: string) => {
         document.execCommand(cmd, false, value);
         editStoryRef.current?.focus();
@@ -241,6 +286,20 @@ export default function MyRequestsPage() {
         setEditMediaPreviews(existingPreviews);
         setEditMediaFiles([]);
         setEditCoverIndex(0);
+        // Pre-fill existing proof documents
+        const existingProofs: { name: string; type: string; url: string }[] = [];
+        if (selectedReq.proofDocuments) {
+            selectedReq.proofDocuments.forEach((url) => {
+                const isPdf = url.toLowerCase().endsWith(".pdf");
+                existingProofs.push({
+                    name: url.split("/").pop() || "document",
+                    type: isPdf ? "pdf" : "image",
+                    url,
+                });
+            });
+        }
+        setEditProofPreviews(existingProofs);
+        setEditProofFiles([]);
         setIsEditing(true);
         // Set story HTML into contentEditable after state update
         setTimeout(() => {
@@ -275,6 +334,7 @@ export default function MyRequestsPage() {
                 },
                 thumbnail: coverFile ? [coverFile] : undefined,
                 media: otherMediaFiles.length > 0 ? otherMediaFiles : undefined,
+                proofDocuments: editProofFiles.length > 0 ? editProofFiles : undefined,
             }).unwrap();
             setEditFeedback({ type: "success", text: "Cập nhật yêu cầu thành công!" });
             if (result.data) setSelectedReq(result.data);
@@ -940,6 +1000,83 @@ export default function MyRequestsPage() {
                                                     Nhấn vào ảnh để chọn làm ảnh bìa • {editMediaPreviews.length} ảnh
                                                 </p>
                                             </>
+                                        )}
+                                    </div>
+
+                                    {/* ── Proof Documents ── */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm font-semibold text-black/70 flex items-center gap-1.5">
+                                            <FileCheck className="w-3.5 h-3.5 text-emerald-500" />
+                                            Tài liệu chứng minh
+                                        </Label>
+                                        <p className="text-[11px] text-black/40">Tải lên giấy tờ xác minh chiến dịch (ảnh hoặc PDF)</p>
+
+                                        {/* Drop zone */}
+                                        <div
+                                            onDrop={handleProofDrop}
+                                            onDragOver={(e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setEditProofDragOver(true); }}
+                                            onDragLeave={() => setEditProofDragOver(false)}
+                                            onClick={() => editProofInputRef.current?.click()}
+                                            className={`relative rounded-xl border-2 border-dashed p-5 text-center cursor-pointer transition-all duration-300 ${editProofDragOver
+                                                    ? "border-emerald-400 bg-emerald-50/50"
+                                                    : "border-black/10 hover:border-emerald-300 hover:bg-emerald-50/20"
+                                                }`}
+                                        >
+                                            <input
+                                                ref={editProofInputRef}
+                                                type="file"
+                                                multiple
+                                                accept="image/*,.pdf"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    if (e.target.files) addProofFiles(e.target.files);
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                            <div className="flex flex-col items-center gap-1.5">
+                                                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                                                    <FileCheck className="w-5 h-5 text-emerald-500" />
+                                                </div>
+                                                <p className="text-xs text-black/50">
+                                                    <span className="font-semibold text-emerald-600">Nhấn để chọn</span> hoặc kéo thả tài liệu
+                                                </p>
+                                                <p className="text-[10px] text-black/30">PNG, JPG, WEBP, PDF</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Proof Previews */}
+                                        {editProofPreviews.length > 0 && (
+                                            <div className="space-y-1.5 mt-2">
+                                                {editProofPreviews.map((proof, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center gap-3 p-2.5 rounded-lg border border-black/10 bg-white/30 group"
+                                                    >
+                                                        {proof.type === "image" && proof.url ? (
+                                                            <img
+                                                                src={proof.url}
+                                                                alt={proof.name}
+                                                                className="w-10 h-10 rounded-md object-cover border border-black/10 flex-shrink-0"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-md bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
+                                                                <span className="text-[10px] font-bold text-red-500">PDF</span>
+                                                            </div>
+                                                        )}
+                                                        <span className="text-xs text-black/60 truncate flex-1">{proof.name}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeProofFile(idx)}
+                                                            className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 flex-shrink-0"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <p className="text-[11px] text-black/40">
+                                                    {editProofPreviews.length} tài liệu đã chọn
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
