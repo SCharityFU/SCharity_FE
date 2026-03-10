@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '@/lib/store/features/auth/authSlice';
 import { authApi } from '@/lib/store/features/auth/authApi';
 import { reportApi } from '@/lib/store/features/report/reportApi';
+import { campaignApi } from '@/lib/store/features/campaign/campaignApi';
 
 export const makeStore = () => {
   return configureStore({
@@ -9,9 +10,10 @@ export const makeStore = () => {
       auth: authReducer,
       [authApi.reducerPath]: authApi.reducer,
       [reportApi.reducerPath]: reportApi.reducer,
+      [campaignApi.reducerPath]: campaignApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(authApi.middleware, reportApi.middleware),
+      getDefaultMiddleware().concat(authApi.middleware, reportApi.middleware, campaignApi.middleware),
   });
 };
 
