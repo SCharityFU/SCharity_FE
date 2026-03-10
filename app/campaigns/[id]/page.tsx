@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import {useEffect, useRef, useState} from "react";
 import Link from "next/link";
 import { ArrowLeft, Heart, Users, Clock, Share2, Shield } from "lucide-react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
@@ -14,8 +14,8 @@ const campaign = {
   description:
     "Hàng nghìn trẻ em Việt Nam mắc bệnh tim bẩm sinh nhưng không có điều kiện phẫu thuật. Chi phí một ca phẫu thuật tim dao động từ 80–150 triệu đồng, vượt xa khả năng của nhiều gia đình. Chiến dịch này hướng đến hỗ trợ 50 ca phẫu thuật tim miễn phí cho trẻ em có hoàn cảnh khó khăn trên cả nước.",
   category: "Y Tế",
-  raised: 420,
-  goal: 500,
+  raised: 2500000,
+  goal: 3600000,
   donors: 3890,
   daysLeft: 8,
   emoji: "❤️‍🩹",
@@ -34,6 +34,37 @@ export default function CampaignDetailPage() {
   const escrowRef = useRef<HTMLDivElement>(null);
   const hospitalRef = useRef<HTMLDivElement>(null);
   const progress = Math.min((campaign.raised / campaign.goal) * 100, 100);
+
+  const [isClosed, setIsClosed] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const deadlineReached = campaign.daysLeft <= 0;
+  const canClose = progress >= 50 || deadlineReached;
+
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [withdrawStatus, setWithdrawStatus] = useState<
+      "idle" | "pending" | "completed" | "rejected"
+  >("idle");
+
+  const [editingBank, setEditingBank] = useState(false);
+  const [bankName, setBankName] = useState("Example Bank");
+  const [accountNumber, setAccountNumber] = useState("123456789");
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+
+  const availableBalance = campaign.raised;
+
+  const bankAccount = "Example Bank - " + accountNumber;
+  const ekycStatus = true;
+
+  const maskAccount = (acc: string) => {
+    return "****" + acc.slice(-4);
+  };
+
+  useEffect(() => {
+    if (progress >= 100) {
+      setIsClosed(true);
+    }
+  }, [progress]);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
@@ -71,6 +102,17 @@ export default function CampaignDetailPage() {
               <p className="text-black/50 text-sm">
                 Bởi <span className="text-black font-medium">{campaign.organizer}</span>
               </p>
+            </div>
+
+            {/* Status */}
+            <div className="flex items-center gap-3 mt-2">
+              <span
+                  className={`px-3 py-1 text-xs rounded-full font-medium ${
+                      isClosed ? "bg-gray-200 text-gray-600" : "bg-emerald-100 text-emerald-600"
+                  }`}
+              >
+                {isClosed ? "Closed" : "Running"}
+              </span>
             </div>
 
             {/* Description */}
@@ -157,16 +199,17 @@ export default function CampaignDetailPage() {
               </div>
 
               <div className="text-center mb-6">
-                <div className="text-3xl font-black text-black mb-1">₫{campaign.raised}tr</div>
+                <div className="text-3xl font-black text-black mb-1">{campaign.raised.toLocaleString('vi-VN')} vnđ</div>
                 <div className="text-sm text-black/50">
-                  đã quyên góp trong tổng số ₫{campaign.goal}tr
+                  đã quyên góp trong tổng số {campaign.goal.toLocaleString('vi-VN')} vnđ
                 </div>
               </div>
 
+              {/* Stats */}
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="glass rounded-xl p-3 text-center">
                   <Users className="w-4 h-4 text-rose-400 mx-auto mb-1" />
-                  <StatCounter value={campaign.donors} label="Nhà HT" className="text-sm" />
+                  <StatCounter value={campaign.donors} label="Nhà hỗ trợ" className="text-sm" />
                 </div>
                 <div className="glass rounded-xl p-3 text-center">
                   <Clock className="w-4 h-4 text-amber-400 mx-auto mb-1" />
@@ -174,6 +217,38 @@ export default function CampaignDetailPage() {
                   <p className="text-xs text-black/50">Ngày còn lại</p>
                 </div>
               </div>
+
+              {!isClosed && (
+                  <div
+                      title={
+                        !canClose
+                            ? "Bạn chỉ có thể đóng chiến dịch khi đạt tối thiểu 50% mục tiêu hoặc khi hết thời hạn."
+                            : ""
+                      }
+                  >
+                    <button
+                        disabled={!canClose}
+                        onClick={() => canClose && setShowConfirm(true)}
+                        className={`w-full mb-6 py-2.5 rounded-lg text-sm font-semibold transition-colors
+      ${
+                            canClose
+                                ? "bg-red-500 text-white hover:bg-red-600"
+                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }`}
+                    >
+                      Kết Thúc Gây Quỹ
+                    </button>
+                  </div>
+              )}
+
+              {isClosed && withdrawStatus === "idle" && (
+                  <button
+                      onClick={() => setShowWithdrawForm(true)}
+                      className="w-full mb-6 py-2.5 rounded-lg text-sm font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                  >
+                    Yêu Cầu Rút Tiền
+                  </button>
+              )}
 
               {/* Donate amounts */}
               <div className="grid grid-cols-3 gap-2 mb-4">
@@ -207,6 +282,213 @@ export default function CampaignDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl p-6 w-[400px] max-w-[90%]">
+              <h3 className="text-lg font-bold mb-3">
+                Xác nhận kết thúc chiến dịch?
+              </h3>
+
+              <p className="text-sm text-black/70 mb-4">
+                Bạn có chắc chắn muốn đóng chiến dịch này không?
+                Hành động này không thể hoàn tác. Người dùng sẽ không thể quyên góp thêm.
+              </p>
+
+              <div className="text-sm mb-6">
+                <strong>Số tiền hiện tại:</strong>{" "}
+                {campaign.raised.toLocaleString('vi-VN')} vnđ ({Math.round(progress)}%)
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                    onClick={() => setShowConfirm(false)}
+                    className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700"
+                >
+                  Hủy bỏ
+                </button>
+
+                <button
+                    onClick={() => {
+                      setIsClosed(true);
+                      setShowConfirm(false);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                >
+                  Đồng ý đóng
+                </button>
+              </div>
+            </div>
+          </div>
+      )}
+
+      {/* Withdraw Form Modal */}
+      {showWithdrawForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl p-6 w-[420px] max-w-[90%]">
+              <h2 className="font-bold text-black mb-4">Yêu Cầu Rút Tiền</h2>
+
+              {/* Balance */}
+              <div className="mb-4">
+                <p className="text-xs text-black/50">Số tiền hiện tại</p>
+                <p className="font-semibold text-lg">{availableBalance.toLocaleString('vi-VN')} vnđ</p>
+              </div>
+
+              {/* Bank */}
+              <div className="mb-4">
+                <p className="text-xs text-black/50">Số tài khoản</p>
+
+                {!editingBank ? (
+                    <>
+                      <p className="font-medium">
+                        {bankName} - {maskAccount(accountNumber)}
+                      </p>
+
+                      <button
+                          onClick={() => setEditingBank(true)}
+                          className="text-xs text-blue-500 mt-1"
+                      >
+                        Cập nhật lại thông tin ngân hàng
+                      </button>
+                    </>
+                ) : (
+                    <div className="space-y-2 mt-2">
+                      <input
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                          placeholder="Bank Name"
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+
+                      <input
+                          value={accountNumber}
+                          onChange={(e) => setAccountNumber(e.target.value)}
+                          placeholder="Account Number"
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+
+                      <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => setEditingBank(false)}
+                            className="px-3 py-1 text-sm bg-gray-200 rounded"
+                        >
+                          Huỷ
+                        </button>
+
+                        <button
+                            onClick={() => setEditingBank(false)}
+                            className="px-3 py-1 text-sm bg-emerald-500 text-white rounded"
+                        >
+                          Lưu
+                        </button>
+                      </div>
+                    </div>
+                )}
+              </div>
+
+            {/* KYC */}
+            <div className="mb-6">
+              <p className="text-xs text-black/50">Xác minh của eKYC</p>
+              <span
+                  className={`px-2 py-1 text-xs rounded ${
+                      ekycStatus
+                          ? "bg-emerald-100 text-emerald-600"
+                          : "bg-red-100 text-red-600"
+                  }`}
+              >
+                {ekycStatus ? "Đã xác minh" : "Chưa xác minh"}
+              </span>
+            </div>
+
+            <div
+                title={
+                  !ekycStatus
+                      ? "Bạn cần hoàn tất eKYC trước khi gửi yêu cầu rút tiền."
+                      : ""
+                }
+                className="justify-end flex"
+            >
+              <button
+                  onClick={() => setShowWithdrawForm(false)}
+                  className="px-4 py-2 mr-4 rounded-lg bg-gray-200 text-gray-700"
+              >
+                Huỷ
+              </button>
+              <button
+                  disabled={!ekycStatus}
+                  onClick={() => setShowWithdrawConfirm(true)}
+                  className={`px-4 py-2 rounded-lg transition-colors
+                      ${
+                      ekycStatus
+                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      }
+                    `}
+                  >
+                Gửi yêu cầu rút tiền
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {withdrawStatus === "pending" && (
+          <div className="glass rounded-xl p-4 text-center mb-4">
+            <p className="font-semibold text-amber-600">
+              Withdraw Pending Review
+            </p>
+            <p className="text-xs text-black/50 mt-1">
+              Yêu cầu rút tiền đang chờ Admin kiểm duyệt
+            </p>
+          </div>
+      )}
+
+      {showWithdrawConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl p-6 w-[400px] max-w-[90%]">
+              <h3 className="text-lg font-bold mb-3">
+                Xác nhận yêu cầu rút tiền
+              </h3>
+
+              <p className="text-sm text-black/70 mb-4">
+                Bạn xác nhận rút:
+              </p>
+
+              <div className="text-sm mb-6 space-y-1">
+                <p>
+                  <strong>Số tiền:</strong>{" "}
+                  {availableBalance.toLocaleString("vi-VN")} vnđ
+                </p>
+                <p>
+                  <strong>Ngân hàng:</strong> {bankAccount}
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                    onClick={() => setShowWithdrawConfirm(false)}
+                    className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700"
+                >
+                  Huỷ
+                </button>
+
+                <button
+                    onClick={() => {
+                      setWithdrawStatus("pending");
+                      setShowWithdrawConfirm(false);
+                      setShowWithdrawForm(false);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600"
+                >
+                  Xác nhận rút
+                </button>
+              </div>
+            </div>
+          </div>
+      )}
+
     </div>
+
   );
 }
