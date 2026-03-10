@@ -126,6 +126,28 @@ export const campaignApi = createApi({
             }),
             invalidatesTags: ['CampaignRequest'],
         }),
+
+        // PUT /campaigns/requests/:requestId — update campaign request details (pending only)
+        updateCampaignRequest: builder.mutation<
+            ApiResponseDto<CampaignRequestResponseDto>,
+            {
+                requestId: string;
+                data: {
+                    title?: string;
+                    story?: string;
+                    goalAmount?: number;
+                    deadline?: string;
+                    category?: string;
+                };
+            }
+        >({
+            query: ({ requestId, data }) => ({
+                url: `/campaigns/requests/${requestId}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['CampaignRequest'],
+        }),
     }),
 });
 
@@ -135,4 +157,5 @@ export const {
     useGetMyRequestByIdQuery,
     useGetMyCampaignsQuery,
     useUpdateRequestBankInfoMutation,
+    useUpdateCampaignRequestMutation,
 } = campaignApi;
