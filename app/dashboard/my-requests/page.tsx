@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef, type ChangeEvent, type DragEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
@@ -28,6 +28,15 @@ import {
     Save,
     ImageIcon,
     FileCheck,
+    Bold,
+    Italic,
+    List,
+    Link as LinkIcon,
+    Image as ImageLucide,
+    Upload,
+    X,
+    Star,
+    DollarSign,
 } from "lucide-react";
 import { CampaignRequestStatus, CampaignCategory } from "@/dtos/enums";
 import type { CampaignRequestResponseDto } from "@/dtos/campaign";
@@ -51,7 +60,10 @@ import {
 } from "@/lib/store/features/campaign/campaignApi";
 import { useVietQRBanks } from "@/hooks/useVietQRBanks";
 
-/* ── Helpers ────────────────────────────────────────────────────────── */
+/* ── Constants ──────────────────────────────────────────────────────── */
+
+const TITLE_MAX = 100;
+const GOAL_PRESETS = [5_000_000, 10_000_000, 50_000_000, 100_000_000];
 
 const STATUS_CONFIG: Record<CampaignRequestStatus, { label: string; color: string; icon: typeof Clock }> = {
     [CampaignRequestStatus.PENDING]: { label: "Đang chờ", color: "text-amber-500 bg-amber-500/10 border-amber-500/20", icon: Clock },
@@ -68,6 +80,8 @@ const CATEGORY_LABELS: Record<string, string> = {
     [CampaignCategory.OTHER]: "Khác",
 };
 
+/* ── Helpers ────────────────────────────────────────────────────────── */
+
 function fmtDate(iso: string): string {
     if (!iso) return "";
     return new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -77,9 +91,29 @@ function fmtVND(v: number): string {
     return v.toLocaleString("vi-VN") + " ₫";
 }
 
-function fmtDateInput(iso: string): string {
+function formatVNDInput(v: number): string {
+    return v.toLocaleString("vi-VN");
+}
+
+function parseCurrencyInput(raw: string): number {
+    return Number(raw.replace(/\./g, "").replace(/\D/g, "")) || 0;
+}
+
+function shortVND(n: number): string {
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(0)} tỷ`;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} tr`;
+    return formatVNDInput(n);
+}
+
+function getTomorrowISO(): string {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split("T")[0];
+}
+
+function fmtDateForDateInput(iso: string): string {
     if (!iso) return "";
-    return new Date(iso).toISOString().slice(0, 16);
+    return new Date(iso).toISOString().split("T")[0];
 }
 
 function removeDiacritics(str: string): string {
@@ -129,21 +163,91 @@ export default function MyRequestsPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState("");
     const [editStory, setEditStory] = useState("");
-    const [editGoal, setEditGoal] = useState("");
+    const [editGoalRaw, setEditGoalRaw] = useState("");
+    const [editGoalAmount, setEditGoalAmount] = useState(0);
     const [editDeadline, setEditDeadline] = useState("");
     const [editCategory, setEditCategory] = useState("");
     const [updateRequest, { isLoading: isUpdating }] = useUpdateCampaignRequestMutation();
     const [editFeedback, setEditFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+    /* Rich text editor ref */
+    const editStoryRef = useRef<HTMLDivElement>(null);
+
+    /* Media state for edit mode */
+    const [editMediaFiles, setEditMediaFiles] = useState<File[]>([]);
+    const [editMediaPreviews, setEditMediaPreviews] = useState<string[]>([]);
+    const [editCoverIndex, setEditCoverIndex] = useState(0);
+    const editFileInputRef = useRef<HTMLInputElement>(null);
+    const [editIsDragOver, setEditIsDragOver] = useState(false);
+
+    const handleEditGoalChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const raw = e.target.value;
+        const num = parseCurrencyInput(raw);
+        setEditGoalAmount(num);
+        setEditGoalRaw(num > 0 ? formatVNDInput(num) : "");
+    };
+
+    const handleEditGoalPreset = (preset: number) => {
+        setEditGoalAmount(preset);
+        setEditGoalRaw(formatVNDInput(preset));
+    };
+
+    const addEditFiles = useCallback((files: FileList | File[]) => {
+        const newFiles = Array.from(files).filter((f) => f.type.startsWith("image/"));
+        if (newFiles.length === 0) return;
+        setEditMediaFiles((prev) => [...prev, ...newFiles]);
+        newFiles.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                setEditMediaPreviews((prev) => [...prev, ev.target?.result as string]);
+            };
+            reader.readAsDataURL(file);
+        });
+    }, []);
+
+    const removeEditMedia = (idx: number) => {
+        setEditMediaFiles((prev) => prev.filter((_, i) => i !== idx));
+        setEditMediaPreviews((prev) => prev.filter((_, i) => i !== idx));
+        if (editCoverIndex === idx) setEditCoverIndex(0);
+        else if (editCoverIndex > idx) setEditCoverIndex((prev) => prev - 1);
+    };
+
+    const handleEditDrop = (e: DragEvent) => {
+        e.preventDefault();
+        setEditIsDragOver(false);
+        if (e.dataTransfer.files) addEditFiles(e.dataTransfer.files);
+    };
+
+    const editExecCmd = (cmd: string, value?: string) => {
+        document.execCommand(cmd, false, value);
+        editStoryRef.current?.focus();
+    };
+
+    const getEditStoryHTML = () => editStoryRef.current?.innerHTML || "";
+
     const startEditing = () => {
         if (!selectedReq) return;
         setEditTitle(selectedReq.title);
         setEditStory(selectedReq.story);
-        setEditGoal(String(selectedReq.goalAmount));
-        setEditDeadline(fmtDateInput(selectedReq.deadline));
+        setEditGoalAmount(selectedReq.goalAmount);
+        setEditGoalRaw(formatVNDInput(selectedReq.goalAmount));
+        setEditDeadline(fmtDateForDateInput(selectedReq.deadline));
         setEditCategory(selectedReq.category ?? "other");
         setEditFeedback(null);
+        // Pre-fill existing media as previews (URLs from server)
+        const existingPreviews: string[] = [];
+        if (selectedReq.thumbnailUrl) existingPreviews.push(selectedReq.thumbnailUrl);
+        if (selectedReq.mediaUrls) existingPreviews.push(...selectedReq.mediaUrls);
+        setEditMediaPreviews(existingPreviews);
+        setEditMediaFiles([]);
+        setEditCoverIndex(0);
         setIsEditing(true);
+        // Set story HTML into contentEditable after state update
+        setTimeout(() => {
+            if (editStoryRef.current) {
+                editStoryRef.current.innerHTML = selectedReq.story || "";
+            }
+        }, 50);
     };
 
     const cancelEditing = () => {
@@ -153,13 +257,14 @@ export default function MyRequestsPage() {
 
     const handleSaveEdit = async () => {
         if (!selectedReq) return;
+        const storyHTML = getEditStoryHTML() || editStory;
         try {
             const result = await updateRequest({
                 requestId: selectedReq.id,
                 data: {
                     title: editTitle,
-                    story: editStory,
-                    goalAmount: Number(editGoal),
+                    story: storyHTML,
+                    goalAmount: editGoalAmount,
                     deadline: new Date(editDeadline).toISOString(),
                     category: editCategory,
                 },
@@ -181,7 +286,7 @@ export default function MyRequestsPage() {
 
     return (
         <div className="min-h-screen pt-24 pb-16 px-4">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-10">
                     <div>
@@ -217,13 +322,15 @@ export default function MyRequestsPage() {
 
                 {/* Loading skeleton */}
                 {isLoading && (
-                    <div className="space-y-4">
-                        {["s1", "s2", "s3"].map((key) => (
-                            <div key={key} className="glass-card rounded-2xl p-6 animate-pulse">
-                                <div className="h-5 bg-black/10 rounded w-1/3 mb-3" />
-                                <div className="h-4 bg-black/10 rounded w-2/3 mb-2" />
-                                <div className="h-4 bg-black/10 rounded w-1/2 mb-2" />
-                                <div className="h-4 bg-black/10 rounded w-1/4" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {["s1", "s2", "s3", "s4", "s5", "s6"].map((key) => (
+                            <div key={key} className="glass-card rounded-2xl p-5 animate-pulse flex flex-col" style={{ minHeight: 280 }}>
+                                <div className="h-5 bg-black/10 rounded w-1/2 mb-3" />
+                                <div className="h-4 bg-black/10 rounded w-3/4 mb-2" />
+                                <div className="h-3 bg-black/10 rounded w-full mb-2" />
+                                <div className="h-3 bg-black/10 rounded w-2/3 mb-2" />
+                                <div className="h-12 bg-black/10 rounded w-full mb-3 mt-auto" />
+                                <div className="h-8 bg-black/10 rounded w-1/2" />
                             </div>
                         ))}
                     </div>
@@ -244,10 +351,10 @@ export default function MyRequestsPage() {
                     </div>
                 )}
 
-                {/* Request Cards */}
+                {/* Request Cards — Portrait Grid */}
                 {!isLoading && requests.length > 0 && (
                     <>
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                             <AnimatePresence mode="popLayout">
                                 {requests.map((req: CampaignRequestResponseDto, i: number) => {
                                     const statusCfg = STATUS_CONFIG[req.status as CampaignRequestStatus];
@@ -260,92 +367,94 @@ export default function MyRequestsPage() {
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -20 }}
                                             transition={{ delay: i * 0.05 }}
-                                            className={`glass-card rounded-2xl p-6 hover:shadow-lg transition-all duration-300 ${isActive
+                                            className={`glass-card rounded-2xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col ${isActive
                                                 ? "ring-2 ring-rose-400 shadow-lg shadow-rose-500/10"
                                                 : ""
                                                 }`}
                                         >
-                                            {/* Row 1: Title + Status */}
-                                            <div className="flex items-start justify-between gap-4 mb-3">
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                    <h3 className="font-bold text-black text-lg truncate">
-                                                        {req.title}
-                                                    </h3>
-                                                    <span
-                                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border shrink-0 ${statusCfg.color}`}
-                                                    >
-                                                        <StatusIcon className="w-3.5 h-3.5" />
-                                                        {statusCfg.label}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* Row 2: Key Info */}
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                                <div className="flex items-center gap-2 text-sm text-black/60">
-                                                    <Target className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                                                    <span className="truncate">{fmtVND(req.goalAmount)}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-sm text-black/60">
-                                                    <CalendarDays className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-                                                    <span>Hạn: {fmtDate(req.deadline)}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-sm text-black/60">
-                                                    <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                                    <span>Gửi: {fmtDate(req.createdAt)}</span>
-                                                </div>
+                                            {/* Top: Status + Category */}
+                                            <div className="flex items-center justify-between gap-2 mb-3">
+                                                <span
+                                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${statusCfg.color}`}
+                                                >
+                                                    <StatusIcon className="w-3 h-3" />
+                                                    {statusCfg.label}
+                                                </span>
                                                 {req.category && (
-                                                    <div className="flex items-center gap-2 text-sm text-black/60">
-                                                        <Tag className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                                                        <span>{CATEGORY_LABELS[req.category] ?? req.category}</span>
-                                                    </div>
+                                                    <span className="text-[11px] text-black/40 flex items-center gap-1">
+                                                        <Tag className="w-3 h-3" />
+                                                        {CATEGORY_LABELS[req.category] ?? req.category}
+                                                    </span>
                                                 )}
                                             </div>
 
-                                            {/* Row 3: Story preview */}
-                                            <p className="text-sm text-black/50 line-clamp-2 mb-3 leading-relaxed">
+                                            {/* Title */}
+                                            <h3 className="font-bold text-black text-[15px] leading-snug mb-2 line-clamp-2">
+                                                {req.title}
+                                            </h3>
+
+                                            {/* Story preview */}
+                                            <p className="text-xs text-black/50 line-clamp-2 leading-relaxed mb-3 flex-1">
                                                 {req.story}
                                             </p>
 
-                                            {/* Row 4: Bank info short */}
+                                            {/* Key Info */}
+                                            <div className="space-y-1.5 mb-3">
+                                                <div className="flex items-center gap-2 text-xs text-black/60">
+                                                    <Target className="w-3 h-3 text-rose-400 shrink-0" />
+                                                    <span className="font-semibold">{fmtVND(req.goalAmount)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-black/50">
+                                                    <CalendarDays className="w-3 h-3 text-violet-400 shrink-0" />
+                                                    <span>Hạn: {fmtDate(req.deadline)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-black/40">
+                                                    <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                                                    <span>Gửi: {fmtDate(req.createdAt)}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Bank info short */}
                                             {req.bankInfo && (
-                                                <div className="flex items-center gap-2 text-sm text-black/40 mb-3">
-                                                    <Landmark className="w-3.5 h-3.5" />
-                                                    <span>
-                                                        {req.bankInfo.bankName} — {req.bankInfo.accountHolderName} — ****{req.bankInfo.accountNumber.slice(-4)}
+                                                <div className="flex items-center gap-1.5 text-[11px] text-black/35 mb-3 px-2 py-1.5 rounded-lg bg-black/[0.03]">
+                                                    <Landmark className="w-3 h-3 shrink-0" />
+                                                    <span className="truncate">
+                                                        {req.bankInfo.bankName} — ****{req.bankInfo.accountNumber.slice(-4)}
                                                     </span>
                                                 </div>
                                             )}
 
                                             {/* Reject reason */}
                                             {req.rejectReason && (
-                                                <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10 mb-3">
-                                                    <p className="text-sm text-rose-500">
-                                                        <strong>Lý do từ chối:</strong> {req.rejectReason}
+                                                <div className="p-2 rounded-lg bg-rose-500/5 border border-rose-500/10 mb-3">
+                                                    <p className="text-[11px] text-rose-500 line-clamp-2">
+                                                        <strong>Từ chối:</strong> {req.rejectReason}
                                                     </p>
                                                 </div>
                                             )}
 
-                                            {/* Row 5: Action buttons */}
-                                            <div className="flex items-center gap-2 pt-3 border-t border-black/5">
-                                                <Button variant="outline" size="sm" onClick={() => openDetail(req)}>
-                                                    <Eye className="w-3.5 h-3.5" />
+                                            {/* Action buttons — stacked */}
+                                            <div className="flex flex-col gap-1.5 pt-3 border-t border-black/5 mt-auto">
+                                                <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => openDetail(req)}>
+                                                    <Eye className="w-3 h-3" />
                                                     Xem Chi Tiết
                                                 </Button>
-                                                {req.status === CampaignRequestStatus.PENDING && (
-                                                    <Button variant="outline" size="sm" onClick={() => openBankModal(req)}>
-                                                        <Landmark className="w-3.5 h-3.5" />
-                                                        Sửa Bank
-                                                    </Button>
-                                                )}
-                                                {req.campaignId && (
-                                                    <Link href={`/campaigns/${req.campaignId}`}>
-                                                        <Button variant="ghost" size="sm">
-                                                            <Eye className="w-3.5 h-3.5" />
-                                                            Xem Chiến Dịch
+                                                <div className="flex gap-1.5">
+                                                    {req.status === CampaignRequestStatus.PENDING && (
+                                                        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => openBankModal(req)}>
+                                                            <Landmark className="w-3 h-3" />
+                                                            Sửa Bank
                                                         </Button>
-                                                    </Link>
-                                                )}
+                                                    )}
+                                                    {req.campaignId && (
+                                                        <Link href={`/campaigns/${req.campaignId}`} className="flex-1">
+                                                            <Button variant="ghost" size="sm" className="w-full text-xs">
+                                                                <Eye className="w-3 h-3" />
+                                                                Xem CD
+                                                            </Button>
+                                                        </Link>
+                                                    )}
+                                                </div>
                                             </div>
                                         </motion.div>
                                     );
@@ -580,70 +689,251 @@ export default function MyRequestsPage() {
                                 </div>
                             ) : (
                                 /* ── Edit Mode ── */
-                                <div className="space-y-4">
-                                    <div>
-                                        <Label className="text-sm font-semibold text-black/70 mb-1.5">Tiêu đề</Label>
-                                        <input
-                                            type="text"
-                                            value={editTitle}
-                                            onChange={(e) => setEditTitle(e.target.value)}
-                                            className="w-full px-4 py-2.5 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors placeholder:text-black/30 text-sm"
-                                        />
+                                <div className="space-y-5">
+                                    {/* ── Title ── */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm font-semibold text-black/70 flex items-center gap-1.5">
+                                            <FileText className="w-3.5 h-3.5 text-rose-400" />
+                                            Tiêu đề
+                                        </Label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                maxLength={TITLE_MAX}
+                                                value={editTitle}
+                                                onChange={(e) => setEditTitle(e.target.value)}
+                                                placeholder="VD: Xây trường học cho trẻ em vùng cao"
+                                                className="w-full px-4 py-2.5 pr-16 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors placeholder:text-black/30 text-sm"
+                                            />
+                                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${editTitle.length >= TITLE_MAX ? "text-rose-500 font-semibold" : "text-black/30"}`}>
+                                                {editTitle.length}/{TITLE_MAX}
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="text-sm font-semibold text-black/70 mb-1.5 flex items-center gap-1.5">
-                                                <Target className="w-3.5 h-3.5 text-rose-400" />
-                                                Mục tiêu (₫)
-                                            </Label>
+                                    {/* ── Goal Amount ── */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm font-semibold text-black/70 flex items-center gap-1.5">
+                                            <DollarSign className="w-3.5 h-3.5 text-amber-500" />
+                                            Mục tiêu gây quỹ
+                                        </Label>
+                                        <div className="relative">
                                             <input
-                                                type="number"
-                                                value={editGoal}
-                                                onChange={(e) => setEditGoal(e.target.value)}
-                                                min={1000000}
-                                                className="w-full px-4 py-2.5 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors text-sm"
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={editGoalRaw}
+                                                onChange={handleEditGoalChange}
+                                                placeholder="VD: 50.000.000"
+                                                className="w-full px-4 py-2.5 pr-10 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors placeholder:text-black/30 text-sm"
                                             />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-black/40">₫</span>
                                         </div>
-                                        <div>
-                                            <Label className="text-sm font-semibold text-black/70 mb-1.5 flex items-center gap-1.5">
+                                        {/* Quick presets */}
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {GOAL_PRESETS.map((preset) => (
+                                                <button
+                                                    key={preset}
+                                                    type="button"
+                                                    onClick={() => handleEditGoalPreset(preset)}
+                                                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-200 ${editGoalAmount === preset
+                                                        ? "bg-rose-500 text-white shadow-sm"
+                                                        : "bg-black/[0.04] border border-black/10 text-black/50 hover:text-black hover:border-rose-400/30"
+                                                        }`}
+                                                >
+                                                    {shortVND(preset)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* ── Deadline + Category row ── */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-sm font-semibold text-black/70 flex items-center gap-1.5">
                                                 <CalendarDays className="w-3.5 h-3.5 text-violet-400" />
                                                 Hạn chót
                                             </Label>
                                             <input
-                                                type="datetime-local"
+                                                type="date"
+                                                min={getTomorrowISO()}
                                                 value={editDeadline}
                                                 onChange={(e) => setEditDeadline(e.target.value)}
                                                 className="w-full px-4 py-2.5 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors text-sm"
                                             />
+                                            {editDeadline && (
+                                                <p className="text-[11px] text-black/40">
+                                                    Ngày kết thúc: {fmtDate(editDeadline)}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-sm font-semibold text-black/70 flex items-center gap-1.5">
+                                                <Tag className="w-3.5 h-3.5 text-blue-400" />
+                                                Danh mục
+                                            </Label>
+                                            <select
+                                                value={editCategory}
+                                                onChange={(e) => setEditCategory(e.target.value)}
+                                                className="w-full px-4 py-2.5 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors text-sm appearance-none cursor-pointer"
+                                            >
+                                                {Object.entries(CATEGORY_LABELS).map(([val, lab]) => (
+                                                    <option key={val} value={val}>{lab}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <Label className="text-sm font-semibold text-black/70 mb-1.5 flex items-center gap-1.5">
-                                            <Tag className="w-3.5 h-3.5 text-blue-400" />
-                                            Danh mục
+                                    {/* ── Story (Rich Text Editor) ── */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm font-semibold text-black/70 flex items-center gap-1.5">
+                                            <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                                            Câu chuyện chiến dịch
                                         </Label>
-                                        <select
-                                            value={editCategory}
-                                            onChange={(e) => setEditCategory(e.target.value)}
-                                            className="w-full px-4 py-2.5 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors text-sm appearance-none cursor-pointer"
-                                        >
-                                            {Object.entries(CATEGORY_LABELS).map(([val, lab]) => (
-                                                <option key={val} value={val}>{lab}</option>
-                                            ))}
-                                        </select>
+                                        {/* Toolbar */}
+                                        <div className="flex items-center gap-0.5 p-1.5 rounded-t-xl border-2 border-b-0 border-black/10 bg-black/[0.02]">
+                                            <button
+                                                type="button"
+                                                onClick={() => editExecCmd("bold")}
+                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
+                                                title="In đậm"
+                                            >
+                                                <Bold className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => editExecCmd("italic")}
+                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
+                                                title="In nghiêng"
+                                            >
+                                                <Italic className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => editExecCmd("insertUnorderedList")}
+                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
+                                                title="Danh sách"
+                                            >
+                                                <List className="w-3.5 h-3.5" />
+                                            </button>
+                                            <div className="w-px h-4 bg-black/10 mx-0.5" />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const url = prompt("Nhập URL:");
+                                                    if (url) editExecCmd("createLink", url);
+                                                }}
+                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
+                                                title="Chèn liên kết"
+                                            >
+                                                <LinkIcon className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const url = prompt("Nhập URL hình ảnh:");
+                                                    if (url) editExecCmd("insertImage", url);
+                                                }}
+                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
+                                                title="Chèn hình ảnh"
+                                            >
+                                                <ImageLucide className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                        {/* Editor */}
+                                        <div
+                                            ref={editStoryRef}
+                                            contentEditable
+                                            onInput={() => setEditStory(editStoryRef.current?.innerText || "")}
+                                            className="min-h-[160px] w-full px-4 py-3 rounded-b-xl border-2 border-black/10 bg-white/50 text-black text-sm outline-none focus:border-rose-400 transition-colors prose prose-sm max-w-none leading-relaxed"
+                                            data-placeholder="Kể câu chuyện về chiến dịch... (ít nhất 50 ký tự)"
+                                            style={{ minHeight: 160 }}
+                                            suppressContentEditableWarning
+                                        />
+                                        <p className="text-[11px] text-black/30 text-right">
+                                            {(editStoryRef.current?.innerText || editStory).length} ký tự • Tối thiểu 50
+                                        </p>
                                     </div>
 
-                                    <div>
-                                        <Label className="text-sm font-semibold text-black/70 mb-1.5">Câu chuyện</Label>
-                                        <textarea
-                                            value={editStory}
-                                            onChange={(e) => setEditStory(e.target.value)}
-                                            rows={6}
-                                            className="w-full px-4 py-2.5 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors text-sm resize-none leading-relaxed"
-                                        />
-                                        <p className="text-xs text-black/30 mt-1">Tối thiểu 50 ký tự</p>
+                                    {/* ── Upload Media ── */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm font-semibold text-black/70 flex items-center gap-1.5">
+                                            <Upload className="w-3.5 h-3.5 text-pink-500" />
+                                            Hình ảnh chiến dịch
+                                        </Label>
+
+                                        {/* Drop zone */}
+                                        <div
+                                            onDrop={handleEditDrop}
+                                            onDragOver={(e: DragEvent<HTMLDivElement>) => { e.preventDefault(); setEditIsDragOver(true); }}
+                                            onDragLeave={() => setEditIsDragOver(false)}
+                                            onClick={() => editFileInputRef.current?.click()}
+                                            className={`relative rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all duration-300 ${editIsDragOver
+                                                ? "border-rose-400 bg-rose-50/50"
+                                                : "border-black/10 hover:border-rose-300 hover:bg-rose-50/20"
+                                                }`}
+                                        >
+                                            <input
+                                                ref={editFileInputRef}
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    if (e.target.files) addEditFiles(e.target.files);
+                                                    e.target.value = "";
+                                                }}
+                                            />
+                                            <div className="flex flex-col items-center gap-1.5">
+                                                <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
+                                                    <ImageIcon className="w-5 h-5 text-rose-400" />
+                                                </div>
+                                                <p className="text-xs text-black/50">
+                                                    <span className="font-semibold text-rose-500">Nhấn để chọn</span> hoặc kéo thả ảnh
+                                                </p>
+                                                <p className="text-[10px] text-black/30">PNG, JPG, WEBP</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Media Previews */}
+                                        {editMediaPreviews.length > 0 && (
+                                            <>
+                                                <div className="grid grid-cols-4 gap-2 mt-2">
+                                                    {editMediaPreviews.map((src, idx) => (
+                                                        <div key={idx} className="relative group">
+                                                            <div
+                                                                className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${editCoverIndex === idx
+                                                                    ? "border-rose-500 ring-2 ring-rose-500/30"
+                                                                    : "border-transparent hover:border-black/20"
+                                                                    }`}
+                                                                onClick={() => setEditCoverIndex(idx)}
+                                                            >
+                                                                <img
+                                                                    src={src}
+                                                                    alt={`Preview ${idx + 1}`}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                                {editCoverIndex === idx && (
+                                                                    <div className="absolute top-1 left-1 bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                                                        <Star className="w-2 h-2" />
+                                                                        Bìa
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.stopPropagation(); removeEditMedia(idx); }}
+                                                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <p className="text-[11px] text-black/40">
+                                                    Nhấn vào ảnh để chọn làm ảnh bìa • {editMediaPreviews.length} ảnh
+                                                </p>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             )}
