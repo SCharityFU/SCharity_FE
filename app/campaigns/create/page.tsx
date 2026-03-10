@@ -25,6 +25,8 @@ import {
     List,
     Link,
     Image as ImageLucide,
+    Search,
+    ChevronDown,
 } from "lucide-react";
 import { CampaignCategory } from "@/dtos/enums";
 import { HighlightText } from "@/components/ui/highlight-text";
@@ -50,6 +52,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSubmitCampaignRequestMutation } from "@/lib/store/features/campaign/campaignApi";
+import { useVietQRBanks } from "@/hooks/useVietQRBanks";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -108,6 +111,16 @@ function shortVND(n: number): string {
     return formatVND(n);
 }
 
+/** Remove Vietnamese diacritics → plain uppercase ASCII (bank standard) */
+function removeDiacritics(str: string): string {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toUpperCase();
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function CreateCampaignPage() {
@@ -126,6 +139,18 @@ export default function CreateCampaignPage() {
     const [bankName, setBankName] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
     const [accountHolderName, setAccountHolderName] = useState("");
+
+    // Bank list from VietQR API
+    const {
+        bankSearch,
+        setBankSearch,
+        bankDropdownOpen,
+        setBankDropdownOpen,
+        selectedBank,
+        bankDropdownRef,
+        filteredBanks,
+        selectBank,
+    } = useVietQRBanks();
 
     // Media
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
@@ -355,6 +380,7 @@ export default function CreateCampaignPage() {
                             )}
                             {feedbackMsg.text}
                             <button
+                                title="Feedback"
                                 onClick={() => setFeedbackMsg(null)}
                                 className="ml-auto hover:opacity-70 transition-opacity"
                             >
@@ -441,6 +467,7 @@ export default function CreateCampaignPage() {
                                     Hạn chót
                                 </Label>
                                 <input
+                                    title="Deadline"
                                     id="campaign-deadline"
                                     type="date"
                                     min={getTomorrowISO()}
@@ -485,20 +512,97 @@ export default function CreateCampaignPage() {
                                     Thông tin ngân hàng
                                 </h3>
 
+                                {/* Bank Dropdown */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="bank-name" className="text-xs text-black/50">
-                                        Tên ngân hàng
+                                    <Label className="text-xs text-black/50">
+                                        Chọn ngân hàng
                                     </Label>
-                                    <input
-                                        id="bank-name"
-                                        type="text"
-                                        value={bankName}
-                                        onChange={(e) => setBankName(e.target.value)}
-                                        placeholder="VD: Vietcombank, BIDV, Techcombank..."
-                                        className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm"
-                                    />
+                                    <div className="relative" ref={bankDropdownRef}>
+                                        {/* Trigger */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setBankDropdownOpen(!bankDropdownOpen)}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg glass border border-black/10 text-sm text-left transition-colors focus:border-rose-500/50 outline-none"
+                                        >
+                                            {selectedBank ? (
+                                                <>
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src={selectedBank.logo}
+                                                        alt={selectedBank.shortName}
+                                                        className="w-6 h-6 object-contain rounded"
+                                                    />
+                                                    <span className="flex-1 truncate text-black">
+                                                        {selectedBank.shortName} — {selectedBank.name}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="flex-1 text-black/30">Chọn ngân hàng...</span>
+                                            )}
+                                            <ChevronDown className={`w-4 h-4 text-black/30 transition-transform ${bankDropdownOpen ? "rotate-180" : ""}`} />
+                                        </button>
+
+                                        {/* Dropdown */}
+                                        <AnimatePresence>
+                                            {bankDropdownOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -4 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -4 }}
+                                                    transition={{ duration: 0.15 }}
+                                                    className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl glass-card border border-black/10 shadow-lg max-h-64 overflow-hidden flex flex-col"
+                                                >
+                                                    {/* Search */}
+                                                    <div className="p-2 border-b border-black/5">
+                                                        <div className="relative">
+                                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black/30" />
+                                                            <input
+                                                                type="text"
+                                                                value={bankSearch}
+                                                                onChange={(e) => setBankSearch(e.target.value)}
+                                                                placeholder="Tìm ngân hàng..."
+                                                                className="w-full pl-8 pr-3 py-2 rounded-lg bg-black/[0.03] border-none text-xs text-black placeholder-black/30 outline-none"
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Bank list */}
+                                                    <div className="overflow-y-auto flex-1">
+                                                        {filteredBanks.map((bank) => (
+                                                                <button
+                                                                    key={bank.id}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        selectBank(bank);
+                                                                        setBankName(bank.shortName);
+                                                                    }}
+                                                                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs hover:bg-black/[0.04] transition-colors ${selectedBank?.id === bank.id ? "bg-rose-50 text-rose-700" : "text-black/70"
+                                                                        }`}
+                                                                >
+                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                    <img
+                                                                        src={bank.logo}
+                                                                        alt={bank.shortName}
+                                                                        className="w-7 h-7 object-contain rounded bg-white p-0.5 border border-black/5"
+                                                                    />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="font-semibold truncate">{bank.shortName}</p>
+                                                                        <p className="text-[10px] text-black/40 truncate">{bank.name}</p>
+                                                                    </div>
+                                                                </button>
+                                                            ))}
+                                                        {filteredBanks.length === 0 && (
+                                                                <p className="text-xs text-black/30 text-center py-4">Không tìm thấy ngân hàng</p>
+                                                            )}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </div>
 
+                                {/* Account Number */}
                                 <div className="space-y-2">
                                     <Label htmlFor="account-number" className="text-xs text-black/50">
                                         <CreditCard className="w-3 h-3" />
@@ -511,10 +615,11 @@ export default function CreateCampaignPage() {
                                         value={accountNumber}
                                         onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
                                         placeholder="VD: 0123456789"
-                                        className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm font-mono"
+                                        className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm font-mono tracking-wider"
                                     />
                                 </div>
 
+                                {/* Account Holder Name */}
                                 <div className="space-y-2">
                                     <Label htmlFor="account-holder" className="text-xs text-black/50">
                                         <User className="w-3 h-3" />
@@ -524,10 +629,11 @@ export default function CreateCampaignPage() {
                                         id="account-holder"
                                         type="text"
                                         value={accountHolderName}
-                                        onChange={(e) => setAccountHolderName(e.target.value)}
+                                        onChange={(e) => setAccountHolderName(removeDiacritics(e.target.value))}
                                         placeholder="VD: NGUYEN VAN A"
-                                        className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm uppercase"
+                                        className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm uppercase tracking-wide"
                                     />
+                                    <p className="text-[10px] text-black/30">Tự động viết hoa, không dấu (theo chuẩn ngân hàng)</p>
                                 </div>
                             </div>
                         </div>
