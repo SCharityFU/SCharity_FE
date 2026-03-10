@@ -264,15 +264,7 @@ export default function HomePage() {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             Hơn 50,000 nhà hảo tâm đã tin tưởng
           </div>
-          <div className="flex gap-3">
-            <Button variant="default">Default</Button>
-            <Button variant="secondary">Secondary</Button>
-            <Button variant="destructive">Destructive</Button>
-            <Button variant="ghost">Ghost</Button>
-            <Button variant="glow">Glow</Button>
-            <Button variant="link">Link</Button>
-            <Button variant="shimmer">Shimmer</Button>
-          </div>
+
 
           {/* Headline */}
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-6">
@@ -497,7 +489,7 @@ export default function HomePage() {
                 </Magnetic>
                 <Magnetic intensity={0.3} range={60}>
                   <Link
-                    href="/auth/login"
+                    href="/register"
                     className="px-8 py-3 rounded-lg glass border border-black/20 text-black font-medium hover:bg-black/10 transition-colors"
                   >
                     Tạo Tài Khoản Miễn Phí
