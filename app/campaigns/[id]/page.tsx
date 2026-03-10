@@ -1,7 +1,9 @@
 "use client";
 import {useEffect, useRef, useState} from "react";
 import Link from "next/link";
-import { ArrowLeft, Heart, Users, Clock, Share2, Shield } from "lucide-react";
+import { ArrowLeft, Heart, Users, Clock, Share2, Shield, Flag } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import ReportCampaignModal from "@/components/campaigns/ReportCampaignModal";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Magnetic } from "@/components/ui/magnetic";
 import { HighlightText } from "@/components/ui/highlight-text";
@@ -45,6 +47,9 @@ export default function CampaignDetailPage() {
   const [withdrawStatus, setWithdrawStatus] = useState<
       "idle" | "pending" | "completed" | "rejected"
   >("idle");
+
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const [editingBank, setEditingBank] = useState(false);
   const [bankName, setBankName] = useState("Example Bank");
@@ -278,6 +283,16 @@ export default function CampaignDetailPage() {
                 <Share2 className="w-4 h-4" />
                 Chia Sẻ Chiến Dịch
               </button>
+
+              {isAuthenticated && (
+                <button
+                  onClick={() => setReportModalOpen(true)}
+                  className="w-full mt-2 py-2.5 rounded-lg glass border border-black/10 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Flag className="w-4 h-4" />
+                  Báo Cáo Chiến Dịch
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -488,6 +503,12 @@ export default function CampaignDetailPage() {
           </div>
       )}
 
+      {/* Report Modal */}
+      <ReportCampaignModal
+        campaignId={campaign.id}
+        open={reportModalOpen}
+        onOpenChange={setReportModalOpen}
+      />
     </div>
 
   );
