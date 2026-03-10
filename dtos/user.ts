@@ -4,7 +4,7 @@ import { ReportReason, ReportStatus } from './enums';
 import { UserPublicDto } from './auth';
 
 // Re-export UserPublicDto so consumers can import from user.ts too
-export { UserPublicDto } from './auth';
+export type { UserPublicDto } from './auth';
 
 // ── Request DTOs ────────────────────────────────────────────────────────────
 

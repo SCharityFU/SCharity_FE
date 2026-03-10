@@ -5,7 +5,8 @@ import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { logout } from "@/lib/store/features/auth/authSlice";
-import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import { RainbowButton } from "@/components/ui/rainbow-button";
+import { LogIn } from "lucide-react";
 
 const navLinks = [
     { href: "/campaigns", label: "Chiến Dịch" },
@@ -24,7 +25,7 @@ export function Navbar() {
         dispatch(logout());
         localStorage.removeItem("access_token");
         localStorage.removeItem("user_info");
-        router.push("/");
+        window.location.href = "/"; // Force a full page reload to clear all states
     };
 
     return (
@@ -58,13 +59,11 @@ export function Navbar() {
                         {isAuthenticated ? (
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
-                                    {user?.avatarUrl && (
-                                        <img
-                                            src={user.avatarUrl}
-                                            alt={user.fullName ?? ""}
-                                            className="w-8 h-8 rounded-full border border-black/10"
-                                        />
-                                    )}
+                                    <img
+                                        src={user?.avatarUrl || "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"}
+                                        alt={user?.fullName ?? ""}
+                                        className="w-8 h-8 rounded-full border border-black/10 object-cover"
+                                    />
                                     <span className="text-sm font-medium text-gray-700">
                                         {user?.fullName}
                                     </span>
@@ -79,7 +78,16 @@ export function Navbar() {
                             </div>
                         ) : (
                             <div className="scale-90 origin-right">
-                                <GoogleLoginButton />
+                                <RainbowButton
+                                    onClick={() => router.push('/login')}
+                                    colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
+                                    duration={3}
+                                    borderWidth={1.5}
+                                    className="text-xs"
+                                >
+                                    <LogIn className="w-4 h-4 mr-2" />
+                                    Đăng Nhập
+                                </RainbowButton>
                             </div>
                         )}
                     </div>
@@ -111,13 +119,11 @@ export function Navbar() {
                     {isAuthenticated ? (
                         <div className="flex items-center justify-between pt-2">
                             <div className="flex items-center gap-2">
-                                {user?.avatarUrl && (
-                                    <img
-                                        src={user.avatarUrl}
-                                        alt={user.fullName ?? ""}
-                                        className="w-7 h-7 rounded-full"
-                                    />
-                                )}
+                                <img
+                                    src={user?.avatarUrl || "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"}
+                                    alt={user?.fullName ?? ""}
+                                    className="w-7 h-7 rounded-full object-cover"
+                                />
                                 <span className="text-sm text-gray-700">{user?.fullName}</span>
                             </div>
                             <button onClick={handleLogout} className="text-sm text-gray-500">
@@ -126,7 +132,16 @@ export function Navbar() {
                         </div>
                     ) : (
                         <div className="flex justify-center w-full">
-                            <GoogleLoginButton />
+                            <RainbowButton
+                                onClick={() => router.push('/login')}
+                                colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
+                                duration={3}
+                                borderWidth={1.5}
+                                className="w-full text-xs"
+                            >
+                                <LogIn className="w-4 h-4 mr-2" />
+                                Đăng Nhập
+                            </RainbowButton>
                         </div>
                     )}
                 </div>
