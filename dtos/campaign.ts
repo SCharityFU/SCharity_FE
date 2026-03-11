@@ -140,3 +140,9 @@ export interface CampaignAnalyticsResponseDto {
   recentDonations: DonationResponseDto[];
   totalDonors: number;
 }
+
+export interface PublicCampaignDetailResponseDto extends CampaignDto {
+  donations: import('./donation').DonationResponseDto[];
+  updates: CampaignUpdateResponseDto[];
+  comments: import('./donation').CommentResponseDto[];
+}

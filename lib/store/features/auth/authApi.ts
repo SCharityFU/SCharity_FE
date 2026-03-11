@@ -138,6 +138,36 @@ export const authApi = createApi({
         body,
       }),
     }),
+
+    verifyKyc: builder.mutation<
+      { success: boolean; message: string; fullName: string; idNumber: string; faceMatchScore: number },
+      { frontImageBase64: string; backImageBase64: string; selfieImageBase64: string }
+    >({
+      query: (body) => ({
+        url: '/users/me/kyc',
+        method: 'POST',
+        body,
+      }),
+      async onQueryStarted(_, { dispatch, queryFulfilled, getState }) {
+        try {
+          const { data } = await queryFulfilled;
+          const authState = (getState() as any).auth;
+          if (authState.user && data.success) {
+            dispatch(
+              setCredentials({
+                user: {
+                  ...authState.user,
+                  isKycVerified: true,
+                },
+                token: authState.token,
+              })
+            );
+          }
+        } catch (error) {
+          // Keep current state on error
+        }
+      },
+    }),
   }),
 });
 
@@ -149,6 +179,7 @@ export const {
   useLogoutMutation,
   useVerifyEmailMutation,
   useForgotPasswordMutation,
-  useResetPasswordMutation
+  useResetPasswordMutation,
+  useVerifyKycMutation
 } = authApi;
 
