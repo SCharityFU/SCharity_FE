@@ -1,7 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { ReportCampaignRequestDto } from '@/dtos/user';
 import type { ApiResponseDto } from '@/dtos/common';
 import type { ReportResponseDto } from '@/dtos/user';
+import type { ReportReason } from '@/dtos/enums';
+
+interface ReportCampaignArgs {
+  campaignId: string;
+  reason: ReportReason;
+  description?: string;
+  files?: File[];
+}
 
 export const reportApi = createApi({
   reducerPath: 'reportApi',
@@ -16,12 +23,20 @@ export const reportApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    reportCampaign: builder.mutation<ApiResponseDto<ReportResponseDto>, ReportCampaignRequestDto>({
-      query: ({ campaignId, ...body }) => ({
-        url: `/campaigns/${campaignId}/report`,
-        method: 'POST',
-        body,
-      }),
+    reportCampaign: builder.mutation<ApiResponseDto<ReportResponseDto>, ReportCampaignArgs>({
+      query: ({ campaignId, reason, description, files }) => {
+        const formData = new FormData();
+        formData.append('reason', reason);
+        if (description) formData.append('description', description);
+        if (files) {
+          files.forEach((file) => formData.append('evidence', file));
+        }
+        return {
+          url: `/campaigns/${campaignId}/report`,
+          method: 'POST',
+          body: formData,
+        };
+      },
     }),
   }),
 });

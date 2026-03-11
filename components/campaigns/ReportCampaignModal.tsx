@@ -98,8 +98,7 @@ export default function ReportCampaignModal({
         campaignId,
         reason: reason as ReportReason,
         description: description || undefined,
-        // TODO: upload files to get URLs when backend upload endpoint is available
-        evidenceUrls: undefined,
+        files: files.length > 0 ? files : undefined,
       }).unwrap();
       setSubmitSuccess(true);
     } catch {
@@ -160,7 +159,7 @@ export default function ReportCampaignModal({
                 <SelectTrigger id="report-reason" className="w-full">
                   <SelectValue placeholder="Chọn lý do báo cáo" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="bg-white shadow-lg border border-black/10">
+                <SelectContent className="w-(--radix-select-trigger-width) bg-white shadow-lg border border-black/10">
                   {Object.entries(REASON_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
