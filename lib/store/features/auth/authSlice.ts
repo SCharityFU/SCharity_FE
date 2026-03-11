@@ -7,6 +7,7 @@ interface AuthState {
     fullName: string;
     avatarUrl?: string;
     role: string;
+    isKycVerified?: boolean;
   } | null;
   token: string | null;
   isAuthenticated: boolean;
