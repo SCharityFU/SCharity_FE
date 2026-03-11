@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '@/lib/store/features/auth/authSlice';
 import { authApi } from '@/lib/store/features/auth/authApi';
+import { reportApi } from '@/lib/store/features/report/reportApi';
 import { homeApi } from '@/lib/store/features/home/homeApi';
 
 export const makeStore = () => {
@@ -8,10 +9,11 @@ export const makeStore = () => {
     reducer: {
       auth: authReducer,
       [authApi.reducerPath]: authApi.reducer,
+      [reportApi.reducerPath]: reportApi.reducer,
       [homeApi.reducerPath]: homeApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(authApi.middleware, homeApi.middleware),
+      getDefaultMiddleware().concat(authApi.middleware, reportApi.middleware, homeApi.middleware),
   });
 };
 

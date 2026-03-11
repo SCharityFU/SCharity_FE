@@ -103,7 +103,9 @@ export default function CampaignDetailPage() {
   }
 
   // Build unified image list: thumbnailUrl first, then mediaUrls
-  const images = [campaign.thumbnailUrl, ...(campaign.mediaUrls ?? [])].filter((u): u is string => !!u);
+  const images = [campaign.thumbnailUrl, ...(campaign.mediaUrls ?? [])].filter(
+    (u): u is string => !!u,
+  );
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (

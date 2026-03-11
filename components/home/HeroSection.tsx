@@ -35,7 +35,7 @@ export function HeroSection() {
             <MorphingText
               words={["Thay Đổi", "Yêu Thương", "Hy Vọng", "Trao Tặng", "Kết Nối"]}
               interval={2500}
-              className="gradient-text"
+              className="gradient-text leading-5"
             />
           </span>
           <span className="block text-black/80 text-4xl md:text-5xl lg:text-6xl mt-2">

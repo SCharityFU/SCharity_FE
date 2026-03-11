@@ -1,10 +1,22 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { setCredentials, logout } from './authSlice';
 
 interface GoogleLoginRequest {
   idToken: string; // The token received from Google OAuth on FE
 }
 
-interface LoginResponse {
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface RegisterRequest {
+  email: string;
+  password: string;
+  fullName: string;
+}
+
+interface AuthResponse {
   success: boolean;
   message: string;
   data: {
@@ -23,9 +35,8 @@ interface LoginResponse {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1', // Replace with exact backend URL later
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1',
     prepareHeaders: (headers, { getState }) => {
-      // Access the Redux state to get the token
       const token = (getState() as any).auth.token;
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
@@ -34,20 +45,110 @@ export const authApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    // Demo endpoint to connect Google Login to the backend
-    loginWithGoogle: builder.mutation<LoginResponse, GoogleLoginRequest>({
+    login: builder.mutation<AuthResponse, LoginRequest>({
+      query: (credentials) => ({
+        url: '/auth/login',
+        method: 'POST',
+        body: credentials,
+      }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            setCredentials({
+              user: data.data.user,
+              token: data.data.accessToken,
+            })
+          );
+        } catch (error) {
+          // Handle login error
+        }
+      },
+    }),
+    
+    register: builder.mutation<AuthResponse, RegisterRequest>({
+      query: (userData) => ({
+        url: '/auth/register',
+        method: 'POST',
+        body: userData,
+      }),
+      // We DO NOT automatically dispatch setCredentials here because the user
+      // MUST verify their email first before they can actually log in.
+    }),
+
+    loginWithGoogle: builder.mutation<AuthResponse, GoogleLoginRequest>({
       query: (credentials) => ({
         url: '/auth/google-login',
         method: 'POST',
         body: credentials,
       }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            setCredentials({
+              user: data.data.user,
+              token: data.data.accessToken,
+            })
+          );
+        } catch (error) {
+          // Handle login error
+        }
+      },
     }),
     
-    // Example endpoint to get current profile using standard JWT
-    getProfile: builder.query<LoginResponse['data']['user'], void>({
-      query: () => '/auth/me', // Update profile to /auth/me to match BE endpoint
+    getProfile: builder.query<AuthResponse['data']['user'], void>({
+      query: () => '/auth/me',
+    }),
+    
+    logout: builder.mutation<{ success: boolean; message: string }, void>({
+      query: () => ({
+        url: '/auth/logout',
+        method: 'POST',
+      }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(logout());
+        } catch (error) {
+          // Even if server fails, we clear local state
+          dispatch(logout());
+        }
+      },
+    }),
+    verifyEmail: builder.mutation<{ success: boolean; message: string; data?: any }, { token: string }>({
+      query: ({ token }) => ({
+        url: `/auth/verify-email?token=${token}`,
+        method: 'GET',
+      }),
+    }),
+
+    forgotPassword: builder.mutation<{ success: boolean; message: string; data?: any }, { email: string }>({
+      query: (body) => ({
+        url: '/auth/forgot-password',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    resetPassword: builder.mutation<{ success: boolean; message: string; data?: any }, { token: string; password: string }>({
+      query: (body) => ({
+        url: '/auth/reset-password',
+        method: 'POST',
+        body,
+      }),
     }),
   }),
 });
 
-export const { useLoginWithGoogleMutation, useGetProfileQuery } = authApi;
+export const { 
+  useLoginMutation,
+  useRegisterMutation,
+  useLoginWithGoogleMutation, 
+  useGetProfileQuery,
+  useLogoutMutation,
+  useVerifyEmailMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation
+} = authApi;
+
