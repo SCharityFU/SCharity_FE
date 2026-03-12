@@ -37,3 +37,6 @@ next-env.d.ts
 
 # Jetbrains WebStorm
 .idea/
+
+# Private stuff
+/private/

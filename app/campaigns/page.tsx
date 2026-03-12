@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Search, SlidersHorizontal, ArrowRight, Loader2 } from "lucide-react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Search, SlidersHorizontal, ArrowRight } from "lucide-react";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Magnetic } from "@/components/ui/magnetic";
@@ -8,6 +8,7 @@ import { HighlightText } from "@/components/ui/highlight-text";
 import { useGetCampaignsQuery } from "@/lib/store/features/home/homeApi";
 import { CampaignCategory } from "@/dtos/enums";
 import CampaignGrid from "@/components/campaign/CampaignGrid";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const categories = ["Tất Cả", "Giáo Dục", "Y Tế", "Môi Trường", "Cứu Trợ", "Xã Hội"];
 
@@ -16,6 +17,12 @@ export default function CampaignsPage() {
   const [activeCategory, setActiveCategory] = useState<string>("Tất Cả");
   const [page, setPage] = useState(1);
   const [limit] = useState(9); // Default page size
+  const deferredSearch = useDeferredValue(search);
+  const debouncedSearch = useDebounce(deferredSearch, 500);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
 
   // Helper mapping from UI display name to the actual enum
   const resolveCategoryEnum = (cat: string): CampaignCategory | undefined => {
@@ -45,7 +52,7 @@ export default function CampaignsPage() {
     {
       limit: limit * page, // simple 'load more' technique: keep limit large or load dynamically
       page: 1,
-      search: search.length > 2 ? search : undefined, // only search if > 2 chars to save API calls
+      search: debouncedSearch.trim().length > 2 ? debouncedSearch.trim() : undefined,
       category: resolveCategoryEnum(activeCategory),
       sortBy: "createdAt",
       sortOrder: "DESC",
@@ -61,15 +68,19 @@ export default function CampaignsPage() {
     setPage(1); // Reset page on category change
   };
 
-  const tabs = categories.map((cat) => ({
-    label: cat,
-    value: cat,
-    content: (
-      <div>
-        <CampaignGrid campaigns={campaigns} isLoading={isLoading || isFetching} />
-      </div>
-    ),
-  }));
+  const tabs = useMemo(
+    () =>
+      categories.map((cat) => ({
+        label: cat,
+        value: cat,
+        content: (
+          <div>
+            <CampaignGrid campaigns={campaigns} isLoading={isLoading || isFetching} />
+          </div>
+        ),
+      })),
+    [campaigns, isLoading, isFetching]
+  );
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
@@ -105,24 +116,7 @@ export default function CampaignsPage() {
           </button>
         </div>
 
-        {/* Vercel Tabs */}
-        {/* We need to pass down a wrapper or onChange, since VercelTabs might be an internal controlled component */}
-        {/* Based on common implementation, we intercept clicks or handle active states if VercelTabs supports standard properties. 
-            If VercelTabs does not have an onChange, we rely on the internal mapping. 
-            However, our data fetching relies on activeCategory. Let's make sure the VercelTabs acts correctly. */}
-        <div
-          onClick={(e) => {
-            // A hack to capture the tab click if VercelTabs doesn't export an onChange natively
-            const target = e.target as HTMLElement;
-            const tabButton = target.closest("button");
-            if (tabButton && tabButton.textContent) {
-              const val = categories.find((c) => c === tabButton.textContent);
-              if (val) handleTabChange(val);
-            }
-          }}
-        >
-          <VercelTabs tabs={tabs} defaultTab="Tất Cả" />
-        </div>
+        <VercelTabs tabs={tabs} defaultTab="Tất Cả" onTabChange={handleTabChange} />
 
         {/* Load More */}
         {campaigns && campaigns.length >= limit * page && (
