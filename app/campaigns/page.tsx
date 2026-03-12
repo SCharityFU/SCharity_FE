@@ -1,170 +1,72 @@
 "use client";
 import { useState } from "react";
-import { Search, SlidersHorizontal, ArrowRight } from "lucide-react";
+import { Search, SlidersHorizontal, ArrowRight, Loader2 } from "lucide-react";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Magnetic } from "@/components/ui/magnetic";
 import { HighlightText } from "@/components/ui/highlight-text";
-import { CampaignCard, type Campaign } from "@/components/CampaignCard";
-
-const allCampaigns: Campaign[] = [
-  {
-    id: "1",
-    title: "Xây Trường Học Vùng Cao Hà Giang",
-    description: "Giúp 300 trẻ em có nơi học tập an toàn.",
-    category: "Giáo Dục",
-    raised: 180,
-    goal: 300,
-    donors: 1240,
-    daysLeft: 15,
-    imageGradient: "bg-gradient-to-br from-blue-600 to-indigo-800",
-    emoji: "🏫",
-    highlight: "underline",
-  },
-  {
-    id: "2",
-    title: "Phẫu Thuật Tim Cho Trẻ Em",
-    description: "Hỗ trợ 50 ca phẫu thuật tim bẩm sinh.",
-    category: "Y Tế",
-    raised: 420,
-    goal: 500,
-    donors: 3890,
-    daysLeft: 8,
-    imageGradient: "bg-gradient-to-br from-rose-600 to-pink-800",
-    emoji: "❤️‍🩹",
-    highlight: "circle",
-  },
-  {
-    id: "3",
-    title: "Phủ Xanh 1000 Hecta Rừng",
-    description: "Trồng cây phục hồi rừng đầu nguồn.",
-    category: "Môi Trường",
-    raised: 95,
-    goal: 200,
-    donors: 672,
-    daysLeft: 30,
-    imageGradient: "bg-gradient-to-br from-green-600 to-emerald-800",
-    emoji: "🌳",
-    highlight: "underline",
-  },
-  {
-    id: "4",
-    title: "Cứu Trợ Lũ Lụt Miền Trung",
-    description: "Hỗ trợ khẩn cấp lương thực, nước sạch.",
-    category: "Cứu Trợ",
-    raised: 750,
-    goal: 800,
-    donors: 8920,
-    daysLeft: 3,
-    imageGradient: "bg-gradient-to-br from-amber-500 to-orange-700",
-    emoji: "🆘",
-    highlight: "marker",
-  },
-  {
-    id: "5",
-    title: "Học Bổng Sinh Viên Nghèo",
-    description: "200 suất học bổng cho sinh viên vượt khó.",
-    category: "Giáo Dục",
-    raised: 130,
-    goal: 250,
-    donors: 945,
-    daysLeft: 20,
-    imageGradient: "bg-gradient-to-br from-violet-600 to-purple-800",
-    emoji: "🎓",
-    highlight: "underline",
-  },
-  {
-    id: "6",
-    title: "Nhà Tình Thương TP.HCM",
-    description: "20 căn nhà cho người vô gia cư.",
-    category: "Xã Hội",
-    raised: 310,
-    goal: 400,
-    donors: 2150,
-    daysLeft: 12,
-    imageGradient: "bg-gradient-to-br from-teal-600 to-cyan-800",
-    emoji: "🏠",
-    highlight: "circle",
-  },
-  {
-    id: "7",
-    title: "Sữa Cho Bé Vùng Khó Khăn",
-    description: "Cung cấp dinh dưỡng cho 500 trẻ dưới 5 tuổi.",
-    category: "Y Tế",
-    raised: 65,
-    goal: 150,
-    donors: 430,
-    daysLeft: 25,
-    imageGradient: "bg-gradient-to-br from-pink-500 to-rose-700",
-    emoji: "🍼",
-    highlight: "underline",
-  },
-  {
-    id: "8",
-    title: "Sạch Hoá Đại Dương Việt Nam",
-    description: "Thu gom 10 tấn rác thải nhựa trên biển.",
-    category: "Môi Trường",
-    raised: 45,
-    goal: 120,
-    donors: 280,
-    daysLeft: 40,
-    imageGradient: "bg-gradient-to-br from-cyan-500 to-blue-700",
-    emoji: "🌊",
-    highlight: "circle",
-  },
-  {
-    id: "9",
-    title: "Máy Tính Cho Em Vùng Sâu",
-    description: "Tặng 200 laptop cho học sinh nghèo.",
-    category: "Giáo Dục",
-    raised: 240,
-    goal: 350,
-    donors: 1680,
-    daysLeft: 18,
-    imageGradient: "bg-gradient-to-br from-indigo-500 to-violet-700",
-    emoji: "💻",
-    highlight: "marker",
-  },
-];
+import { useGetCampaignsQuery } from "@/lib/store/features/home/homeApi";
+import { CampaignCategory } from "@/dtos/enums";
+import CampaignGrid from "@/components/campaign/CampaignGrid";
 
 const categories = ["Tất Cả", "Giáo Dục", "Y Tế", "Môi Trường", "Cứu Trợ", "Xã Hội"];
 
-function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {campaigns.map((c) => (
-        <CampaignCard key={c.id} campaign={c} />
-      ))}
-    </div>
-  );
-}
-
 export default function CampaignsPage() {
   const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("Tất Cả");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(9); // Default page size
 
-  const filteredBySearch = (list: Campaign[]) =>
-    list.filter(
-      (c) =>
-        c.title.toLowerCase().includes(search.toLowerCase()) ||
-        c.description.toLowerCase().includes(search.toLowerCase()),
-    );
+  // Helper mapping from UI display name to the actual enum
+  const resolveCategoryEnum = (cat: string): CampaignCategory | undefined => {
+    switch (cat) {
+      case "Tất Cả":
+        return undefined;
+      case "Giáo Dục":
+        return CampaignCategory.EDUCATION;
+      case "Y Tế":
+        return CampaignCategory.MEDICAL;
+      case "Môi Trường":
+        return CampaignCategory.ENVIRONMENT;
+      case "Cứu Trợ":
+        return CampaignCategory.DISASTER;
+      case "Xã Hội":
+        return CampaignCategory.COMMUNITY;
+      default:
+        return CampaignCategory.OTHER;
+    }
+  };
+
+  const {
+    data: campaigns,
+    isLoading,
+    isFetching,
+  } = useGetCampaignsQuery(
+    {
+      limit: limit * page, // simple 'load more' technique: keep limit large or load dynamically
+      page: 1,
+      search: search.length > 2 ? search : undefined, // only search if > 2 chars to save API calls
+      category: resolveCategoryEnum(activeCategory),
+      sortBy: "createdAt",
+      sortOrder: "DESC",
+    },
+    {
+      // Helps avoid aggressive refetching while typing fast
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  const handleTabChange = (value: string) => {
+    setActiveCategory(value);
+    setPage(1); // Reset page on category change
+  };
 
   const tabs = categories.map((cat) => ({
     label: cat,
     value: cat,
     content: (
       <div>
-        {filteredBySearch(
-          cat === "Tất Cả" ? allCampaigns : allCampaigns.filter((c) => c.category === cat),
-        ).length === 0 ? (
-          <div className="text-center py-20 text-black/40">Không tìm thấy chiến dịch nào.</div>
-        ) : (
-          <CampaignGrid
-            campaigns={filteredBySearch(
-              cat === "Tất Cả" ? allCampaigns : allCampaigns.filter((c) => c.category === cat),
-            )}
-          />
-        )}
+        <CampaignGrid campaigns={campaigns} isLoading={isLoading || isFetching} />
       </div>
     ),
   }));
@@ -204,21 +106,41 @@ export default function CampaignsPage() {
         </div>
 
         {/* Vercel Tabs */}
-        <VercelTabs tabs={tabs} defaultTab="Tất Cả" />
+        {/* We need to pass down a wrapper or onChange, since VercelTabs might be an internal controlled component */}
+        {/* Based on common implementation, we intercept clicks or handle active states if VercelTabs supports standard properties. 
+            If VercelTabs does not have an onChange, we rely on the internal mapping. 
+            However, our data fetching relies on activeCategory. Let's make sure the VercelTabs acts correctly. */}
+        <div
+          onClick={(e) => {
+            // A hack to capture the tab click if VercelTabs doesn't export an onChange natively
+            const target = e.target as HTMLElement;
+            const tabButton = target.closest("button");
+            if (tabButton && tabButton.textContent) {
+              const val = categories.find((c) => c === tabButton.textContent);
+              if (val) handleTabChange(val);
+            }
+          }}
+        >
+          <VercelTabs tabs={tabs} defaultTab="Tất Cả" />
+        </div>
 
         {/* Load More */}
-        <div className="text-center mt-12">
-          <Magnetic intensity={0.3} range={60}>
-            <RainbowButton
-              colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
-              duration={3}
-              borderWidth={2}
-            >
-              Tải Thêm Chiến Dịch
-              <ArrowRight className="w-4 h-4" />
-            </RainbowButton>
-          </Magnetic>
-        </div>
+        {campaigns && campaigns.length >= limit * page && (
+          <div className="text-center mt-12">
+            <Magnetic intensity={0.3} range={60}>
+              <div onClick={() => setPage(page + 1)}>
+                <RainbowButton
+                  colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
+                  duration={3}
+                  borderWidth={2}
+                >
+                  {isFetching ? "Đang tải..." : "Tải Thêm Chiến Dịch"}
+                  {!isFetching && <ArrowRight className="w-4 h-4" />}
+                </RainbowButton>
+              </div>
+            </Magnetic>
+          </div>
+        )}
       </div>
     </div>
   );

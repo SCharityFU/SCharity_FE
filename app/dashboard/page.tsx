@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
-import { Heart, ArrowUpRight, TrendingUp, Clock, Plus } from "lucide-react";
+import { Heart, ArrowUpRight, TrendingUp, Clock, Plus, FileText, Folder } from "lucide-react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Magnetic } from "@/components/ui/magnetic";
 import { HighlightText } from "@/components/ui/highlight-text";
 import { StatCounter, RollingCounter } from "@/components/ui/number-counter";
 import { BentoGrid } from "@/components/ui/bento-grid";
+import { useAppSelector } from "@/lib/store/hooks";
+import { ShieldAlert, ShieldCheck } from "lucide-react";
 
 const recentDonations = [
     { campaign: "Phẫu Thuật Tim Cho Trẻ Em", amount: 500, date: "2 giờ trước", emoji: "❤️‍🩹" },
@@ -20,6 +22,8 @@ const myCampaigns = [
 ];
 
 export default function DashboardPage() {
+    const { user } = useAppSelector((state) => state.auth);
+
     return (
         <div className="min-h-screen pt-24 pb-16 px-4">
             <div className="max-w-7xl mx-auto">
@@ -59,6 +63,67 @@ export default function DashboardPage() {
                     ))}
                 </BentoGrid>
 
+                {/* Quick Navigation */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                    <Link href="/dashboard/my-requests" className="glass-card rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg transition-shadow group">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-transparent flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-bold text-black text-sm">Yêu Cầu Tạo Chiến Dịch</p>
+                            <p className="text-xs text-black/40">Xem trạng thái các yêu cầu đã gửi</p>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-black/20 group-hover:text-black/50 transition-colors" />
+                    </Link>
+                    <Link href="/dashboard/my-campaigns" className="glass-card rounded-2xl p-5 flex items-center gap-4 hover:shadow-lg transition-shadow group">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500/20 to-transparent flex items-center justify-center">
+                            <Folder className="w-5 h-5 text-violet-500" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-bold text-black text-sm">Chiến Dịch Của Tôi</p>
+                            <p className="text-xs text-black/40">Quản lý các chiến dịch đã tạo</p>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-black/20 group-hover:text-black/50 transition-colors" />
+                    </Link>
+                </div>
+                {/* KYC Status Card */}
+                <div className="mb-10">
+                    <div className={`rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between border shadow-lg ${user?.isKycVerified ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100'}`}>
+                        <div className="flex items-start gap-4 mb-4 sm:mb-0">
+                            {user?.isKycVerified ? (
+                                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <ShieldCheck className="w-6 h-6" />
+                                </div>
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                                    <ShieldAlert className="w-6 h-6" />
+                                </div>
+                            )}
+                            <div>
+                                <h3 className={`text-xl font-bold mb-1 ${user?.isKycVerified ? 'text-emerald-950' : 'text-rose-950'}`}>
+                                    {user?.isKycVerified ? 'Đã Xác Thực eKYC' : 'Chưa Xác Thực eKYC'}
+                                </h3>
+                                <p className={`text-sm ${user?.isKycVerified ? 'text-emerald-800/70' : 'text-rose-800/70'} max-w-xl`}>
+                                    {user?.isKycVerified
+                                        ? 'Danh tính của bạn đã được đối chiếu với giấy tờ hợp lệ. Bạn hiện có đầy đủ quyền để rút tiền và thực hiện các giao dịch lớn.'
+                                        : 'Bạn cần xác thực danh tính để đảm bảo an toàn cho tài khoản và mở khóa tính năng rút quỹ. Quá trình này chỉ mất 2 phút.'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {!user?.isKycVerified && (
+                            <Link href="/kyc" className="w-full sm:w-auto mt-2 sm:mt-0">
+                                <RainbowButton
+                                    colors={["#f43f5e", "#8b5cf6", "#f43f5e"]}
+                                    className="w-full whitespace-nowrap px-8"
+                                >
+                                    Xác Thực Ngay
+                                </RainbowButton>
+                            </Link>
+                        )}
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Recent Donations */}
                     <div className="glass-card rounded-2xl p-6">
@@ -69,7 +134,7 @@ export default function DashboardPage() {
                             </Link>
                         </div>
                         <div className="space-y-4">
-                            {recentDonations.map((d, i) => (
+                            {recentDonations.map((d: typeof recentDonations[number], i: number) => (
                                 <div key={i} className="flex items-center gap-4 pb-4 border-b border-black/10 last:border-0 last:pb-0">
                                     <div className="w-10 h-10 rounded-xl glass flex items-center justify-center text-xl shrink-0">
                                         {d.emoji}
@@ -90,8 +155,8 @@ export default function DashboardPage() {
                     <div className="glass-card rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="font-bold text-black">Chiến Dịch Của Tôi</h2>
-                            <Link href="/campaigns/create" className="text-xs text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1">
-                                Tạo mới <Plus className="w-3 h-3" />
+                            <Link href="/dashboard/my-campaigns" className="text-xs text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1">
+                                Xem tất cả <ArrowUpRight className="w-3 h-3" />
                             </Link>
                         </div>
                         <div className="space-y-5">

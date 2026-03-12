@@ -287,3 +287,9 @@
     background-position: 200% center;
   }
 }
+
+
+/* Custom css */
+.morphingTextLineHeight {
+  line-height: 7rem;
+}

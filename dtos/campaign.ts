@@ -50,6 +50,10 @@ export interface CreateCampaignUpdateRequestDto {
   // Files handled via multipart/form-data
 }
 
+export interface UpdateBankInfoDto {
+  bankInfo: BankInfoDto;
+}
+
 export interface CloseCampaignRequestDto {
   confirm: boolean;
 }
@@ -135,4 +139,10 @@ export interface CampaignAnalyticsResponseDto {
   chartData: DonationChartDataPointDto[];
   recentDonations: DonationResponseDto[];
   totalDonors: number;
+}
+
+export interface PublicCampaignDetailResponseDto extends CampaignDto {
+  donations: import('./donation').DonationResponseDto[];
+  updates: CampaignUpdateResponseDto[];
+  comments: import('./donation').CommentResponseDto[];
 }

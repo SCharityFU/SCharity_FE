@@ -1,18 +1,25 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, Menu, X, LogOut } from "lucide-react";
+import { Heart, Menu, X, LogOut, LayoutDashboard, FileText, Megaphone, ChevronDown, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { logout } from "@/lib/store/features/auth/authSlice";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { LogIn } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
     { href: "/campaigns", label: "Chiến Dịch" },
     { href: "/#how-it-works", label: "Cách Hoạt Động" },
     { href: "/#stats", label: "Tác Động" },
-    { href: "/dashboard", label: "Dashboard" },
 ];
 
 export function Navbar() {
@@ -23,9 +30,7 @@ export function Navbar() {
 
     const handleLogout = () => {
         dispatch(logout());
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_info");
-        window.location.href = "/"; // Force a full page reload to clear all states
+        window.location.href = "/";
     };
 
     return (
@@ -57,25 +62,36 @@ export function Navbar() {
                     {/* Right Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         {isAuthenticated ? (
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <img
-                                        src={user?.avatarUrl || "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"}
-                                        alt={user?.fullName ?? ""}
-                                        className="w-8 h-8 rounded-full border border-black/10 object-cover"
-                                    />
-                                    <span className="text-sm font-medium text-gray-700">
-                                        {user?.fullName}
-                                    </span>
-                                </div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="p-2 rounded-lg hover:bg-black/5 transition-colors text-gray-500 hover:text-gray-700"
-                                    title="Đăng xuất"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                </button>
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 hover:bg-black/5 transition-colors outline-none">
+                                        <img
+                                            src={user?.avatarUrl || "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"}
+                                            alt={user?.fullName ?? ""}
+                                            className="w-8 h-8 rounded-full border border-black/10 object-cover"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            {user?.fullName}
+                                        </span>
+                                        <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuLabel>
+                                        {user?.email}
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                                        <User className="w-4 h-4 text-gray-400" />
+                                        Xem Hồ Sơ
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={handleLogout} className="text-rose-600 focus:bg-rose-50">
+                                        <LogOut className="w-4 h-4" />
+                                        Đăng Xuất
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         ) : (
                             <div className="scale-90 origin-right">
                                 <RainbowButton
@@ -117,19 +133,29 @@ export function Navbar() {
                         </Link>
                     ))}
                     {isAuthenticated ? (
-                        <div className="flex items-center justify-between pt-2">
-                            <div className="flex items-center gap-2">
+                        <>
+                            <div className="flex items-center gap-2 pt-2 pb-1 border-t border-black/5">
                                 <img
                                     src={user?.avatarUrl || "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"}
                                     alt={user?.fullName ?? ""}
                                     className="w-7 h-7 rounded-full object-cover"
                                 />
-                                <span className="text-sm text-gray-700">{user?.fullName}</span>
+                                <span className="text-sm font-medium text-gray-700">{user?.fullName}</span>
                             </div>
-                            <button onClick={handleLogout} className="text-sm text-gray-500">
-                                Đăng xuất
+                            <Link
+                                href="/profile"
+                                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                <User className="w-4 h-4" /> Xem Hồ Sơ
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="text-sm text-rose-600 py-2 flex items-center gap-2"
+                            >
+                                <LogOut className="w-4 h-4" /> Đăng Xuất
                             </button>
-                        </div>
+                        </>
                     ) : (
                         <div className="flex justify-center w-full">
                             <RainbowButton
