@@ -28,6 +28,7 @@ import { WithdrawRequestModal } from "@/components/campaign/detail/WithdrawReque
 import { useAuth } from "@/hooks/useAuth";
 import { useGetCampaignWithdrawalsQuery } from "@/lib/store/features/campaign/campaignApi";
 import { cn } from "@/lib/utils";
+import { useCreateDonationMutation } from "@/lib/store/features/donation/donationApi";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -150,11 +151,7 @@ function DonorRow({ donation, rank }: { donation: DonationResponseDto; rank: num
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-black truncate leading-tight">{name}</p>
-        {donation.message ? (
-          <p className="text-[11px] text-black/35 italic truncate mt-px">"{donation.message}"</p>
-        ) : (
-          <p className="text-[11px] text-black/30 mt-px">{formatDateOnly(donation.createdAt)}</p>
-        )}
+        <p className="text-[11px] text-black/30 mt-px">{formatDateOnly(donation.createdAt)}</p>
       </div>
 
       {/* Amount */}
@@ -283,6 +280,31 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
 
+  // ── Donate modal state ────────────────────────────────────────────────────
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
+  const [donateAmount, setDonateAmount] = useState<number | "">("");
+  const [donateMessage, setDonateMessage] = useState("");
+  const [donateAnonymous, setDonateAnonymous] = useState(false);
+  const [createDonation, { isLoading: isDonating }] = useCreateDonationMutation();
+
+  const handleDonateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!donateAmount || donateAmount < 10000) return;
+    try {
+      const res = await createDonation({
+        campaignId: campaign.id,
+        amount: Number(donateAmount),
+        message: donateMessage || undefined,
+        isAnonymous: donateAnonymous,
+      }).unwrap();
+      if (res.data?.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
+      }
+    } catch (err: any) {
+      alert(err?.data?.message || "Đã xảy ra lỗi khi tạo thanh toán");
+    }
+  };
+
   // ── Derived values ─────────────────────────────────────────────────────────
   const goal = campaign.goalAmount || 1;
   const raised = campaign.raisedAmount ?? 0;
@@ -407,51 +429,19 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           </div>
 
           {/* ── Donate button ─────────────────────────────────────────────── */}
-          {!isClosed && (
-            <button
-              disabled={!isActive}
-              className={cn(
-                "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
-                isActive
-                  ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25 hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700 hover:scale-[1.01] active:scale-[0.99]"
-                  : "bg-black/6 text-black/30 cursor-not-allowed",
-              )}
-            >
-              <Heart className={cn("w-4 h-4", isActive ? "fill-white/80 text-white" : "text-black/25")} />
-              {isActive ? "Quyên Góp Ngay" : isSuspended ? "Đang tạm ngưng" : "Chiến dịch đã đóng"}
-            </button>
-          )}
-
-          {/* ── Owner: Close campaign button ──────────────────────────────── */}
-          {isOwner && isActive && (
-            <div className="relative group mt-2.5">
-              <button
-                onClick={() => canClose && setCloseModalOpen(true)}
-                disabled={!canClose}
-                className={cn(
-                  "w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 border",
-                  canClose
-                    ? "border-red-500/30 bg-red-500/8 text-red-600 hover:bg-red-500/15 hover:border-red-500/40"
-                    : "border-black/8 bg-black/[0.03] text-black/25 cursor-not-allowed",
-                )}
-              >
-                <XCircle className="w-4 h-4" />
-                Kết thúc gây quỹ
-              </button>
-              {/* Tooltip for disabled state */}
-              {cannotCloseReason && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-black/80 text-white text-[11px] leading-relaxed max-w-[260px] text-center opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20">
-                  {cannotCloseReason}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/80" />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Owner: Withdraw request button (after close) ──────────────── */}
-          {isOwner && isClosed && (
-            <WithdrawButtonSection campaign={campaign} onOpenModal={() => setWithdrawModalOpen(true)} />
-          )}
+          <button
+            onClick={() => setDonateModalOpen(true)}
+            disabled={!isActive}
+            className={cn(
+              "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
+              isActive
+                ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25 hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700 hover:scale-[1.01] active:scale-[0.99]"
+                : "bg-black/6 text-black/30 cursor-not-allowed",
+            )}
+          >
+            <Heart className={cn("w-4 h-4", isActive ? "fill-white/80 text-white" : "text-black/25")} />
+            {isActive ? "Quyên Góp Ngay" : isSuspended ? "Đang tạm ngưng" : "Chiến dịch đã đóng"}
+          </button>
 
           {/* ── Share button ───────────────────────────────────────────────── */}
           <button
