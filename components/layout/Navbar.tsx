@@ -167,6 +167,7 @@ export function Navbar() {
                                 className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
                                 onClick={() => setMobileOpen(false)}
                             >
+                                <User className="w-4 h-4" /> Xem Hồ Sơ
                                 <LayoutDashboard className="w-4 h-4" /> Dashboard
                             </Link>
                             {isAdmin && (

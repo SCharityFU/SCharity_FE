@@ -28,7 +28,7 @@ export const makeStore = () => {
         campaignApi.middleware,
         homeApi.middleware,
         userApi.middleware,
-        adminApi.middleware
+        adminApi.middleware,
       ),
   });
 };
