@@ -37,8 +37,8 @@ export const adminApi = createApi({
   tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics"],
   endpoints: (builder) => ({
     getAdminCampaigns: builder.query<
-      PaginatedResponseDto<AdminCampaignListItemDto>,
-      AdminCampaignsQueryDto
+        PaginatedResponseDto<AdminCampaignListItemDto>,
+        AdminCampaignsQueryDto
     >({
       query: ({ page = 1, limit = 10, status, category, search } = {}) => ({
         url: "/admin/campaigns",
@@ -54,16 +54,16 @@ export const adminApi = createApi({
     }),
 
     getAdminCampaignDetail: builder.query<
-      ApiResponseDto<AdminCampaignDetailDto>,
-      string
+        ApiResponseDto<AdminCampaignDetailDto>,
+        string
     >({
       query: (campaignId) => `/admin/campaigns/${campaignId}`,
       providesTags: ["AdminCampaignDetail"],
     }),
 
     getAdminCampaignAnalytics: builder.query<
-      ApiResponseDto<AdminCampaignAnalyticsDto>,
-      { campaignId: string; days?: number }
+        ApiResponseDto<AdminCampaignAnalyticsDto>,
+        { campaignId: string; days?: number }
     >({
       query: ({ campaignId, days = 30 }) => ({
         url: `/admin/campaigns/${campaignId}/analytics`,
@@ -73,8 +73,8 @@ export const adminApi = createApi({
     }),
 
     getAdminTransactions: builder.query<
-      PaginatedResponseDto<AdminDonationItem>,
-      AdminTransactionsQueryDto
+        PaginatedResponseDto<AdminDonationItem>,
+        AdminTransactionsQueryDto
     >({
       query: ({ page = 1, limit = 10, search = "", sortOrder = "DESC" } = {}) => ({
         url: "/admin/transactions",
@@ -89,8 +89,8 @@ export const adminApi = createApi({
     }),
 
     getAdminCampaignTransactions: builder.query<
-      PaginatedResponseDto<AdminDonationItem>,
-      { campaignId: string; query?: AdminCampaignTransactionsQueryDto }
+        PaginatedResponseDto<AdminDonationItem>,
+        { campaignId: string; query?: AdminCampaignTransactionsQueryDto }
     >({
       query: ({ campaignId, query }) => ({
         url: `/admin/campaigns/${campaignId}/transactions`,
