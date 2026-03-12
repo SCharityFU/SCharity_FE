@@ -15,6 +15,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { UserRole } from "@/dtos";
 
 const navLinks = [
     { href: "/campaigns", label: "Chiến Dịch" },
@@ -27,6 +28,7 @@ export function Navbar() {
     const { user, isAuthenticated } = useAppSelector((state) => state.auth);
     const dispatch = useAppDispatch();
     const router = useRouter();
+    const isAdmin = user?.role === UserRole.ADMIN;
 
     const handleLogout = () => {
         dispatch(logout());
@@ -81,6 +83,24 @@ export function Navbar() {
                                         {user?.email}
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+                                        <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                                        Dashboard
+                                    </DropdownMenuItem>
+                                    {isAdmin && (
+                                        <DropdownMenuItem onClick={() => router.push("/admin")}>
+                                            <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                                            Quản trị Admin
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={() => router.push("/dashboard/my-requests")}>
+                                        <FileText className="w-4 h-4 text-gray-400" />
+                                        Yêu Cầu Của Tôi
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push("/dashboard/my-campaigns")}>
+                                        <Megaphone className="w-4 h-4 text-gray-400" />
+                                        Chiến Dịch Của Tôi
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => router.push("/profile")}>
                                         <User className="w-4 h-4 text-gray-400" />
                                         Xem Hồ Sơ
@@ -147,6 +167,31 @@ export function Navbar() {
                                 className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
                                 onClick={() => setMobileOpen(false)}
                             >
+                                <User className="w-4 h-4" /> Xem Hồ Sơ
+                                <LayoutDashboard className="w-4 h-4" /> Dashboard
+                            </Link>
+                            {isAdmin && (
+                                <Link
+                                    href="/admin"
+                                    className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                    onClick={() => setMobileOpen(false)}
+                                >
+                                    <LayoutDashboard className="w-4 h-4" /> Trang quản trị admin
+                                </Link>
+                            )}
+                            <Link
+                                href="/dashboard/my-requests"
+                                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                <FileText className="w-4 h-4" /> Yêu Cầu Của Tôi
+                            </Link>
+                            <Link
+                                href="/dashboard/my-campaigns"
+                                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                <Megaphone className="w-4 h-4" /> Chiến Dịch Của Tôi
                                 <User className="w-4 h-4" /> Xem Hồ Sơ
                             </Link>
                             <button
