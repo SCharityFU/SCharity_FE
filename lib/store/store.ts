@@ -4,6 +4,7 @@ import { authApi } from '@/lib/store/features/auth/authApi';
 import { reportApi } from '@/lib/store/features/report/reportApi';
 import { campaignApi } from '@/lib/store/features/campaign/campaignApi';
 import { homeApi } from '@/lib/store/features/home/homeApi';
+import { userApi } from '@/lib/store/features/user/userApi';
 
 export const makeStore = () => {
   return configureStore({
@@ -13,13 +14,15 @@ export const makeStore = () => {
       [reportApi.reducerPath]: reportApi.reducer,
       [campaignApi.reducerPath]: campaignApi.reducer,
       [homeApi.reducerPath]: homeApi.reducer,
+      [userApi.reducerPath]: userApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(
         authApi.middleware,
         reportApi.middleware,
         campaignApi.middleware,
-        homeApi.middleware
+        homeApi.middleware,
+        userApi.middleware
       ),
   });
 };
