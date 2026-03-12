@@ -6,6 +6,7 @@ import { campaignApi } from '@/lib/store/features/campaign/campaignApi';
 import { homeApi } from '@/lib/store/features/home/homeApi';
 import { userApi } from '@/lib/store/features/user/userApi';
 import { adminApi } from '@/lib/store/features/admin/adminApi';
+import { donationApi } from '@/lib/store/features/donation/donationApi';
 
 // Helps client StoreProvider detect hot-updated store config in development.
 export const STORE_CONFIG_VERSION = Date.now();
@@ -20,6 +21,7 @@ export const makeStore = () => {
       [homeApi.reducerPath]: homeApi.reducer,
       [userApi.reducerPath]: userApi.reducer,
       [adminApi.reducerPath]: adminApi.reducer,
+      [donationApi.reducerPath]: donationApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(
@@ -29,6 +31,7 @@ export const makeStore = () => {
         homeApi.middleware,
         userApi.middleware,
         adminApi.middleware,
+        donationApi.middleware,
       ),
   });
 };

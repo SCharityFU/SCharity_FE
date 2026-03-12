@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, Menu, X, LogOut, LayoutDashboard, FileText, Megaphone, ChevronDown, User } from "lucide-react";
+import { Heart, Menu, X, LogOut, LayoutDashboard, FileText, Megaphone, ChevronDown, User, History } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { logout } from "@/lib/store/features/auth/authSlice";
@@ -101,6 +101,10 @@ export function Navbar() {
                                         <Megaphone className="w-4 h-4 text-gray-400" />
                                         Chiến Dịch Của Tôi
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push("/dashboard/mydonation")}>
+                                        <History className="w-4 h-4 text-gray-400" />
+                                        Lịch Sử Quyên Góp
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => router.push("/profile")}>
                                         <User className="w-4 h-4 text-gray-400" />
                                         Xem Hồ Sơ
@@ -192,6 +196,19 @@ export function Navbar() {
                                 onClick={() => setMobileOpen(false)}
                             >
                                 <Megaphone className="w-4 h-4" /> Chiến Dịch Của Tôi
+                            </Link>
+                            <Link
+                                href="/dashboard/mydonation"
+                                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                <History className="w-4 h-4" /> Lịch Sử Quyên Góp
+                            </Link>
+                            <Link
+                                href="/profile"
+                                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                onClick={() => setMobileOpen(false)}
+                            >
                                 <User className="w-4 h-4" /> Xem Hồ Sơ
                             </Link>
                             <button

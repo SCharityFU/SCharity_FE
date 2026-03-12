@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Banknote,
   AlertOctagon,
+  Loader2,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { PublicCampaignDetailResponseDto } from "@/dtos/campaign";
@@ -19,6 +20,7 @@ import type { DonationResponseDto } from "@/dtos/donation";
 import { formatVND, formatDateOnly } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { useCreateDonationMutation } from "@/lib/store/features/donation/donationApi";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -141,11 +143,7 @@ function DonorRow({ donation, rank }: { donation: DonationResponseDto; rank: num
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-black truncate leading-tight">{name}</p>
-        {donation.message ? (
-          <p className="text-[11px] text-black/35 italic truncate mt-px">"{donation.message}"</p>
-        ) : (
-          <p className="text-[11px] text-black/30 mt-px">{formatDateOnly(donation.createdAt)}</p>
-        )}
+        <p className="text-[11px] text-black/30 mt-px">{formatDateOnly(donation.createdAt)}</p>
       </div>
 
       {/* Amount */}
@@ -159,6 +157,31 @@ function DonorRow({ donation, rank }: { donation: DonationResponseDto; rank: num
 export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailResponseDto }) {
   const [copied, setCopied] = useState(false);
   const [donorModalOpen, setDonorModalOpen] = useState(false);
+
+  // ── Donate modal state ────────────────────────────────────────────────────
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
+  const [donateAmount, setDonateAmount] = useState<number | "">("");
+  const [donateMessage, setDonateMessage] = useState("");
+  const [donateAnonymous, setDonateAnonymous] = useState(false);
+  const [createDonation, { isLoading: isDonating }] = useCreateDonationMutation();
+
+  const handleDonateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!donateAmount || donateAmount < 10000) return;
+    try {
+      const res = await createDonation({
+        campaignId: campaign.id,
+        amount: Number(donateAmount),
+        message: donateMessage || undefined,
+        isAnonymous: donateAnonymous,
+      }).unwrap();
+      if (res.data?.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
+      }
+    } catch (err: any) {
+      alert(err?.data?.message || "Đã xảy ra lỗi khi tạo thanh toán");
+    }
+  };
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const goal = campaign.goalAmount || 1;
@@ -267,6 +290,7 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
           {/* ── Donate button ─────────────────────────────────────────────── */}
           <button
+            onClick={() => setDonateModalOpen(true)}
             disabled={!isActive}
             className={cn(
               "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
@@ -374,6 +398,105 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             <DonorRow key={d.id} donation={d} rank={i} />
           ))}
         </div>
+      </Modal>
+
+      {/* ── Donate modal ──────────────────────────────────────────────────────── */}
+      <Modal
+        open={donateModalOpen}
+        onClose={() => setDonateModalOpen(false)}
+        title="Quyên Góp"
+        subtitle={`Ủng hộ chiến dịch "${campaign.title}"`}
+      >
+        <form onSubmit={handleDonateSubmit} className="space-y-5">
+          {/* Amount */}
+          <div>
+            <label className="text-sm font-semibold text-black mb-1.5 block">
+              Số tiền (VNĐ) <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                required
+                min={10000}
+                step={1000}
+                value={donateAmount}
+                onChange={(e) => setDonateAmount(e.target.value ? Number(e.target.value) : "")}
+                className="w-full px-4 py-3 rounded-xl border border-black/10 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none text-black font-semibold pr-12 transition-colors"
+                placeholder="Ví dụ: 50000"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 font-semibold">₫</span>
+            </div>
+            <p className="text-[11px] text-black/40 mt-1">Tối thiểu 10,000 VNĐ</p>
+            {/* Quick amount buttons */}
+            <div className="flex gap-2 mt-2">
+              {[50000, 100000, 200000, 500000].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setDonateAmount(v)}
+                  className={cn(
+                    "flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors",
+                    donateAmount === v
+                      ? "bg-rose-500 text-white border-rose-500"
+                      : "border-black/10 text-black/50 hover:border-rose-500/30 hover:text-rose-500",
+                  )}
+                >
+                  {formatVND(v)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Message (becomes Comment.content + Donation.message) */}
+          <div>
+            <label className="text-sm font-semibold text-black mb-1.5 block">
+              Lời nhắn / Động viên
+            </label>
+            <textarea
+              value={donateMessage}
+              onChange={(e) => setDonateMessage(e.target.value)}
+              maxLength={500}
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-black/10 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none text-sm resize-none transition-colors"
+              placeholder="Gửi gắm lời yêu thương đến chiến dịch..."
+            />
+            <p className="text-[11px] text-black/30 text-right mt-0.5">{donateMessage.length}/500</p>
+          </div>
+
+          {/* Anonymous */}
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={donateAnonymous}
+              onChange={(e) => setDonateAnonymous(e.target.checked)}
+              className="w-4 h-4 rounded border-black/20 text-rose-500 focus:ring-rose-500"
+            />
+            <span className="text-sm text-black/60">Ủng hộ ẩn danh</span>
+          </label>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isDonating || !donateAmount || donateAmount < 10000}
+            className={cn(
+              "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
+              "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25",
+              "hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+            )}
+          >
+            {isDonating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Heart className="w-4 h-4 fill-white/80" />
+                {donateAmount && donateAmount >= 10000
+                  ? `Tiếp tục thanh toán (${formatVND(Number(donateAmount))})`
+                  : "Nhập số tiền để tiếp tục"}
+              </>
+            )}
+          </button>
+        </form>
       </Modal>
     </>
   );
