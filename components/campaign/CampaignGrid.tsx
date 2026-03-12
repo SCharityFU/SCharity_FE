@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { CampaignCard } from "../CampaignCard";
+import { CampaignCard } from "../campaigns/CampaignCard";
 import type { CampaignDto } from "@/dtos/campaign";
 
 export default function CampaignGrid({

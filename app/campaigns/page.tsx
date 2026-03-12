@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Search, SlidersHorizontal, ArrowRight, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, ArrowRight } from "lucide-react";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Magnetic } from "@/components/ui/magnetic";
@@ -8,6 +8,7 @@ import { HighlightText } from "@/components/ui/highlight-text";
 import { useGetCampaignsQuery } from "@/lib/store/features/home/homeApi";
 import { CampaignCategory } from "@/dtos/enums";
 import CampaignGrid from "@/components/campaign/CampaignGrid";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const categories = ["Tất Cả", "Giáo Dục", "Y Tế", "Môi Trường", "Cứu Trợ", "Xã Hội"];
 
@@ -16,6 +17,7 @@ export default function CampaignsPage() {
   const [activeCategory, setActiveCategory] = useState<string>("Tất Cả");
   const [page, setPage] = useState(1);
   const [limit] = useState(9); // Default page size
+  const debouncedSearch = useDebounce(search, 500);
 
   // Helper mapping from UI display name to the actual enum
   const resolveCategoryEnum = (cat: string): CampaignCategory | undefined => {
@@ -45,7 +47,7 @@ export default function CampaignsPage() {
     {
       limit: limit * page, // simple 'load more' technique: keep limit large or load dynamically
       page: 1,
-      search: search.length > 2 ? search : undefined, // only search if > 2 chars to save API calls
+      search: debouncedSearch.trim().length > 2 ? debouncedSearch.trim() : undefined,
       category: resolveCategoryEnum(activeCategory),
       sortBy: "createdAt",
       sortOrder: "DESC",
@@ -95,7 +97,10 @@ export default function CampaignsPage() {
               type="text"
               placeholder="Tìm kiếm chiến dịch..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               className="w-full pl-10 pr-4 py-3 rounded-xl glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm"
             />
           </div>

@@ -1,6 +1,6 @@
 # SCharity FE Codebase Index
 
-Last updated: 2026-03-12
+Last updated: 2026-03-12 (admin layout added)
 
 ## Overview
 - Stack: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Redux Toolkit + RTK Query.
@@ -24,6 +24,9 @@ Last updated: 2026-03-12
 - `app/campaigns/page.tsx`: Campaign listing page.
 - `app/campaigns/[id]/page.tsx`: Campaign detail page.
 - `app/campaigns/create/page.tsx`: Campaign creation page.
+- `app/admin/layout.tsx`: Shared admin layout with sidebar navigation.
+- `app/admin/page.tsx`: Default admin dashboard route.
+- `app/admin/transactions/page.tsx`: Admin donation transactions list (search/sort/pagination).
 - `app/dashboard/page.tsx`: Dashboard root.
 - `app/dashboard/my-campaigns/page.tsx`: Current user's campaigns.
 - `app/dashboard/my-requests/page.tsx`: Withdrawal/requests listing.
@@ -80,6 +83,7 @@ Last updated: 2026-03-12
 - `lib/store/features/campaign/campaignApi.ts`: Campaign endpoints.
 - `lib/store/features/home/homeApi.ts`: Home page endpoints.
 - `lib/store/features/report/reportApi.ts`: Report endpoints.
+- `lib/store/features/admin/adminApi.ts`: Admin endpoints (platform/campaign transactions).
 
 ## DTO Index
 - `dtos/index.ts`: Barrel export for DTO modules.

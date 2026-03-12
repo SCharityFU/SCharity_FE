@@ -15,6 +15,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { UserRole } from "@/dtos";
 
 const navLinks = [
     { href: "/campaigns", label: "Chiến Dịch" },
@@ -27,12 +28,14 @@ export function Navbar() {
     const { user, isAuthenticated } = useAppSelector((state) => state.auth);
     const dispatch = useAppDispatch();
     const router = useRouter();
+    const isAdmin = user?.role === UserRole.ADMIN;
 
     const handleLogout = () => {
         dispatch(logout());
         localStorage.removeItem("access_token");
         localStorage.removeItem("user_info");
-        window.location.href = "/"; // Force a full page reload to clear all states
+        router.push("/");
+        router.refresh();
     };
 
     return (
@@ -87,6 +90,12 @@ export function Navbar() {
                                         <LayoutDashboard className="w-4 h-4 text-gray-400" />
                                         Dashboard
                                     </DropdownMenuItem>
+                                    {isAdmin && (
+                                        <DropdownMenuItem onClick={() => router.push("/admin")}>
+                                            <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                                            Quản trị
+                                        </DropdownMenuItem>
+                                    )}
                                     <DropdownMenuItem onClick={() => router.push("/dashboard/my-requests")}>
                                         <FileText className="w-4 h-4 text-gray-400" />
                                         Yêu Cầu Của Tôi
@@ -159,6 +168,15 @@ export function Navbar() {
                             >
                                 <LayoutDashboard className="w-4 h-4" /> Dashboard
                             </Link>
+                            {isAdmin && (
+                                <Link
+                                    href="/admin"
+                                    className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                    onClick={() => setMobileOpen(false)}
+                                >
+                                    <LayoutDashboard className="w-4 h-4" /> Trang Quan Tri
+                                </Link>
+                            )}
                             <Link
                                 href="/dashboard/my-requests"
                                 className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
