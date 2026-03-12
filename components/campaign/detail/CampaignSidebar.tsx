@@ -12,12 +12,21 @@ import {
   CalendarDays,
   Banknote,
   AlertOctagon,
+  XCircle,
+  Wallet,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { PublicCampaignDetailResponseDto } from "@/dtos/campaign";
 import type { DonationResponseDto } from "@/dtos/donation";
 import { formatVND, formatDateOnly } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
+import { CloseCampaignModal } from "@/components/campaign/detail/CloseCampaignModal";
+import { WithdrawRequestModal } from "@/components/campaign/detail/WithdrawRequestModal";
+import { useAuth } from "@/hooks/useAuth";
+import { useGetCampaignWithdrawalsQuery } from "@/lib/store/features/campaign/campaignApi";
 import { cn } from "@/lib/utils";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -154,11 +163,125 @@ function DonorRow({ donation, rank }: { donation: DonationResponseDto; rank: num
   );
 }
 
+// ── Withdraw button with status checking ──────────────────────────────────────
+
+function WithdrawButtonSection({
+  campaign,
+  onOpenModal,
+}: {
+  campaign: PublicCampaignDetailResponseDto;
+  onOpenModal: () => void;
+}) {
+  const { data: withdrawals, isLoading } = useGetCampaignWithdrawalsQuery(campaign.id);
+
+  // Find the most recent withdrawal
+  const latestWithdraw = withdrawals?.[0] ?? null;
+
+  if (isLoading) {
+    return (
+      <div className="w-full mt-2.5 py-3.5 rounded-xl bg-gray-100 border border-black/5 flex items-center justify-center gap-2">
+        <Loader2 className="w-4 h-4 animate-spin text-black/30" />
+        <span className="text-xs text-black/40">Đang kiểm tra...</span>
+      </div>
+    );
+  }
+
+  // No withdrawal exists → show the normal button
+  if (!latestWithdraw) {
+    return (
+      <button
+        onClick={onOpenModal}
+        className="w-full mt-2.5 py-3.5 rounded-xl bg-gradient-to-r from-violet-500 to-violet-600 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-violet-500/25 hover:shadow-violet-500/40 hover:from-violet-600 hover:to-violet-700 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
+      >
+        <Wallet className="w-4 h-4" />
+        Yêu cầu rút tiền
+      </button>
+    );
+  }
+
+  // Pending → show waiting button
+  if (latestWithdraw.status === "pending") {
+    return (
+      <div className="mt-2.5 space-y-2">
+        <button
+          disabled
+          className="w-full py-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-700 text-sm font-bold flex items-center justify-center gap-2 cursor-not-allowed"
+        >
+          <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          Đợi duyệt rút tiền
+        </button>
+        <p className="text-[11px] text-black/40 text-center">
+          Yêu cầu rút <span className="font-semibold text-black/60">{formatVND(latestWithdraw.amount)}</span> đang chờ Admin duyệt.
+        </p>
+      </div>
+    );
+  }
+
+  // Approved → show success state
+  if (latestWithdraw.status === "approved") {
+    return (
+      <div className="mt-2.5 flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+        <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-emerald-800">Yêu cầu rút tiền đã được duyệt</p>
+          <p className="text-[11px] text-emerald-700 mt-0.5">
+            Số tiền <span className="font-semibold">{formatVND(latestWithdraw.amount)}</span> sẽ được chuyển vào tài khoản.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Completed → show completed
+  if (latestWithdraw.status === "completed") {
+    return (
+      <div className="mt-2.5 flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+        <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-emerald-800">Đã rút tiền thành công</p>
+          <p className="text-[11px] text-emerald-700 mt-0.5">
+            Số tiền <span className="font-semibold">{formatVND(latestWithdraw.amount)}</span> đã được chuyển.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Rejected → show error + allow retry
+  if (latestWithdraw.status === "rejected") {
+    return (
+      <div className="mt-2.5 space-y-2">
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/8 border border-red-500/20">
+          <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-red-800">Yêu cầu rút tiền bị từ chối</p>
+            {latestWithdraw.rejectReason && (
+              <p className="text-[11px] text-red-700 mt-0.5">{latestWithdraw.rejectReason}</p>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={onOpenModal}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500 to-violet-600 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-violet-500/25 hover:shadow-violet-500/40 hover:from-violet-600 hover:to-violet-700 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
+        >
+          <Wallet className="w-4 h-4" />
+          Gửi lại yêu cầu rút tiền
+        </button>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailResponseDto }) {
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [donorModalOpen, setDonorModalOpen] = useState(false);
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const goal = campaign.goalAmount || 1;
@@ -173,11 +296,21 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
   const isUrgent = daysLeft > 0 && daysLeft <= 7 && campaign.status === "active";
   const isActive = campaign.status === "active";
+  const isClosed = campaign.status === "closed";
   const isSuspended = campaign.status === "suspended";
 
   const successDonations = (campaign.donations ?? []).filter((d) => d.status === "success");
   const previewDonors = successDonations.slice(0, DONOR_PREVIEW);
   const hasMoreDonors = successDonations.length > DONOR_PREVIEW;
+
+  // ── Owner logic ────────────────────────────────────────────────────────────
+  const isOwner = user?.id === campaign.creatorId;
+  const deadlineReached = campaign.deadline ? new Date(campaign.deadline) <= new Date() : false;
+  const canClose = isOwner && isActive && (progress >= 50 || deadlineReached);
+  const cannotCloseReason =
+    isOwner && isActive && !canClose
+      ? "Bạn chỉ có thể đóng chiến dịch khi đạt tối thiểu 50% mục tiêu hoặc khi hết thời hạn."
+      : null;
 
   // ── Share handler ──────────────────────────────────────────────────────────
   const handleShare = async () => {
@@ -229,6 +362,14 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             </div>
           )}
 
+          {/* Closed notice */}
+          {isClosed && (
+            <div className="flex items-center gap-2 p-2.5 mb-4 rounded-xl bg-gray-500/8 border border-gray-500/20">
+              <XCircle className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+              <p className="text-[11px] font-semibold text-gray-700">Chiến dịch đã kết thúc gây quỹ.</p>
+            </div>
+          )}
+
           {/* ── Raised amount ──────────────────────────────────────────────── */}
           <div className="mb-1">
             <div className="flex items-baseline gap-1.5">
@@ -266,18 +407,51 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           </div>
 
           {/* ── Donate button ─────────────────────────────────────────────── */}
-          <button
-            disabled={!isActive}
-            className={cn(
-              "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
-              isActive
-                ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25 hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700 hover:scale-[1.01] active:scale-[0.99]"
-                : "bg-black/6 text-black/30 cursor-not-allowed",
-            )}
-          >
-            <Heart className={cn("w-4 h-4", isActive ? "fill-white/80 text-white" : "text-black/25")} />
-            {isActive ? "Quyên Góp Ngay" : isSuspended ? "Đang tạm ngưng" : "Chiến dịch đã đóng"}
-          </button>
+          {!isClosed && (
+            <button
+              disabled={!isActive}
+              className={cn(
+                "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
+                isActive
+                  ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25 hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700 hover:scale-[1.01] active:scale-[0.99]"
+                  : "bg-black/6 text-black/30 cursor-not-allowed",
+              )}
+            >
+              <Heart className={cn("w-4 h-4", isActive ? "fill-white/80 text-white" : "text-black/25")} />
+              {isActive ? "Quyên Góp Ngay" : isSuspended ? "Đang tạm ngưng" : "Chiến dịch đã đóng"}
+            </button>
+          )}
+
+          {/* ── Owner: Close campaign button ──────────────────────────────── */}
+          {isOwner && isActive && (
+            <div className="relative group mt-2.5">
+              <button
+                onClick={() => canClose && setCloseModalOpen(true)}
+                disabled={!canClose}
+                className={cn(
+                  "w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 border",
+                  canClose
+                    ? "border-red-500/30 bg-red-500/8 text-red-600 hover:bg-red-500/15 hover:border-red-500/40"
+                    : "border-black/8 bg-black/[0.03] text-black/25 cursor-not-allowed",
+                )}
+              >
+                <XCircle className="w-4 h-4" />
+                Kết thúc gây quỹ
+              </button>
+              {/* Tooltip for disabled state */}
+              {cannotCloseReason && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-black/80 text-white text-[11px] leading-relaxed max-w-[260px] text-center opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20">
+                  {cannotCloseReason}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/80" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Owner: Withdraw request button (after close) ──────────────── */}
+          {isOwner && isClosed && (
+            <WithdrawButtonSection campaign={campaign} onOpenModal={() => setWithdrawModalOpen(true)} />
+          )}
 
           {/* ── Share button ───────────────────────────────────────────────── */}
           <button
@@ -375,6 +549,18 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           ))}
         </div>
       </Modal>
+
+      <CloseCampaignModal
+        open={closeModalOpen}
+        onClose={() => setCloseModalOpen(false)}
+        campaign={campaign}
+      />
+
+      <WithdrawRequestModal
+        open={withdrawModalOpen}
+        onClose={() => setWithdrawModalOpen(false)}
+        campaign={campaign}
+      />
     </>
   );
 }

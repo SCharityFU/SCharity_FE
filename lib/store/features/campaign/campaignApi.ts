@@ -6,6 +6,8 @@ import type {
     CampaignDto,
     BankInfoDto,
 } from '@/dtos/campaign';
+import type { CreateWithdrawRequestDto, WithdrawRequestResponseDto } from '@/dtos/withdraw';
+import type { BankAccountResponseDto } from '@/dtos/user';
 
 interface SubmitCampaignRequestArg {
     data: SubmitCampaignRequestDto;
@@ -27,7 +29,7 @@ export const campaignApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['CampaignRequest', 'MyCampaign'],
+    tagTypes: ['CampaignRequest', 'MyCampaign', 'BankAccount', 'Withdrawal'],
     endpoints: (builder) => ({
         submitCampaignRequest: builder.mutation<
             ApiResponseDto<CampaignRequestResponseDto>,
@@ -180,6 +182,87 @@ export const campaignApi = createApi({
             },
             invalidatesTags: ['CampaignRequest'],
         }),
+
+        // POST /campaigns/:id/close — close a campaign (owner only)
+        closeCampaign: builder.mutation<ApiResponseDto<CampaignDto>, string>({
+            query: (campaignId) => ({
+                url: `/campaigns/${campaignId}/close`,
+                method: 'POST',
+            }),
+            invalidatesTags: ['MyCampaign'],
+        }),
+
+        // GET /users/me/bank-accounts — list own bank accounts
+        getMyBankAccounts: builder.query<BankAccountResponseDto[], void>({
+            query: () => '/users/me/bank-accounts',
+            transformResponse: (response: ApiResponseDto<BankAccountResponseDto[]>) =>
+                response.data ?? [],
+            providesTags: ['BankAccount'],
+        }),
+
+        // POST /withdrawals — create withdraw request
+        createWithdrawRequest: builder.mutation<
+            ApiResponseDto<WithdrawRequestResponseDto>,
+            CreateWithdrawRequestDto
+        >({
+            query: (body) => ({
+                url: '/withdrawals',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['MyCampaign', 'Withdrawal'],
+        }),
+
+        // GET /withdrawals/campaign/:campaignId — list withdrawals for a campaign
+        getCampaignWithdrawals: builder.query<
+            WithdrawRequestResponseDto[],
+            string
+        >({
+            query: (campaignId) => `/withdrawals/campaign/${campaignId}`,
+            transformResponse: (response: ApiResponseDto<WithdrawRequestResponseDto[]>) =>
+                response.data ?? [],
+            providesTags: ['Withdrawal'],
+        }),
+
+        // POST /users/me/bank-account-change-requests — request bank info change (admin approval via email)
+        requestBankInfoChange: builder.mutation<
+            ApiResponseDto<{ id: string; status: string }>,
+            {
+                bankAccountId: string;
+                bankName: string;
+                accountNumber: string;
+                accountHolderName: string;
+            }
+        >({
+            query: (body) => ({
+                url: '/users/me/bank-account-change-requests',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['BankAccount'],
+        }),
+
+        // GET /users/me/bank-account-change-requests/:bankAccountId
+        getBankChangeRequestStatus: builder.query<
+            {
+                isBankInfoApproved: boolean;
+                latestRequest: {
+                    id: string;
+                    status: string;
+                    newBankName: string;
+                    newAccountNumber: string;
+                    newAccountHolderName: string;
+                    rejectReason: string | null;
+                    createdAt: string;
+                    processedAt: string | null;
+                } | null;
+            },
+            string
+        >({
+            query: (bankAccountId) => `/users/me/bank-account-change-requests/${bankAccountId}`,
+            transformResponse: (response: ApiResponseDto<any>) => response.data,
+            providesTags: ['BankAccount'], // re-fetch when bank account changes
+        }),
     }),
 });
 
@@ -190,4 +273,10 @@ export const {
     useGetMyCampaignsQuery,
     useUpdateRequestBankInfoMutation,
     useUpdateCampaignRequestMutation,
+    useCloseCampaignMutation,
+    useGetMyBankAccountsQuery,
+    useCreateWithdrawRequestMutation,
+    useGetCampaignWithdrawalsQuery,
+    useRequestBankInfoChangeMutation,
+    useGetBankChangeRequestStatusQuery,
 } = campaignApi;

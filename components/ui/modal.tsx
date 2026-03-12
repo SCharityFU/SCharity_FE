@@ -1,6 +1,7 @@
 "use client";
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface ModalProps {
@@ -43,11 +44,11 @@ export function Modal({ open, onClose, title, subtitle, children, className }: M
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/20 backdrop-blur-[3px]"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
@@ -56,7 +57,7 @@ export function Modal({ open, onClose, title, subtitle, children, className }: M
       <div
         className={cn(
           "relative z-10 w-full sm:max-w-lg max-h-[88vh] sm:max-h-[78vh]",
-          "glass-card rounded-t-3xl sm:rounded-2xl shadow-2xl shadow-black/15",
+          "bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-black/10",
           "flex flex-col overflow-hidden",
           // Slide-up entrance via Tailwind animate (tw-animate-css)
           "animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-2 fade-in duration-300",
@@ -74,7 +75,7 @@ export function Modal({ open, onClose, title, subtitle, children, className }: M
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="w-8 h-8 flex-shrink-0 rounded-full glass border border-black/8 flex items-center justify-center text-black/40 hover:text-black hover:bg-black/5 transition-colors"
+            className="w-8 h-8 flex-shrink-0 rounded-full bg-gray-100 border border-black/8 flex items-center justify-center text-black/40 hover:text-black hover:bg-gray-200 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -91,6 +92,7 @@ export function Modal({ open, onClose, title, subtitle, children, className }: M
         {/* ── Drag handle (mobile only) ───────────────────────────────────── */}
         <div className="sm:hidden absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-black/15" />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

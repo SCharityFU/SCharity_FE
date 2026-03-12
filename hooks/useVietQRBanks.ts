@@ -53,7 +53,7 @@ export function useVietQRBanks() {
         );
     }, [bankList, bankSearch]);
 
-    const selectBank = useCallback((bank: VietQRBank) => {
+    const selectBank = useCallback((bank: VietQRBank | null) => {
         setSelectedBank(bank);
         setBankDropdownOpen(false);
         setBankSearch("");

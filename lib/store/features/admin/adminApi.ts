@@ -7,6 +7,7 @@ import type {
   AdminCampaignsQueryDto,
   AdminCampaignTransactionsQueryDto,
   AdminTransactionsQueryDto,
+  DashboardStatsResponseDto,
 } from "@/dtos/admin";
 
 export type AdminDonationStatus = "pending" | "success" | "failed" | "refunded";
@@ -51,6 +52,22 @@ export const adminApi = createApi({
         },
       }),
       providesTags: ["AdminCampaigns"],
+    }),
+
+    getDashboardStats: builder.query<DashboardStatsResponseDto, void>({
+      query: () => "/admin/dashboard",
+      transformResponse: (res: ApiResponseDto<DashboardStatsResponseDto>) => res.data!,
+    }),
+
+    getDonationChartData: builder.query<
+      { date: string; amount: number; count: number }[],
+      { interval?: "day" | "week" | "month"; days?: number }
+    >({
+      query: ({ interval = "day", days = 30 } = {}) => ({
+        url: "/admin/dashboard/chart",
+        params: { interval, days },
+      }),
+      transformResponse: (res: ApiResponseDto<{ date: string; amount: number; count: number }[]>) => res.data ?? [],
     }),
 
     getAdminCampaignDetail: builder.query<
@@ -115,4 +132,6 @@ export const {
   useGetAdminCampaignAnalyticsQuery,
   useGetAdminTransactionsQuery,
   useGetAdminCampaignTransactionsQuery,
+  useGetDashboardStatsQuery,
+  useGetDonationChartDataQuery,
 } = adminApi;
