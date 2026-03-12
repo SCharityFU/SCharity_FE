@@ -12,9 +12,10 @@ interface VercelTabsProps {
     tabs: TabData[];
     defaultTab?: string;
     className?: string;
+    onTabChange?: (value: string) => void;
 }
 
-export function VercelTabs({ tabs, defaultTab, className }: VercelTabsProps) {
+export function VercelTabs({ tabs, defaultTab, className, onTabChange }: VercelTabsProps) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.value);
     const [hoverStyle, setHoverStyle] = useState({});
@@ -67,7 +68,10 @@ export function VercelTabs({ tabs, defaultTab, className }: VercelTabsProps) {
                     <button
                         key={tab.value}
                         ref={(el) => { tabRefs.current[index] = el; }}
-                        onClick={() => setActiveTab(tab.value)}
+                        onClick={() => {
+                            setActiveTab(tab.value);
+                            onTabChange?.(tab.value);
+                        }}
                         className={`z-10 h-[30px] cursor-pointer rounded-md border-0 bg-transparent px-3 py-2 outline-none transition-colors duration-300 ${activeTab === tab.value ? "text-black" : "text-black/60"
                             }`}
                         onMouseEnter={() => setHoveredIndex(index)}
@@ -79,14 +83,7 @@ export function VercelTabs({ tabs, defaultTab, className }: VercelTabsProps) {
             </div>
             {/* Content Area */}
             <div className="mt-8 w-full">
-                {tabs.map((tab) => (
-                    <div
-                        key={tab.value}
-                        className={`w-full transition-all duration-500 ${activeTab === tab.value ? "block" : "hidden"}`}
-                    >
-                        {tab.content}
-                    </div>
-                ))}
+                {tabs.find((tab) => tab.value === activeTab)?.content}
             </div>
         </div>
     );

@@ -1,6 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { PaginatedResponseDto } from "@/dtos/common";
+import type { ApiResponseDto, PaginatedResponseDto } from "@/dtos/common";
 import type {
+  AdminCampaignAnalyticsDto,
+  AdminCampaignDetailDto,
+  AdminCampaignListItemDto,
+  AdminCampaignsQueryDto,
   AdminCampaignTransactionsQueryDto,
   AdminTransactionsQueryDto,
 } from "@/dtos/admin";
@@ -30,8 +34,44 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["AdminTransactions"],
+  tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics"],
   endpoints: (builder) => ({
+    getAdminCampaigns: builder.query<
+      PaginatedResponseDto<AdminCampaignListItemDto>,
+      AdminCampaignsQueryDto
+    >({
+      query: ({ page = 1, limit = 10, status, category, search } = {}) => ({
+        url: "/admin/campaigns",
+        params: {
+          page,
+          limit,
+          ...(status ? { status } : {}),
+          ...(category ? { category } : {}),
+          ...(search ? { search } : {}),
+        },
+      }),
+      providesTags: ["AdminCampaigns"],
+    }),
+
+    getAdminCampaignDetail: builder.query<
+      ApiResponseDto<AdminCampaignDetailDto>,
+      string
+    >({
+      query: (campaignId) => `/admin/campaigns/${campaignId}`,
+      providesTags: ["AdminCampaignDetail"],
+    }),
+
+    getAdminCampaignAnalytics: builder.query<
+      ApiResponseDto<AdminCampaignAnalyticsDto>,
+      { campaignId: string; days?: number }
+    >({
+      query: ({ campaignId, days = 30 }) => ({
+        url: `/admin/campaigns/${campaignId}/analytics`,
+        params: { days },
+      }),
+      providesTags: ["AdminCampaignAnalytics"],
+    }),
+
     getAdminTransactions: builder.query<
       PaginatedResponseDto<AdminDonationItem>,
       AdminTransactionsQueryDto
@@ -60,6 +100,8 @@ export const adminApi = createApi({
           ...(query?.search ? { search: query.search } : {}),
           sortBy: query?.sortBy ?? "createdAt",
           sortOrder: query?.sortOrder ?? "DESC",
+          ...(query?.startDate ? { startDate: query.startDate } : {}),
+          ...(query?.endDate ? { endDate: query.endDate } : {}),
         },
       }),
       providesTags: ["AdminTransactions"],
@@ -68,6 +110,9 @@ export const adminApi = createApi({
 });
 
 export const {
+  useGetAdminCampaignsQuery,
+  useGetAdminCampaignDetailQuery,
+  useGetAdminCampaignAnalyticsQuery,
   useGetAdminTransactionsQuery,
   useGetAdminCampaignTransactionsQuery,
 } = adminApi;

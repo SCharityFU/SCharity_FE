@@ -4,6 +4,7 @@ import { authApi } from '@/lib/store/features/auth/authApi';
 import { reportApi } from '@/lib/store/features/report/reportApi';
 import { campaignApi } from '@/lib/store/features/campaign/campaignApi';
 import { homeApi } from '@/lib/store/features/home/homeApi';
+import { userApi } from '@/lib/store/features/user/userApi';
 import { adminApi } from '@/lib/store/features/admin/adminApi';
 
 // Helps client StoreProvider detect hot-updated store config in development.
@@ -17,6 +18,7 @@ export const makeStore = () => {
       [reportApi.reducerPath]: reportApi.reducer,
       [campaignApi.reducerPath]: campaignApi.reducer,
       [homeApi.reducerPath]: homeApi.reducer,
+      [userApi.reducerPath]: userApi.reducer,
       [adminApi.reducerPath]: adminApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
@@ -25,6 +27,7 @@ export const makeStore = () => {
         reportApi.middleware,
         campaignApi.middleware,
         homeApi.middleware,
+        userApi.middleware,
         adminApi.middleware
       ),
   });

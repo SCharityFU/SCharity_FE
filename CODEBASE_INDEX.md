@@ -26,6 +26,8 @@ Last updated: 2026-03-12 (admin layout added)
 - `app/campaigns/create/page.tsx`: Campaign creation page.
 - `app/admin/layout.tsx`: Shared admin layout with sidebar navigation.
 - `app/admin/page.tsx`: Default admin dashboard route.
+- `app/admin/campaigns/page.tsx`: Admin campaigns management table (filters/search/pagination).
+- `app/admin/campaigns/[id]/page.tsx`: Admin campaign detail with tabs (basic/analytics/transactions).
 - `app/admin/transactions/page.tsx`: Admin donation transactions list (search/sort/pagination).
 - `app/dashboard/page.tsx`: Dashboard root.
 - `app/dashboard/my-campaigns/page.tsx`: Current user's campaigns.
@@ -73,6 +75,20 @@ Last updated: 2026-03-12 (admin layout added)
   - `AuthProvider.tsx`
   - `GoogleProvider.tsx`
 - `components/ui/`: Design system and animated utility components.
+  - `rich-text-content.tsx`: Reusable renderer for custom rich-text HTML/plain content.
+- `components/admin/campaign-detail/AnalyticsLineChart.tsx`: Reusable line chart for admin campaign analytics.
+  - `CampaignDetailHeader.tsx`: Header + tab navigation for admin campaign detail.
+  - `CampaignBasicTab.tsx`: Basic info tab content.
+  - `CampaignAnalyticsTab.tsx`: Analytics tab content.
+  - `CampaignTransactionsTab.tsx`: Transactions tab table and filters.
+  - `campaignDetailUtils.ts`: Shared format/status helpers for admin campaign detail UI.
+ - `components/admin/campaigns/`
+  - `CampaignsFilters.tsx`: Filter/search controls for admin campaigns list.
+  - `CampaignsTable.tsx`: Admin campaigns table with pagination and actions.
+  - `campaignsUtils.ts`: Shared format/status helpers for campaigns list.
+ - `components/admin/transactions/`
+  - `TransactionsTable.tsx`: Admin transactions table + search + sorting.
+  - `transactionsUtils.ts`: Shared format/status helpers for transactions list.
 
 ## State and Data Layer Index
 - `lib/store/store.ts`: Store configuration, reducer registration, middleware.

@@ -1,8 +1,9 @@
+import { memo } from "react";
 import { Loader2 } from "lucide-react";
 import { CampaignCard } from "../campaigns/CampaignCard";
 import type { CampaignDto } from "@/dtos/campaign";
 
-export default function CampaignGrid({
+function CampaignGrid({
   campaigns,
   isLoading,
 }: {
@@ -29,3 +30,5 @@ export default function CampaignGrid({
     </div>
   );
 }
+
+export default memo(CampaignGrid);

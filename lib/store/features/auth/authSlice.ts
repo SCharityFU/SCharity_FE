@@ -27,11 +27,20 @@ export const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      // Persist to localStorage so auth survives reload
+      if (typeof window !== "undefined") {
+        localStorage.setItem("access_token", action.payload.token);
+        localStorage.setItem("user_info", JSON.stringify(action.payload.user));
+      }
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_info");
+      }
     },
   },
 });

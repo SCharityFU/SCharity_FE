@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, ArrowRight } from "lucide-react";
 import { VercelTabs } from "@/components/ui/vercel-tabs";
 import { RainbowButton } from "@/components/ui/rainbow-button";
@@ -17,7 +17,12 @@ export default function CampaignsPage() {
   const [activeCategory, setActiveCategory] = useState<string>("Tất Cả");
   const [page, setPage] = useState(1);
   const [limit] = useState(9); // Default page size
-  const debouncedSearch = useDebounce(search, 500);
+  const deferredSearch = useDeferredValue(search);
+  const debouncedSearch = useDebounce(deferredSearch, 500);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
 
   // Helper mapping from UI display name to the actual enum
   const resolveCategoryEnum = (cat: string): CampaignCategory | undefined => {
@@ -63,15 +68,19 @@ export default function CampaignsPage() {
     setPage(1); // Reset page on category change
   };
 
-  const tabs = categories.map((cat) => ({
-    label: cat,
-    value: cat,
-    content: (
-      <div>
-        <CampaignGrid campaigns={campaigns} isLoading={isLoading || isFetching} />
-      </div>
-    ),
-  }));
+  const tabs = useMemo(
+    () =>
+      categories.map((cat) => ({
+        label: cat,
+        value: cat,
+        content: (
+          <div>
+            <CampaignGrid campaigns={campaigns} isLoading={isLoading || isFetching} />
+          </div>
+        ),
+      })),
+    [campaigns, isLoading, isFetching]
+  );
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
@@ -97,10 +106,7 @@ export default function CampaignsPage() {
               type="text"
               placeholder="Tìm kiếm chiến dịch..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-3 rounded-xl glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm"
             />
           </div>
@@ -110,24 +116,7 @@ export default function CampaignsPage() {
           </button>
         </div>
 
-        {/* Vercel Tabs */}
-        {/* We need to pass down a wrapper or onChange, since VercelTabs might be an internal controlled component */}
-        {/* Based on common implementation, we intercept clicks or handle active states if VercelTabs supports standard properties. 
-            If VercelTabs does not have an onChange, we rely on the internal mapping. 
-            However, our data fetching relies on activeCategory. Let's make sure the VercelTabs acts correctly. */}
-        <div
-          onClick={(e) => {
-            // A hack to capture the tab click if VercelTabs doesn't export an onChange natively
-            const target = e.target as HTMLElement;
-            const tabButton = target.closest("button");
-            if (tabButton && tabButton.textContent) {
-              const val = categories.find((c) => c === tabButton.textContent);
-              if (val) handleTabChange(val);
-            }
-          }}
-        >
-          <VercelTabs tabs={tabs} defaultTab="Tất Cả" />
-        </div>
+        <VercelTabs tabs={tabs} defaultTab="Tất Cả" onTabChange={handleTabChange} />
 
         {/* Load More */}
         {campaigns && campaigns.length >= limit * page && (
