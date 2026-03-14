@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Edit2, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RichTextContent } from "@/components/ui/rich-text-content";
+import { formatDate } from "@/lib/utils";
 
 interface Update {
     id: string;
@@ -23,7 +24,6 @@ interface UpdatesListProps {
     onEdit: (update: Update) => void;
     onDelete: (updateId: string) => void;
     onViewDetail: (update: Update) => void;
-    formatDate: (date: string) => string;
 }
 
 const ITEMS_PER_PAGE = 3;
@@ -37,7 +37,6 @@ export function UpdatesList({
     onEdit,
     onDelete,
     onViewDetail,
-    formatDate,
 }: UpdatesListProps) {
     const [expandedCount, setExpandedCount] = useState(ITEMS_PER_PAGE);
 

@@ -25,20 +25,7 @@ import { CampaignEditModal, UpdatesList, UpdateDetailModal, UpdateEditModal } fr
 import type { CampaignDto } from "@/dtos/campaign";
 import { CampaignImageSlider } from "@/components/campaign/detail/CampaignImageSlider";
 import { MyCampaignHeader } from "@/components/campaign/my-campaign/MyCampaignHeader";
-
-function formatVND(value: number): string {
-    return value.toLocaleString("vi-VN") + " ₫";
-}
-
-function formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-}
+import { formatDate, formatVND } from "@/lib/utils";
 
 // ── Skeleton Loader ────────────────────────────────────────────────────────────
 
@@ -202,11 +189,19 @@ const images = [campaign!.thumbnailUrl, ...(campaign!.mediaUrls ?? [])].filter(
                             className="bg-white border border-black/10 rounded-2xl p-8 hover:border-black/20 transition-colors"
                         >
                             <h3 className="text-lg font-semibold text-black mb-4">Câu chuyện</h3>
-                            <RichTextContent 
-                                content={campaign.story} 
-                                className="text-base md:text-lg"
-                                emptyText="Chưa có câu chuyện"
-                            />
+                            <RichTextContent content={campaign.story} />
+                            {campaign.mediaUrls && campaign.mediaUrls.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                                {campaign.mediaUrls.map((url, i) => (
+                                    <img
+                                    key={i}
+                                    src={url}
+                                    alt={`media-${i}`}
+                                    className="w-full h-48 object-cover rounded-xl shadow-sm border border-black/5"
+                                    />
+                                ))}
+                                </div>
+                            )}
                         </motion.div>
 
                         {/* 4. Campaign Updates */}
@@ -262,7 +257,6 @@ const images = [campaign!.thumbnailUrl, ...(campaign!.mediaUrls ?? [])].filter(
                                 onEdit={handleOpenEditModal}
                                 onDelete={handleDeleteUpdate}
                                 onViewDetail={handleViewDetail}
-                                formatDate={formatDate}
                             />
                         </motion.div>
                     </div>
