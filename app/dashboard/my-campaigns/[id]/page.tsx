@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RichTextContent } from "@/components/ui/rich-text-content";
 import { useGetMyCampaignsQuery, useGetCampaignUpdatesQuery, useDeleteCampaignUpdateMutation } from "@/lib/store/features/campaign/campaignApi";
-import { UpdateModal, CampaignEditModal, UpdatesList, UpdateDetailModal } from "@/components/campaign/my-campaign";
+import { CampaignEditModal, UpdatesList, UpdateDetailModal, UpdateEditModal } from "@/components/campaign/my-campaign";
 import type { CampaignDto } from "@/dtos/campaign";
 import { CampaignImageSlider } from "@/components/campaign/detail/CampaignImageSlider";
 import { MyCampaignHeader } from "@/components/campaign/my-campaign/MyCampaignHeader";
@@ -430,7 +430,7 @@ const images = [campaign!.thumbnailUrl, ...(campaign!.mediaUrls ?? [])].filter(
             </div>
 
             {/* Update Modal */}
-            <UpdateModal
+            <UpdateEditModal
                 campaignId={campaignId}
                 isOpen={isUpdateModalOpen}
                 onClose={handleCloseModal}

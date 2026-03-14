@@ -881,6 +881,7 @@ export default function MyRequestsPage() {
                                                 Danh mục
                                             </Label>
                                             <select
+                                            title="Chọn danh mục phù hợp nhất cho chiến dịch của bạn"
                                                 value={editCategory}
                                                 onChange={(e) => setEditCategory(e.target.value)}
                                                 className="w-full px-4 py-2.5 rounded-xl border-2 border-black/10 bg-white/50 text-black outline-none focus:border-rose-400 transition-colors text-sm appearance-none cursor-pointer"
@@ -975,6 +976,7 @@ export default function MyRequestsPage() {
                                                                 )}
                                                             </div>
                                                             <button
+                                                            title="Xóa ảnh"
                                                                 type="button"
                                                                 onClick={(e) => { e.stopPropagation(); removeEditMedia(idx); }}
                                                                 className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
@@ -1053,6 +1055,7 @@ export default function MyRequestsPage() {
                                                         )}
                                                         <span className="text-xs text-black/60 truncate flex-1">{proof.name}</span>
                                                         <button
+                                                        title="Xóa tài liệu"
                                                             type="button"
                                                             onClick={() => removeProofFile(idx)}
                                                             className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 flex-shrink-0"

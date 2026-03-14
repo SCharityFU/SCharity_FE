@@ -85,6 +85,7 @@ export function UpdateEditModal({ campaignId, isOpen, onClose, updateToEdit }: U
                     </h2>
                     <button
                         onClick={onClose}
+                        aria-label="Đóng modal"
                         className="p-2 hover:bg-black/10 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
@@ -164,7 +165,7 @@ export function UpdateEditModal({ campaignId, isOpen, onClose, updateToEdit }: U
                                         value={content}
                                         onChange={setContent}
                                         placeholder="Chi tiết về tiến độ, những thành quả đạt được..."
-                                        minRequirements={50}
+                                        // minRequirements={50}
                                     />
                                     <p className="text-xs text-black/40 mt-1">Tối thiểu 50 ký tự</p>
                                 </div>

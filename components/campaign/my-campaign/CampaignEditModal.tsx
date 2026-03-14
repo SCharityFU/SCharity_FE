@@ -51,15 +51,10 @@ export function CampaignEditModal({ campaign, isOpen, onClose }: CampaignEditMod
         setSuccess(false);
 
         try {
-            const formData = new FormData();
-            formData.append("story", story);
-            if (thumbnail) {
-                formData.append("thumbnail", thumbnail);
-            }
-
             await updateCampaign({
                 campaignId: campaign.id,
-                data: formData,
+                data: { story },
+                thumbnail: thumbnail || undefined,
             }).unwrap();
 
             setSuccess(true);
@@ -86,6 +81,7 @@ export function CampaignEditModal({ campaign, isOpen, onClose }: CampaignEditMod
                     <h2 className="text-2xl font-bold text-black">Sửa chiến dịch</h2>
                     <button
                         onClick={onClose}
+                        aria-label="Đóng modal"
                         className="p-2 hover:bg-black/10 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
@@ -110,9 +106,9 @@ export function CampaignEditModal({ campaign, isOpen, onClose }: CampaignEditMod
 
                     {/* Thumbnail Upload */}
                     <div>
-                        <label className="block text-sm font-semibold text-black mb-3">
+                        <p className="block text-sm font-semibold text-black mb-3">
                             Ảnh bìa
-                        </label>
+                        </p>
                         <div className="space-y-3">
                             {/* Preview */}
                             {thumbnailPreview && (
@@ -156,7 +152,7 @@ export function CampaignEditModal({ campaign, isOpen, onClose }: CampaignEditMod
                             value={story}
                             onChange={setStory}
                             placeholder="Kể về chiến dịch, lý do, ảnh hưởng mong muốn..."
-                            minRequirements={0}
+                            // minRequirements={0}
                         />
                     </div>
 

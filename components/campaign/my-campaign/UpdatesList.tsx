@@ -130,6 +130,7 @@ export function UpdatesList({
                                     ) : (
                                         <button
                                             onClick={() => setDeleteConfirm(update.id)}
+                                            aria-label="Xóa cập nhật"
                                             className="px-3 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 transition-colors text-rose-700 text-sm font-medium"
                                         >
                                             <Trash2 className="w-4 h-4" />

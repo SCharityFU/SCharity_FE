@@ -60,6 +60,7 @@ export function UpdateDetailModal({
                             </div>
                             <button
                                 onClick={onClose}
+                                aria-label="Đóng modal"
                                 className="p-2 hover:bg-black/5 rounded-lg transition-colors flex-shrink-0"
                             >
                                 <X className="w-4 h-4 text-black/50" />

@@ -1,6 +1,6 @@
 import { Clock, Flame, CheckCircle2, Lock, AlertOctagon, BadgeCheck, CalendarDays, Edit2, Eye } from "lucide-react";
 import { mapCategoryToVietnamese, formatDateOnly } from "@/lib/utils";
-import type { PublicCampaignDetailResponseDto } from "@/dtos/campaign";
+import type { CampaignDto, PublicCampaignDetailResponseDto } from "@/dtos/campaign";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -66,7 +66,7 @@ function avatarGradient(name: string) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function MyCampaignHeader({ campaign,setIsCampaignEditOpen }: { campaign: CampaignDto, setIsCampaignEditOpen: (value: boolean)=>void }) {
+export function MyCampaignHeader({ campaign, setIsCampaignEditOpen }: { campaign: CampaignDto, setIsCampaignEditOpen: (value: boolean)=>void }) {
   const statusKey = campaign.status in STATUS_CONFIG ? (campaign.status as StatusKey) : "pending";
   const status = STATUS_CONFIG[statusKey];
   const StatusIcon = status.Icon;
