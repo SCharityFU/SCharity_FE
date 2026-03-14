@@ -234,6 +234,30 @@
     stroke-dashoffset: 1000;
     animation: beam-dash var(--beam-duration, 2s) linear infinite;
   }
+
+  .rich-text-editor .tox {
+    border-radius: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+
+  .rich-text-editor .tox .tox-editor-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: none;
+  }
+
+  .rich-text-editor .tox .tox-toolbar,
+  .rich-text-editor .tox .tox-toolbar__primary,
+  .rich-text-editor .tox .tox-toolbar__overflow {
+    background: rgba(255, 255, 255, 0.75);
+  }
+
+  .tox-tinymce-aux,
+  .tox-dialog-wrap,
+  .tox-menu {
+    z-index: 80 !important;
+    pointer-events: auto !important;
+  }
 }
 
 /* text-wrap balance utility */

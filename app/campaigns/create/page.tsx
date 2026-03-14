@@ -20,11 +20,6 @@ import {
     ArrowLeft,
     CheckCircle2,
     AlertTriangle,
-    Bold,
-    Italic,
-    List,
-    Link,
-    Image as ImageLucide,
     Search,
     ChevronDown,
     FileCheck,
@@ -52,6 +47,7 @@ import {
     AlertDialogMedia,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useSubmitCampaignRequestMutation } from "@/lib/store/features/campaign/campaignApi";
 import { useVietQRBanks } from "@/hooks/useVietQRBanks";
 
@@ -116,10 +112,18 @@ function shortVND(n: number): string {
 function removeDiacritics(str: string): string {
     return str
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/đ/g, "d")
-        .replace(/Đ/g, "D")
+        .replaceAll(/[\u0300-\u036f]/g, "")
+        .replaceAll("đ", "d")
+        .replaceAll("Đ", "D")
         .toUpperCase();
+}
+
+function plainTextFromHtml(html: string): string {
+    return html
+        .replaceAll(/<[^>]+>/g, " ")
+        .replaceAll("&nbsp;", " ")
+        .replaceAll(/\s+/g, " ")
+        .trim();
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -172,9 +176,6 @@ export default function CreateCampaignPage() {
     // Feedback
     const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-    // Story editor ref
-    const storyEditorRef = useRef<HTMLDivElement>(null);
-
     // ── Load draft from localStorage on mount ─────────────────────────────────
 
     useEffect(() => {
@@ -194,24 +195,11 @@ export default function CreateCampaignPage() {
             setAccountHolderName(draft.accountHolderName || "");
             setMediaPreviews(draft.mediaPreviews || []);
             setCoverIndex(draft.coverIndex || 0);
-
-            // Restore story editor HTML after mount
-            if (draft.storyHtml && storyEditorRef.current) {
-                storyEditorRef.current.innerHTML = draft.storyHtml;
-            }
         } catch {
             // Ignore corrupted draft
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    // Restore story HTML into contentEditable after initial render
-    useEffect(() => {
-        if (story && storyEditorRef.current && !storyEditorRef.current.innerHTML) {
-            storyEditorRef.current.innerHTML = story;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [story]);
 
     // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -262,14 +250,6 @@ export default function CreateCampaignPage() {
 
     const handleDragLeave = () => setIsDragOver(false);
 
-    // Story toolbar commands
-    const execCmd = (cmd: string, value?: string) => {
-        document.execCommand(cmd, false, value);
-        storyEditorRef.current?.focus();
-    };
-
-    const getStoryHTML = () => storyEditorRef.current?.innerHTML || "";
-
     // Proof document handlers
     const addProofFiles = useCallback((files: FileList | File[]) => {
         const allowed = Array.from(files).filter(
@@ -315,7 +295,7 @@ export default function CreateCampaignPage() {
     if (title.length < 5) errors.push("Tiêu đề ít nhất 5 ký tự");
     if (goalAmount < 1_000_000) errors.push("Mục tiêu tối thiểu 1.000.000₫");
     if (!deadline) errors.push("Chưa chọn hạn chót");
-    const storyText = storyEditorRef.current?.innerText || story;
+    const storyText = plainTextFromHtml(story);
     if (storyText.length < 50) errors.push("Câu chuyện ít nhất 50 ký tự");
     if (!bankName) errors.push("Chưa nhập tên ngân hàng");
     if (!accountNumber) errors.push("Chưa nhập số tài khoản");
@@ -335,7 +315,7 @@ export default function CreateCampaignPage() {
             await submitRequest({
                 data: {
                     title,
-                    story: getStoryHTML() || story,
+                    story,
                     goalAmount,
                     deadline: new Date(deadline).toISOString(),
                     category: (category as CampaignCategory) || undefined,
@@ -369,7 +349,7 @@ export default function CreateCampaignPage() {
             goalRaw,
             deadline,
             category,
-            storyHtml: getStoryHTML(),
+            storyHtml: story,
             bankName,
             accountNumber,
             accountHolderName,
@@ -693,72 +673,14 @@ export default function CreateCampaignPage() {
                                     <FileText className="w-4 h-4 text-indigo-500" />
                                     Câu chuyện chiến dịch
                                 </Label>
-
-                                {/* Toolbar */}
-                                <div className="flex items-center gap-1 p-1.5 rounded-t-xl glass border border-black/10 border-b-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => execCmd("bold")}
-                                        className="p-2 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                        title="In đậm"
-                                    >
-                                        <Bold className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => execCmd("italic")}
-                                        className="p-2 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                        title="In nghiêng"
-                                    >
-                                        <Italic className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => execCmd("insertUnorderedList")}
-                                        className="p-2 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                        title="Danh sách"
-                                    >
-                                        <List className="w-4 h-4" />
-                                    </button>
-                                    <div className="w-px h-5 bg-black/10 mx-1" />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const url = prompt("Nhập URL:");
-                                            if (url) execCmd("createLink", url);
-                                        }}
-                                        className="p-2 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                        title="Chèn liên kết"
-                                    >
-                                        <Link className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const url = prompt("Nhập URL hình ảnh:");
-                                            if (url) execCmd("insertImage", url);
-                                        }}
-                                        className="p-2 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                        title="Chèn hình ảnh"
-                                    >
-                                        <ImageLucide className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                {/* Editor */}
-                                <div
-                                    ref={storyEditorRef}
-                                    contentEditable
-                                    onInput={() => setStory(storyEditorRef.current?.innerText || "")}
-                                    className="min-h-[200px] w-full px-4 py-3 rounded-b-xl glass border border-black/10 text-black text-sm outline-none focus:border-rose-500/50 transition-colors prose prose-sm max-w-none"
-                                    data-placeholder="Kể câu chuyện về chiến dịch của bạn... (ít nhất 50 ký tự)"
-                                    style={{
-                                        minHeight: "200px",
-                                    }}
-                                    suppressContentEditableWarning
+                                <RichTextEditor
+                                    value={story}
+                                    onChange={setStory}
+                                    minHeight={200}
+                                    placeholder="Kể câu chuyện về chiến dịch của bạn... (ít nhất 50 ký tự)"
                                 />
                                 <p className="text-xs text-black/30 text-right">
-                                    {(storyEditorRef.current?.innerText || story).length} ký tự
+                                    {plainTextFromHtml(story).length} ký tự
                                 </p>
                             </div>
 
@@ -1072,14 +994,6 @@ export default function CreateCampaignPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* ── Inline styles for contentEditable placeholder ──────────────── */}
-            <style jsx global>{`
-        [contenteditable]:empty:before {
-          content: attr(data-placeholder);
-          color: rgba(0, 0, 0, 0.3);
-          pointer-events: none;
-        }
-      `}</style>
         </div>
     );
 }

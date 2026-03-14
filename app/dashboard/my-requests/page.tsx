@@ -28,11 +28,6 @@ import {
     Save,
     ImageIcon,
     FileCheck,
-    Bold,
-    Italic,
-    List,
-    Link as LinkIcon,
-    Image as ImageLucide,
     Upload,
     X,
     Star,
@@ -45,6 +40,7 @@ import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Button } from "@/components/ui/button";
 import { Magnetic } from "@/components/ui/magnetic";
 import { Label } from "@/components/ui/label";
+import { RichTextContent } from "@/components/ui/rich-text-content";
 import {
     Dialog,
     DialogContent,
@@ -53,6 +49,7 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
     useGetMyRequestsQuery,
     useUpdateCampaignRequestMutation,
@@ -125,6 +122,18 @@ function removeDiacritics(str: string): string {
         .toUpperCase();
 }
 
+function plainTextFromHtml(html: string): string {
+    return html
+        .replaceAll(/<[^>]+>/g, " ")
+        .replaceAll("&nbsp;", " ")
+        .replaceAll(/\s+/g, " ")
+        .trim();
+}
+
+function isTinyMceAuxTarget(target: EventTarget | null): boolean {
+    return target instanceof HTMLElement && Boolean(target.closest(".tox-tinymce-aux, .tox-dialog-wrap, .tox-menu"));
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    Main Page
    ═══════════════════════════════════════════════════════════════════════ */
@@ -169,9 +178,6 @@ export default function MyRequestsPage() {
     const [editCategory, setEditCategory] = useState("");
     const [updateRequest, { isLoading: isUpdating }] = useUpdateCampaignRequestMutation();
     const [editFeedback, setEditFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-    /* Rich text editor ref */
-    const editStoryRef = useRef<HTMLDivElement>(null);
 
     /* Media state for edit mode */
     const [editMediaFiles, setEditMediaFiles] = useState<File[]>([]);
@@ -263,17 +269,10 @@ export default function MyRequestsPage() {
         if (e.dataTransfer.files) addProofFiles(e.dataTransfer.files);
     };
 
-    const editExecCmd = (cmd: string, value?: string) => {
-        document.execCommand(cmd, false, value);
-        editStoryRef.current?.focus();
-    };
-
-    const getEditStoryHTML = () => editStoryRef.current?.innerHTML || "";
-
     const startEditing = () => {
         if (!selectedReq) return;
         setEditTitle(selectedReq.title);
-        setEditStory(selectedReq.story);
+        setEditStory(selectedReq.story || "");
         setEditGoalAmount(selectedReq.goalAmount);
         setEditGoalRaw(formatVNDInput(selectedReq.goalAmount));
         setEditDeadline(fmtDateForDateInput(selectedReq.deadline));
@@ -301,12 +300,6 @@ export default function MyRequestsPage() {
         setEditProofPreviews(existingProofs);
         setEditProofFiles([]);
         setIsEditing(true);
-        // Set story HTML into contentEditable after state update
-        setTimeout(() => {
-            if (editStoryRef.current) {
-                editStoryRef.current.innerHTML = selectedReq.story || "";
-            }
-        }, 50);
     };
 
     const cancelEditing = () => {
@@ -316,7 +309,6 @@ export default function MyRequestsPage() {
 
     const handleSaveEdit = async () => {
         if (!selectedReq) return;
-        const storyHTML = getEditStoryHTML() || editStory;
         // Only send actual File objects (not existing URL previews from server)
         const newFiles = editMediaFiles.filter((f) => f instanceof File);
         // Separate cover (thumbnail) from other media
@@ -327,7 +319,7 @@ export default function MyRequestsPage() {
                 requestId: selectedReq.id,
                 data: {
                     title: editTitle,
-                    story: storyHTML,
+                    story: editStory,
                     goalAmount: editGoalAmount,
                     deadline: new Date(editDeadline).toISOString(),
                     category: editCategory,
@@ -439,6 +431,17 @@ export default function MyRequestsPage() {
                                                 : ""
                                                 }`}
                                         >
+                                            {/* Thumbnail */}
+                                            {req.thumbnailUrl && (
+                                                <div className="mb-3 rounded-xl overflow-hidden border border-black/10 bg-black/[0.02]">
+                                                    <img
+                                                        src={req.thumbnailUrl}
+                                                        alt={req.title}
+                                                        className="w-full h-36 object-cover"
+                                                    />
+                                                </div>
+                                            )}
+
                                             {/* Top: Status + Category */}
                                             <div className="flex items-center justify-between gap-2 mb-3">
                                                 <span
@@ -462,7 +465,7 @@ export default function MyRequestsPage() {
 
                                             {/* Story preview */}
                                             <p className="text-xs text-black/50 line-clamp-2 leading-relaxed mb-3 flex-1">
-                                                {req.story}
+                                                <RichTextContent content={req.story} />
                                             </p>
 
                                             {/* Key Info */}
@@ -559,7 +562,20 @@ export default function MyRequestsPage() {
 
             {/* ── Detail Modal ─────────────────────────────────────────── */}
             <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) { setIsEditing(false); setEditFeedback(null); } }}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+                <DialogContent
+                    className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+                    showCloseButton={false}
+                    onInteractOutside={(event) => {
+                        if (isTinyMceAuxTarget(event.target)) {
+                            event.preventDefault();
+                        }
+                    }}
+                    onFocusOutside={(event) => {
+                        if (isTinyMceAuxTarget(event.target)) {
+                            event.preventDefault();
+                        }
+                    }}
+                >
                     {selectedReq && (
                         <>
                             <DialogHeader>
@@ -674,8 +690,8 @@ export default function MyRequestsPage() {
                                     {/* Story */}
                                     <div>
                                         <p className="text-xs text-black/40 mb-1">Câu chuyện</p>
-                                        <div className="rounded-xl bg-black/[0.03] p-4 text-sm text-black/70 leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto">
-                                            {selectedReq.story}
+                                        <div className="rounded-xl bg-black/[0.03] p-4 max-h-40 overflow-y-auto">
+                                            <RichTextContent content={selectedReq.story} />
                                         </div>
                                     </div>
 
@@ -856,68 +872,14 @@ export default function MyRequestsPage() {
                                             <FileText className="w-3.5 h-3.5 text-indigo-500" />
                                             Câu chuyện chiến dịch
                                         </Label>
-                                        {/* Toolbar */}
-                                        <div className="flex items-center gap-0.5 p-1.5 rounded-t-xl border-2 border-b-0 border-black/10 bg-black/[0.02]">
-                                            <button
-                                                type="button"
-                                                onClick={() => editExecCmd("bold")}
-                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                                title="In đậm"
-                                            >
-                                                <Bold className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => editExecCmd("italic")}
-                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                                title="In nghiêng"
-                                            >
-                                                <Italic className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => editExecCmd("insertUnorderedList")}
-                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                                title="Danh sách"
-                                            >
-                                                <List className="w-3.5 h-3.5" />
-                                            </button>
-                                            <div className="w-px h-4 bg-black/10 mx-0.5" />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const url = prompt("Nhập URL:");
-                                                    if (url) editExecCmd("createLink", url);
-                                                }}
-                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                                title="Chèn liên kết"
-                                            >
-                                                <LinkIcon className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const url = prompt("Nhập URL hình ảnh:");
-                                                    if (url) editExecCmd("insertImage", url);
-                                                }}
-                                                className="p-1.5 rounded-lg hover:bg-black/5 transition-colors text-black/50 hover:text-black"
-                                                title="Chèn hình ảnh"
-                                            >
-                                                <ImageLucide className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                        {/* Editor */}
-                                        <div
-                                            ref={editStoryRef}
-                                            contentEditable
-                                            onInput={() => setEditStory(editStoryRef.current?.innerText || "")}
-                                            className="min-h-[160px] w-full px-4 py-3 rounded-b-xl border-2 border-black/10 bg-white/50 text-black text-sm outline-none focus:border-rose-400 transition-colors prose prose-sm max-w-none leading-relaxed"
-                                            data-placeholder="Kể câu chuyện về chiến dịch... (ít nhất 50 ký tự)"
-                                            style={{ minHeight: 160 }}
-                                            suppressContentEditableWarning
+                                        <RichTextEditor
+                                            value={editStory}
+                                            onChange={setEditStory}
+                                            minHeight={160}
+                                            placeholder="Kể câu chuyện về chiến dịch... (ít nhất 50 ký tự)"
                                         />
                                         <p className="text-[11px] text-black/30 text-right">
-                                            {(editStoryRef.current?.innerText || editStory).length} ký tự • Tối thiểu 50
+                                            {plainTextFromHtml(editStory).length} ký tự • Tối thiểu 50
                                         </p>
                                     </div>
 
