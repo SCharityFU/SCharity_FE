@@ -1,6 +1,7 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   useGetAdminTransactionsQuery,
 } from "@/lib/store/features/admin/adminApi";
@@ -8,9 +9,13 @@ import { useAppSelector } from "@/lib/store/hooks";
 import { UserRole } from "@/dtos";
 import { useDebounce } from "@/hooks/useDebounce";
 import { TransactionsTable } from "@/components/admin/transactions/TransactionsTable";
+import { useAnimatedToast } from "@/components/ui/animated-toast";
 
 export default function AdminTransactionsPage() {
   const { user } = useAppSelector((state) => state.auth);
+  const router = useRouter();
+  const { addToast } = useAnimatedToast();
+  const lastErrorKeyRef = useRef<string | null>(null);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -33,6 +38,33 @@ export default function AdminTransactionsPage() {
   const rows = data?.data ?? [];
   const pagination = data?.pagination;
 
+  useEffect(() => {
+    if (!isError) {
+      lastErrorKeyRef.current = null;
+      return;
+    }
+
+    const statusCode = (error as { status?: number })?.status;
+    if (statusCode === 401) {
+      router.replace("/login");
+      return;
+    }
+
+    const message = statusCode
+      ? `Không thể tải danh sách giao dịch. Mã lỗi: ${statusCode}`
+      : "Không thể tải danh sách giao dịch. Vui lòng thử lại.";
+    const errorKey = `${statusCode ?? "unknown"}:${message}`;
+
+    if (lastErrorKeyRef.current === errorKey) return;
+    lastErrorKeyRef.current = errorKey;
+
+    addToast({
+      type: "error",
+      title: "Lỗi tải dữ liệu",
+      message,
+    });
+  }, [isError, error, addToast, router]);
+
   if (!isAdmin) {
     return (
       <div className="p-3 md:p-4">
@@ -50,12 +82,6 @@ export default function AdminTransactionsPage() {
           <p className="text-xs md:text-sm text-black/50">Quản lý toàn bộ giao dịch quyên góp trên nền tảng.</p>
         </div>
       </div>
-
-      {isError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          Không thể tải danh sách giao dịch. {(error as { status?: number })?.status ? `Mã lỗi: ${(error as { status?: number }).status}` : "Vui lòng thử lại."}
-        </div>
-      )}
 
       <TransactionsTable
         rows={rows}

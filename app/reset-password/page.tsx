@@ -8,6 +8,7 @@ import { useResetPasswordMutation } from "@/lib/store/features/auth/authApi";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useAnimatedToast } from "@/components/ui/animated-toast";
 
 const resetPasswordSchema = z.object({
   password: z
@@ -29,6 +30,7 @@ function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
+  const { addToast } = useAnimatedToast();
 
   const [resetPasswordApi, { isLoading }] = useResetPasswordMutation();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -44,7 +46,13 @@ function ResetPasswordContent() {
 
   const onSubmit = async (data: ResetPasswordValues) => {
     if (!token) {
-        setServerError("Thiếu mã xác thực (Token) trong đường dẫn.");
+        const message = "Thiếu mã xác thực (Token) trong đường dẫn.";
+        setServerError(message);
+        addToast({
+          type: "error",
+          title: "Thiếu token",
+          message,
+        });
         return;
     }
 
@@ -52,12 +60,24 @@ function ResetPasswordContent() {
     setSuccessMessage(null);
     try {
       await resetPasswordApi({ token, password: data.password }).unwrap();
-      setSuccessMessage("Mật khẩu của bạn đã được thay đổi thành công!");
+      const message = "Mật khẩu của bạn đã được thay đổi thành công!";
+      setSuccessMessage(message);
+      addToast({
+        type: "success",
+        title: "Đổi mật khẩu thành công",
+        message,
+      });
       setTimeout(() => {
         router.push("/login");
       }, 3000);
     } catch (err: any) {
-      setServerError(err?.data?.message || "Thay đổi mật khẩu thất bại. Đường dẫn có thể đã hết hạn.");
+      const message = err?.data?.message || "Thay đổi mật khẩu thất bại. Đường dẫn có thể đã hết hạn.";
+      setServerError(message);
+      addToast({
+        type: "error",
+        title: "Đổi mật khẩu thất bại",
+        message,
+      });
     }
   };
 

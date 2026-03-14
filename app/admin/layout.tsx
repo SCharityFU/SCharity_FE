@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, FolderKanban, Users, Flag, Settings, HandCoins } from "lucide-react";
+import { BarChart3, FolderKanban, Users, Flag, Settings, HandCoins, ClipboardCheck } from "lucide-react";
 
 const adminMenu = [
     { label: "Tổng quan", href: "/admin", icon: BarChart3 },
+    { label: "Yêu cầu tạo campaign", href: "/admin/campaign-requests", icon: ClipboardCheck },
     { label: "Giao dịch", href: "/admin/transactions", icon: HandCoins },
     { label: "Chiến dịch", href: "/admin/campaigns", icon: FolderKanban },
     { label: "Người dùng", href: "/admin/users", icon: Users },

@@ -3,10 +3,13 @@ import type { ApiResponseDto, PaginatedResponseDto } from "@/dtos/common";
 import type {
   AdminCampaignAnalyticsDto,
   AdminCampaignDetailDto,
+  AdminCampaignRequestItemDto,
   AdminCampaignListItemDto,
   AdminCampaignsQueryDto,
   AdminCampaignTransactionsQueryDto,
+  AdminCampaignRequestsQueryDto,
   AdminTransactionsQueryDto,
+  ReviewCampaignRequestDto,
 } from "@/dtos/admin";
 
 export type AdminDonationStatus = "pending" | "success" | "failed" | "refunded";
@@ -34,8 +37,60 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics"],
+  tagTypes: [
+    "AdminTransactions",
+    "AdminCampaigns",
+    "AdminCampaignDetail",
+    "AdminCampaignAnalytics",
+    "AdminCampaignRequests",
+    "AdminCampaignRequestDetail",
+  ],
   endpoints: (builder) => ({
+    getAdminCampaignRequests: builder.query<
+      PaginatedResponseDto<AdminCampaignRequestItemDto>,
+      AdminCampaignRequestsQueryDto
+    >({
+      query: ({ page = 1, limit = 10, status } = {}) => ({
+        url: "/admin/campaign-requests",
+        params: {
+          page,
+          limit,
+          ...(status ? { status } : {}),
+        },
+      }),
+      providesTags: ["AdminCampaignRequests"],
+    }),
+
+    getAdminCampaignRequestDetail: builder.query<
+      ApiResponseDto<AdminCampaignRequestItemDto>,
+      string
+    >({
+      query: (requestId) => `/admin/campaign-requests/${requestId}`,
+      providesTags: (_result, _error, requestId) => [
+        "AdminCampaignRequestDetail",
+        { type: "AdminCampaignRequestDetail" as const, id: requestId },
+      ],
+    }),
+
+    reviewAdminCampaignRequest: builder.mutation<
+      ApiResponseDto<AdminCampaignRequestItemDto>,
+      { requestId: string; payload: ReviewCampaignRequestDto }
+    >({
+      query: ({ requestId, payload }) => ({
+        url: `/admin/campaign-requests/${requestId}/review`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: (_result, _error, { requestId }) => [
+        "AdminCampaignRequests",
+        "AdminCampaignDetail",
+        "AdminCampaigns",
+        "AdminCampaignAnalytics",
+        "AdminTransactions",
+        { type: "AdminCampaignRequestDetail" as const, id: requestId },
+      ],
+    }),
+
     getAdminCampaigns: builder.query<
       PaginatedResponseDto<AdminCampaignListItemDto>,
       AdminCampaignsQueryDto
@@ -110,6 +165,9 @@ export const adminApi = createApi({
 });
 
 export const {
+  useGetAdminCampaignRequestsQuery,
+  useGetAdminCampaignRequestDetailQuery,
+  useReviewAdminCampaignRequestMutation,
   useGetAdminCampaignsQuery,
   useGetAdminCampaignDetailQuery,
   useGetAdminCampaignAnalyticsQuery,

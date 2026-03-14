@@ -3,8 +3,7 @@
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, ArrowLeft, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAppSelector } from "@/lib/store/hooks";
 import {
@@ -18,6 +17,7 @@ import { CampaignDetailHeader } from "@/components/admin/campaign-detail/Campaig
 import { CampaignBasicTab } from "@/components/admin/campaign-detail/CampaignBasicTab";
 import { CampaignAnalyticsTab } from "@/components/admin/campaign-detail/CampaignAnalyticsTab";
 import { CampaignTransactionsTab } from "@/components/admin/campaign-detail/CampaignTransactionsTab";
+import { useAnimatedToast } from "@/components/ui/animated-toast";
 
 type TabKey = "basic" | "analytics" | "transactions";
 
@@ -32,8 +32,10 @@ export default function AdminCampaignDetailPage() {
   const campaignId = params.id;
 
   const router = useRouter();
+  const { addToast } = useAnimatedToast();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const detailErrorToastRef = useRef<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     const tab = searchParams.get("tab");
@@ -103,9 +105,31 @@ export default function AdminCampaignDetailPage() {
   }
 
   useEffect(() => {
+    if (!detailQuery.isError) {
+      detailErrorToastRef.current = null;
+      return;
+    }
+
     const statusCode = (detailQuery.error as { status?: number } | undefined)?.status;
     if (statusCode === 401) router.replace("/login");
-  }, [detailQuery.error, router]);
+    if (statusCode === 401 || statusCode === 403 || statusCode === 404) return;
+
+    const message = "Không thể tải chi tiết chiến dịch.";
+    if (detailErrorToastRef.current === message) return;
+    detailErrorToastRef.current = message;
+
+    addToast({
+      type: "error",
+      title: "Lỗi tải dữ liệu",
+      message,
+      action: {
+        label: "Thử lại",
+        onClick: () => {
+          void detailQuery.refetch();
+        },
+      },
+    });
+  }, [detailQuery.isError, detailQuery.error, detailQuery.refetch, addToast, router]);
 
   if (!isAdmin) {
     return (
@@ -149,19 +173,6 @@ export default function AdminCampaignDetailPage() {
         onTabChange={setActiveTab}
         onOpenPublicView={(id) => router.push(`/campaigns/${id}`)}
       />
-
-      {detailQuery.isError && detailStatusCode !== 401 && detailStatusCode !== 403 && detailStatusCode !== 404 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1">
-            <AlertTriangle className="w-4 h-4" />
-            Không thể tải chi tiết chiến dịch.
-          </span>
-          <Button variant="outline" size="sm" onClick={() => detailQuery.refetch()}>
-            <RotateCw className="w-3.5 h-3.5" />
-            Thử lại
-          </Button>
-        </div>
-      )}
 
       {activeTab === "basic" && detail && <CampaignBasicTab detail={detail} />}
 

@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import StoreProvider from "@/components/providers/StoreProvider";
 import GoogleProvider from "@/components/providers/GoogleProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import NextTopLoader from "nextjs-toploader";
@@ -47,11 +48,13 @@ export default function RootLayout({
                 />
                 <GoogleProvider>
                     <StoreProvider>
-                        <AuthProvider>
-                            <Navbar />
-                            <main>{children}</main>
-                            <Footer />
-                        </AuthProvider>
+                        <ToastProvider>
+                            <AuthProvider>
+                                <Navbar />
+                                <main>{children}</main>
+                                <Footer />
+                            </AuthProvider>
+                        </ToastProvider>
                     </StoreProvider>
                 </GoogleProvider>
             </body>

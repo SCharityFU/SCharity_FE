@@ -7,6 +7,7 @@ import * as z from "zod";
 import { useForgotPasswordMutation } from "@/lib/store/features/auth/authApi";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useAnimatedToast } from "@/components/ui/animated-toast";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Định dạng email không hợp lệ"),
@@ -16,6 +17,7 @@ type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
+  const { addToast } = useAnimatedToast();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -32,9 +34,21 @@ export default function ForgotPasswordPage() {
     setSuccessMessage(null);
     try {
       await forgotPassword({ email: data.email }).unwrap();
-      setSuccessMessage("Nếu email này có trong hệ thống, chúng tôi đã gửi hướng dẫn khôi phục mật khẩu. Vui lòng kiểm tra hộp thư của bạn.");
+      const message = "Nếu email này có trong hệ thống, chúng tôi đã gửi hướng dẫn khôi phục mật khẩu. Vui lòng kiểm tra hộp thư của bạn.";
+      setSuccessMessage(message);
+      addToast({
+        type: "success",
+        title: "Đã gửi yêu cầu",
+        message,
+      });
     } catch (err: any) {
-      setServerError(err?.data?.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      const message = err?.data?.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.";
+      setServerError(message);
+      addToast({
+        type: "error",
+        title: "Gửi yêu cầu thất bại",
+        message,
+      });
     }
   };
 

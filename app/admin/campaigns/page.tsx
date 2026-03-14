@@ -2,8 +2,6 @@
 
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/lib/store/hooks";
 import { UserRole, CampaignStatus } from "@/dtos";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -13,6 +11,7 @@ import {
 import type { AdminCampaignListItemDto } from "@/dtos/admin";
 import { CampaignsFilters } from "@/components/admin/campaigns/CampaignsFilters";
 import { CampaignsTable } from "@/components/admin/campaigns/CampaignsTable";
+import { useAnimatedToast } from "@/components/ui/animated-toast";
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -22,8 +21,10 @@ function parsePositiveInt(value: string | null, fallback: number) {
 export default function AdminCampaignsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const { addToast } = useAnimatedToast();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lastErrorKeyRef = useRef<string | null>(null);
 
   const [page, setPage] = useState(() => parsePositiveInt(searchParams.get("page"), 1));
   const [limit, setLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100));
@@ -72,12 +73,40 @@ export default function AdminCampaignsPage() {
   const hasActiveFilters = Boolean(debouncedSearch.trim() || status !== "all" || category.trim());
 
   useEffect(() => {
-    if (!isError) return;
+    if (!isError) {
+      lastErrorKeyRef.current = null;
+      return;
+    }
+
     const statusCode = (error as { status?: number })?.status;
     if (statusCode === 401) {
       router.replace("/login");
+      return;
     }
-  }, [isError, error, router]);
+
+    if (statusCode === 403) {
+      return;
+    }
+
+    const message = statusCode === 404
+      ? "Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404)."
+      : "Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại.";
+    const errorKey = `${statusCode ?? "unknown"}:${message}`;
+    if (lastErrorKeyRef.current === errorKey) return;
+    lastErrorKeyRef.current = errorKey;
+
+    addToast({
+      type: "error",
+      title: "Lỗi tải danh sách chiến dịch",
+      message,
+      action: {
+        label: "Thử lại",
+        onClick: () => {
+          void refetch();
+        },
+      },
+    });
+  }, [isError, error, router, addToast, refetch]);
 
   if (!isAdmin) {
     return (
@@ -111,21 +140,6 @@ export default function AdminCampaignsPage() {
       {isError && statusCode === 403 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
           Bạn không có quyền truy cập dữ liệu chiến dịch quản trị.
-        </div>
-      )}
-
-      {isError && statusCode !== 401 && statusCode !== 403 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1">
-            <AlertTriangle className="w-4 h-4" />
-            {statusCode === 404
-              ? "Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404)."
-              : "Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại."}
-          </span>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RotateCw className="w-3.5 h-3.5" />
-            Thử lại
-          </Button>
         </div>
       )}
 
