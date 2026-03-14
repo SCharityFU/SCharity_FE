@@ -123,7 +123,7 @@ export function ReportsTable({
                 disabled={resolvingId === row.id}
               >
                 <CheckCircle className="w-3.5 h-3.5" />
-                {resolvingId === row.id ? "Đang xử lý..." : "Xử lý"}
+                {resolvingId === row.id ? "Đang xử lý..." : "Đánh dấu đã xem"}
               </Button>
             )}
           </div>

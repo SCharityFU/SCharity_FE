@@ -51,7 +51,7 @@ export function CampaignBasicTab({ detail }: { detail: AdminCampaignDetailDto })
         <p className="text-black/60">Gây quỹ: <span className="font-semibold text-black">{formatVND(detail.raisedAmount)}</span></p>
         <p className="text-black/60">Mục tiêu: <span className="font-semibold text-black">{formatVND(detail.goalAmount)}</span></p>
         <p className="text-black/60">Nhà hảo tâm: <span className="font-semibold text-black">{detail.donorCount}</span></p>
-        <p className="text-black/60">Báo cáo: <span className="font-semibold text-black">{detail.reportCount}</span></p>
+        <p className="text-black/60">Lượt bị báo cáo: <span className="font-semibold text-black">{detail.reportCount}</span></p>
         <p className="text-black/60">Hạn chót: <span className="font-semibold text-black">{formatDateTimeVN(detail.deadline)}</span></p>
         {detail.suspendReason && detail.status !== CampaignStatus.SUSPENDED && (
           <p className="text-red-600">Lý do tạm dừng: {detail.suspendReason}</p>
