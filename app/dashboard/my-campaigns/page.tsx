@@ -13,7 +13,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Eye,
-    BarChart3,
+    Edit2,
 } from "lucide-react";
 import { CampaignStatus, CampaignCategory } from "@/dtos/enums";
 import type { CampaignDto } from "@/dtos/campaign";
@@ -99,12 +99,16 @@ export default function MyCampaignsPage() {
 
                 {/* Content */}
                 {isLoading && (
-                    <div className="space-y-4">
-                        {["s1", "s2", "s3"].map((key) => (
-                            <div key={key} className="glass-card rounded-2xl p-6 animate-pulse">
-                                <div className="h-5 bg-black/10 rounded w-1/3 mb-3" />
-                                <div className="h-4 bg-black/10 rounded w-full mb-2" />
-                                <div className="h-3 bg-black/10 rounded w-2/3" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {["s1", "s2", "s3", "s4", "s5", "s6"].map((key) => (
+                            <div key={key} className="glass-card rounded-2xl overflow-hidden animate-pulse flex flex-col">
+                                <div className="h-40 bg-black/10" />
+                                <div className="p-4 space-y-3">
+                                    <div className="h-5 bg-black/10 rounded w-3/4" />
+                                    <div className="h-3 bg-black/10 rounded w-full" />
+                                    <div className="h-3 bg-black/10 rounded w-2/3" />
+                                    <div className="h-8 bg-black/10 rounded w-full mt-4" />
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -128,7 +132,7 @@ export default function MyCampaignsPage() {
 
                 {!isLoading && campaigns.length > 0 && (
                     <>
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                             <AnimatePresence mode="popLayout">
                                 {campaigns.map((c: CampaignDto, i: number) => {
                                     const statusCfg = STATUS_LABELS[c.status] ?? STATUS_LABELS[CampaignStatus.PENDING];
@@ -141,69 +145,74 @@ export default function MyCampaignsPage() {
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -20 }}
                                             transition={{ delay: i * 0.05 }}
-                                            className="glass-card rounded-2xl p-6 hover:shadow-lg transition-shadow"
+                                            className="glass-card rounded-2xl overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300"
                                         >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <h3 className="font-bold text-black text-lg truncate">
-                                                            {c.title}
-                                                        </h3>
-                                                        <span
-                                                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusCfg.color}`}
-                                                        >
-                                                            {statusCfg.label}
-                                                        </span>
-                                                        {c.category && (
-                                                            <span className="px-2 py-0.5 rounded-full text-xs bg-black/5 text-black/50 border border-black/10">
-                                                                {CATEGORY_LABELS[c.category] ?? c.category}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                            {/* Thumbnail */}
+                                            <div className="relative h-40 bg-black/5">
+                                                {c.thumbnailUrl && (
+                                                    <img
+                                                        src={c.thumbnailUrl}
+                                                        alt={c.title}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                                                <span className={`absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold border ${statusCfg.color}`}>
+                                                    {statusCfg.label}
+                                                </span>
+                                            </div>
 
-                                                    {/* Progress bar */}
-                                                    <div className="mb-3">
-                                                        <div className="flex justify-between text-xs text-black/50 mb-1">
-                                                            <span>{formatVND(c.raisedAmount)}</span>
-                                                            <span>{progress.toFixed(0)}%</span>
-                                                        </div>
-                                                        <div className="w-full h-2 bg-black/5 rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full bg-gradient-to-r from-rose-400 to-violet-500 rounded-full transition-all duration-500"
-                                                                style={{ width: `${String(progress)}%` }}
-                                                            />
-                                                        </div>
-                                                        <div className="flex justify-between text-xs text-black/40 mt-1">
-                                                            <span>Mục tiêu: {formatVND(c.goalAmount)}</span>
-                                                        </div>
-                                                    </div>
+                                            {/* Content */}
+                                            <div className="flex-1 p-4 flex flex-col">
+                                                {/* Title & Category */}
+                                                <h3 className="font-bold text-black text-sm leading-snug mb-2 line-clamp-2">
+                                                    {c.title}
+                                                </h3>
+                                                {c.category && (
+                                                    <span className="text-[11px] bg-black/5 text-black/60 px-2 py-0.5 rounded-full w-fit mb-3">
+                                                        {CATEGORY_LABELS[c.category] ?? c.category}
+                                                    </span>
+                                                )}
 
-                                                    {/* Meta */}
-                                                    <div className="flex flex-wrap gap-4 text-sm text-black/40">
-                                                        <span className="flex items-center gap-1">
-                                                            <Users className="w-3.5 h-3.5" />
-                                                            {c.donorCount} nhà hảo tâm
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Calendar className="w-3.5 h-3.5" />
-                                                            {remaining > 0 ? `${remaining} ngày còn lại` : "Đã hết hạn"}
-                                                        </span>
+                                                {/* Progress bar */}
+                                                <div className="mb-3">
+                                                    <div className="flex justify-between text-xs text-black/50 mb-1">
+                                                        <span>{formatVND(c.raisedAmount)}</span>
+                                                        <span>{progress.toFixed(0)}%</span>
+                                                    </div>
+                                                    <div className="w-full h-1.5 bg-black/5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-gradient-to-r from-rose-400 to-violet-500"
+                                                            style={{ width: `${progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Meta Info */}
+                                                <div className="space-y-1 mb-4 text-xs text-black/50">
+                                                    <div className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        {c.donorCount} người
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {remaining > 0 ? `${remaining} ngày` : "Hết hạn"}
                                                     </div>
                                                 </div>
 
                                                 {/* Actions */}
-                                                <div className="flex flex-col gap-2 shrink-0">
-                                                    <Link href={`/campaigns/${c.id}`}>
-                                                        <Button variant="outline" size="sm">
-                                                            <Eye className="w-3.5 h-3.5" />
-                                                            Xem
-                                                        </Button>
+                                                <div className="flex gap-2 mt-auto">
+                                                    <Link href={`/dashboard/my-campaigns/${c.id}`} className="flex-1">
+                                                        <button className="w-full px-3 py-2 rounded-lg bg-rose-500 text-white text-xs font-medium hover:bg-rose-600 transition-colors flex items-center justify-center gap-1">
+                                                            <Eye className="w-3 h-3" />
+                                                            Chi tiết
+                                                        </button>
                                                     </Link>
-                                                    <Link href={`/dashboard/my-campaigns/${c.id}/analytics`}>
-                                                        <Button variant="ghost" size="sm">
-                                                            <BarChart3 className="w-3.5 h-3.5" />
-                                                            Thống kê
-                                                        </Button>
+                                                    <Link href={`/campaigns/${c.id}/edit`} className="flex-1">
+                                                        <button className="w-full px-3 py-2 rounded-lg bg-black/5 text-black text-xs font-medium hover:bg-black/10 transition-colors flex items-center justify-center gap-1">
+                                                            <Edit2 className="w-3 h-3" />
+                                                            Sửa
+                                                        </button>
                                                     </Link>
                                                 </div>
                                             </div>
