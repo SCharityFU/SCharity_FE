@@ -1,4 +1,4 @@
-export { UpdateModal } from "./progress-update-modal";
-export { CampaignEditModal } from "./campaign-update-modal";
-export { UpdatesList } from "./updates-list";
-export { UpdateDetailModal } from "./update-detail-modal";
+export { UpdateEditModal } from "./UpdateEditModal";
+export { CampaignEditModal } from "./CampaignEditModal";
+export { UpdatesList } from "./UpdatesList";
+export { UpdateDetailModal } from "./UpdateDetailModal";

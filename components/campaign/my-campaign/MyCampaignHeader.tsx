@@ -83,95 +83,97 @@ export function MyCampaignHeader({ campaign,setIsCampaignEditOpen }: { campaign:
   const gradient = avatarGradient(creatorName);
 
   return (
-    <>
-     <div className="space-y-3">
-      {/* ── Badges row ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Status */}
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${status.pill}`}
-        >
-          {status.pulse ? (
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+    <div className="flex items-start justify-between gap-4">
+      {/* Left: Badges, Title, Creator */}
+      <div className="space-y-3 flex-1">
+        {/* ── Badges row ─────────────────────────────────────────────────────── */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Status */}
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${status.pill}`}
+          >
+            {status.pulse ? (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+            ) : (
+              <StatusIcon className="w-3 h-3" />
+            )}
+            {status.label}
+          </span>
+
+          {/* Category */}
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium glass border border-black/8 text-black/55">
+            {mapCategoryToVietnamese(campaign.category)}
+          </span>
+
+          {/* Urgency */}
+          {isUrgent && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-700 border border-rose-500/25">
+              <Flame className="w-3 h-3" />
+              Còn {daysLeft} ngày!
             </span>
-          ) : (
-            <StatusIcon className="w-3 h-3" />
           )}
-          {status.label}
-        </span>
 
-        {/* Category */}
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium glass border border-black/8 text-black/55">
-          {mapCategoryToVietnamese(campaign.category)}
-        </span>
+          {/* Deadline (non-urgent) */}
+          {!isUrgent && campaign.deadline && campaign.status === "active" && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-black/40 glass border border-black/8">
+              <CalendarDays className="w-3 h-3" />
+              {formatDateOnly(campaign.deadline)}
+            </span>
+          )}
+        </div>
 
-        {/* Urgency */}
-        {isUrgent && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-700 border border-rose-500/25">
-            <Flame className="w-3 h-3" />
-            Còn {daysLeft} ngày!
-          </span>
-        )}
+        {/* ── Title ──────────────────────────────────────────────────────────── */}
+        <h1 className="text-2xl sm:text-3xl font-black text-black leading-tight tracking-tight">{campaign.title}</h1>
 
-        {/* Deadline (non-urgent) */}
-        {!isUrgent && campaign.deadline && campaign.status === "active" && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-black/40 glass border border-black/8">
-            <CalendarDays className="w-3 h-3" />
-            {formatDateOnly(campaign.deadline)}
-          </span>
-        )}
+        {/* ── Creator row ────────────────────────────────────────────────────── */}
+        <div className="flex items-center gap-2.5 pt-1">
+          {creatorAvatar ? (
+            <img
+              src={creatorAvatar}
+              alt={creatorName}
+              className="w-7 h-7 rounded-full object-cover border border-black/10 shadow-sm flex-shrink-0"
+            />
+          ) : (
+            <div
+              className={`w-7 h-7 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm`}
+            >
+              {creatorInitial}
+            </div>
+          )}
+          <p className="text-sm text-black/50">
+            Tổ chức bởi <span className="font-semibold text-black/75">{creatorName}</span>
+          </p>
+
+          {/* Suspended reason inline notice */}
+          {campaign.status === "suspended" && campaign.suspendReason && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-black/20 mx-1" />
+              <span className="text-xs text-red-600 font-medium truncate max-w-[200px]">{campaign.suspendReason}</span>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* ── Title ──────────────────────────────────────────────────────────── */}
-      <h1 className="text-2xl sm:text-3xl font-black text-black leading-tight tracking-tight">{campaign.title}</h1>
-
-      {/* ── Creator row ────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 pt-1">
-        {creatorAvatar ? (
-          <img
-            src={creatorAvatar}
-            alt={creatorName}
-            className="w-7 h-7 rounded-full object-cover border border-black/10 shadow-sm flex-shrink-0"
-          />
-        ) : (
-          <div
-            className={`w-7 h-7 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm`}
-          >
-            {creatorInitial}
-          </div>
-        )}
-        <p className="text-sm text-black/50">
-          Tổ chức bởi <span className="font-semibold text-black/75">{creatorName}</span>
-        </p>
-
-        {/* Suspended reason inline notice */}
-        {campaign.status === "suspended" && campaign.suspendReason && (
-          <>
-            <span className="w-1 h-1 rounded-full bg-black/20 mx-1" />
-            <span className="text-xs text-red-600 font-medium truncate max-w-[200px]">{campaign.suspendReason}</span>
-          </>
-        )}
+      {/* Right: Buttons */}
+      <div className="flex flex-col gap-2 shrink-0">
+        <Link href={`/campaigns/${campaign.id}`}>
+          <Button variant="outline" size="sm" className="hover:bg-black/5">
+            <Eye className="w-4 h-4" />
+            Xem công khai
+          </Button>
+        </Link>
+        <Button 
+          onClick={() => setIsCampaignEditOpen(true)}
+          size="sm"
+          className="bg-black hover:bg-black/90"
+        >
+          <Edit2 className="w-4 h-4" />
+          Sửa chiến dịch
+        </Button>
       </div>
     </div>
-     <div className="flex flex-col gap-2 shrink-0">
-                                        <Link href={`/campaigns/${campaign.id}`}>
-                                            <Button variant="outline" size="sm" className="hover:bg-black/5">
-                                                <Eye className="w-4 h-4" />
-                                                Xem công khai
-                                            </Button>
-                                        </Link>
-                                        <Button 
-                                            onClick={() => setIsCampaignEditOpen(true)}
-                                            size="sm"
-                                            className="bg-black hover:bg-black/90"
-                                        >
-                                            <Edit2 className="w-4 h-4" />
-                                            Sửa chiến dịch
-                                        </Button>
-                                    </div>
-    </>
-   
   );
 }

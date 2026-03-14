@@ -42,42 +42,43 @@ export function UpdateDetailModal({
 
                     {/* Modal */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl bg-white rounded-xl shadow-2xl"
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                        className="fixed right-4 top-24 z-50 bg-white rounded-2xl shadow-2xl border border-black/10 flex flex-col"
+                        style={{ width: "calc(40% - 1rem)", maxHeight: "80vh" }}
                     >
                         {/* Header */}
-                        <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-black/10">
-                            <div className="flex-1">
-                                <h2 className="text-xl font-bold text-black mb-1">
+                        <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-black/10 flex-shrink-0">
+                            <div className="flex-1 min-w-0">
+                                <h2 className="text-lg font-bold text-black mb-1 truncate">
                                     {update.title}
                                 </h2>
-                                <p className="text-sm text-black/50">
+                                <p className="text-xs text-black/50">
                                     {formatDate(update.createdAt)}
                                 </p>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 hover:bg-black/5 rounded-lg transition-colors"
+                                className="p-2 hover:bg-black/5 rounded-lg transition-colors flex-shrink-0"
                             >
-                                <X className="w-5 h-5 text-black/50" />
+                                <X className="w-4 h-4 text-black/50" />
                             </button>
                         </div>
 
                         {/* Content */}
-                        <div className="max-h-[60vh] overflow-y-auto px-6 py-4">
+                        <div className="flex-1 overflow-y-auto px-6 py-4">
                             <RichTextContent 
                                 content={update.content} 
-                                className="text-base md:text-lg"
+                                className="text-sm md:text-base"
                             />
                         </div>
 
                         {/* Footer */}
-                        <div className="flex justify-end gap-2 px-6 py-4 border-t border-black/10">
+                        <div className="flex justify-end gap-2 px-6 py-3 border-t border-black/10 flex-shrink-0 bg-black/2">
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 rounded-lg bg-black/5 hover:bg-black/10 transition-colors text-black font-medium"
+                                className="px-3 py-1.5 rounded-lg bg-black/5 hover:bg-black/10 transition-colors text-black font-medium text-sm"
                             >
                                 Đóng
                             </button>

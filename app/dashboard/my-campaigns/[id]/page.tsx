@@ -193,43 +193,7 @@ const images = [campaign!.thumbnailUrl, ...(campaign!.mediaUrls ?? [])].filter(
                     <div className="lg:col-span-2 space-y-6">
                         
                         <CampaignImageSlider images={images} />
-
-                        {/* 2. Title + meta (compact header)
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                        >
-                            <div className="flex items-start justify-between gap-4 mb-4">
-                                <div className="flex-1">
-                                    <h1 className="text-4xl md:text-5xl font-black text-black mb-3 leading-tight">
-                                        {campaign.title}
-                                    </h1>
-                                    <div className="flex items-center gap-3">
-                                        <span className="inline-block px-3 py-1.5 rounded-full bg-rose-100 border border-rose-300 text-xs font-bold text-rose-700">
-                                            {campaign.category}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-2 shrink-0">
-                                    <Link href={`/campaigns/${campaign.id}`}>
-                                        <Button variant="outline" size="sm" className="hover:bg-black/5">
-                                            <Eye className="w-4 h-4" />
-                                            Xem công khai
-                                        </Button>
-                                    </Link>
-                                    <Button 
-                                        onClick={() => setIsCampaignEditOpen(true)}
-                                        size="sm"
-                                        className="bg-black hover:bg-black/90"
-                                    >
-                                        <Edit2 className="w-4 h-4" />
-                                        Sửa chiến dịch
-                                    </Button>
-                                </div>
-                            </div>
-                        </motion.div> */}
-                    <MyCampaignHeader campaign={campaign} setIsCampaignEditOpen={setIsCampaignEditOpen} />
+                        <MyCampaignHeader campaign={campaign} setIsCampaignEditOpen={setIsCampaignEditOpen} />
                         {/* 3. Story Section */}
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}

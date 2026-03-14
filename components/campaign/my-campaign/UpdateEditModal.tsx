@@ -11,14 +11,14 @@ import {
     useUpdateCampaignUpdateMutation,
 } from "@/lib/store/features/campaign/campaignApi";
 
-interface UpdateModalProps {
+interface UpdateEditModalProps {
     campaignId: string;
     isOpen: boolean;
     onClose: () => void;
     updateToEdit?: any;
 }
 
-export function UpdateModal({ campaignId, isOpen, onClose, updateToEdit }: UpdateModalProps) {
+export function UpdateEditModal({ campaignId, isOpen, onClose, updateToEdit }: UpdateEditModalProps) {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [isDraft, setIsDraft] = useState(true);
