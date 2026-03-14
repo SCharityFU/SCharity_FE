@@ -30,6 +30,8 @@ import {
     useGetMyRequestByIdQuery,
     useUpdateRequestBankInfoMutation,
 } from "@/lib/store/features/campaign/campaignApi";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 /** Remove Vietnamese diacritics → plain uppercase ASCII (bank standard) */
 function removeDiacritics(str: string): string {
@@ -134,14 +136,17 @@ export default function UpdateBankInfoPage() {
             }).unwrap();
 
             setShowConfirm(false);
-            setFeedback({ type: "success", text: "Cập nhật thông tin ngân hàng thành công!" });
+            const successMessage = "Cập nhật thông tin ngân hàng thành công!";
+            setFeedback({ type: "success", text: successMessage });
+            toast.success(successMessage);
 
             // Redirect after success
             setTimeout(() => router.push("/dashboard/my-requests"), 1500);
-        } catch (err: any) {
+        } catch (err: unknown) {
             setShowConfirm(false);
-            const msg = err?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.";
+            const msg = getSafeApiErrorMessage(err, "Có lỗi xảy ra. Vui lòng thử lại.");
             setFeedback({ type: "error", text: msg });
+            toast.error(msg);
         }
     };
 

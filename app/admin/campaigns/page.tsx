@@ -5,12 +5,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/lib/store/hooks";
 import { UserRole, CampaignStatus } from "@/dtos";
 import { useDebounce } from "@/hooks/useDebounce";
-import {
-  useGetAdminCampaignsQuery,
-} from "@/lib/store/features/admin/adminApi";
+import { useGetAdminCampaignsQuery } from "@/lib/store/features/admin/adminApi";
 import type { AdminCampaignListItemDto } from "@/dtos/admin";
 import { CampaignsFilters } from "@/components/admin/campaigns/CampaignsFilters";
 import { CampaignsTable } from "@/components/admin/campaigns/CampaignsTable";
+import { SuspendCampaignModal } from "@/components/admin/campaigns/SuspendCampaignModal";
+import { UnsuspendConfirmDialog } from "@/components/admin/campaigns/UnsuspendConfirmDialog";
 import { useAnimatedToast } from "@/components/ui/animated-toast";
 
 function parsePositiveInt(value: string | null, fallback: number) {
@@ -27,7 +27,9 @@ export default function AdminCampaignsPage() {
   const lastErrorKeyRef = useRef<string | null>(null);
 
   const [page, setPage] = useState(() => parsePositiveInt(searchParams.get("page"), 1));
-  const [limit, setLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100));
+  const [limit, setLimit] = useState(() =>
+    Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100),
+  );
   const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [status, setStatus] = useState(() => searchParams.get("status") ?? "all");
   const [category, setCategory] = useState(() => searchParams.get("category") ?? "");
@@ -59,7 +61,7 @@ export default function AdminCampaignsPage() {
       status: status !== "all" ? (status as CampaignStatus) : undefined,
       category: category.trim() || undefined,
     },
-    { skip: !isAdmin }
+    { skip: !isAdmin },
   );
 
   const latestRowsRef = useRef<AdminCampaignListItemDto[]>([]);
@@ -71,6 +73,12 @@ export default function AdminCampaignsPage() {
   const pagination = data?.pagination;
 
   const hasActiveFilters = Boolean(debouncedSearch.trim() || status !== "all" || category.trim());
+
+  // Suspend / Unsuspend modal state
+  const [suspendTarget, setSuspendTarget] = useState<{ id: string; title: string } | null>(null);
+  const [unsuspendTarget, setUnsuspendTarget] = useState<{ id: string; title: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!isError) {
@@ -88,9 +96,10 @@ export default function AdminCampaignsPage() {
       return;
     }
 
-    const message = statusCode === 404
-      ? "Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404)."
-      : "Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại.";
+    const message =
+      statusCode === 404
+        ? "Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404)."
+        : "Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại.";
     const errorKey = `${statusCode ?? "unknown"}:${message}`;
     if (lastErrorKeyRef.current === errorKey) return;
     lastErrorKeyRef.current = errorKey;
@@ -124,7 +133,9 @@ export default function AdminCampaignsPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-base md:text-lg font-semibold text-black">Quản lý chiến dịch</h1>
-          <p className="text-xs md:text-sm text-black/50">Theo dõi và quản trị các campaign trên toàn nền tảng.</p>
+          <p className="text-xs md:text-sm text-black/50">
+            Theo dõi và quản trị các campaign trên toàn nền tảng.
+          </p>
         </div>
       </div>
 
@@ -162,11 +173,31 @@ export default function AdminCampaignsPage() {
           setPage(1);
         }}
         onViewDetails={(id) => router.push(`/admin/campaigns/${id}`)}
+        onSuspend={(id, title) => setSuspendTarget({ id, title })}
+        onUnsuspend={(id, title) => setUnsuspendTarget({ id, title })}
       />
 
       {isFetching && rows.length > 0 && (
         <p className="text-xs text-black/40">Đang cập nhật dữ liệu...</p>
       )}
+
+      <SuspendCampaignModal
+        campaignId={suspendTarget?.id ?? null}
+        campaignTitle={suspendTarget?.title ?? ""}
+        open={!!suspendTarget}
+        onOpenChange={(open) => {
+          if (!open) setSuspendTarget(null);
+        }}
+      />
+
+      <UnsuspendConfirmDialog
+        campaignId={unsuspendTarget?.id ?? null}
+        campaignTitle={unsuspendTarget?.title ?? ""}
+        open={!!unsuspendTarget}
+        onOpenChange={(open) => {
+          if (!open) setUnsuspendTarget(null);
+        }}
+      />
     </div>
   );
 }

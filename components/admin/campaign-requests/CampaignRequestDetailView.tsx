@@ -24,6 +24,7 @@ import {
   requestStatusClassName,
   requestStatusLabel,
 } from "@/components/admin/campaign-requests/campaignRequestsUtils";
+import { mapCategoryToVietnamese } from "@/lib/utils";
 
 interface CampaignRequestDetailViewProps {
   detail: AdminCampaignRequestItemDto;
@@ -61,6 +62,10 @@ export function CampaignRequestDetailView({
     await onReview({ action: "reject", rejectReason: trimmedReason });
   };
 
+  const getCategoryLabel = (category: string) => {
+    return mapCategoryToVietnamese(category);
+  }
+
   return (
     <div className="space-y-3">
       <Link href="/admin/campaign-requests" className="inline-flex text-sm text-rose-600 hover:underline">
@@ -82,7 +87,7 @@ export function CampaignRequestDetailView({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          <p className="text-black/60">Danh mục: <span className="font-semibold text-black">{detail.category}</span></p>
+          <p className="text-black/60">Danh mục: <span className="font-semibold text-black">{getCategoryLabel(detail.category)}</span></p>
           <p className="text-black/60">Deadline: <span className="font-semibold text-black">{formatDateTimeVN(detail.deadline)}</span></p>
           <p className="text-black/60">Mục tiêu: <span className="font-semibold text-black">{formatVND(detail.goalAmount)}</span></p>
           <p className="text-black/60">Thời gian gửi: <span className="font-semibold text-black">{formatDateTimeVN(detail.createdAt)}</span></p>

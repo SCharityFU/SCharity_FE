@@ -8,6 +8,7 @@ import { useForgotPasswordMutation } from "@/lib/store/features/auth/authApi";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useAnimatedToast } from "@/components/ui/animated-toast";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Định dạng email không hợp lệ"),
@@ -41,8 +42,8 @@ export default function ForgotPasswordPage() {
         title: "Đã gửi yêu cầu",
         message,
       });
-    } catch (err: any) {
-      const message = err?.data?.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.";
+    } catch (err: unknown) {
+      const message = getSafeApiErrorMessage(err, "Đã xảy ra lỗi. Vui lòng thử lại sau.");
       setServerError(message);
       addToast({
         type: "error",

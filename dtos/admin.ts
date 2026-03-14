@@ -6,8 +6,10 @@ import {
   CampaignStatus,
   WithdrawStatus,
   ReportStatus,
+  ReportReason,
 } from './enums';
 import { DonationChartDataPointDto } from './campaign';
+import { UserPublicDto } from './auth';
 
 // ── Request DTOs ────────────────────────────────────────────────────────────
 
@@ -117,6 +119,48 @@ export interface AdminCampaignRequestItemDto {
   updatedAt: string;
 }
 
+export interface AdminWithdrawBankInfoDto {
+  bankName: string;
+  accountNumber: string;
+  accountHolderName: string;
+}
+
+export interface AdminWithdrawRelatedCampaignDto {
+  id: string;
+  title?: string;
+}
+
+export interface AdminWithdrawRelatedUserDto {
+  id: string;
+  fullName?: string;
+  email?: string;
+}
+
+export interface AdminWithdrawRequestItemDto {
+  id: string;
+  amount: number;
+  status: WithdrawStatus;
+  rejectReason: string | null;
+  bankInfo: AdminWithdrawBankInfoDto;
+  campaignId: string;
+  campaign?: AdminWithdrawRelatedCampaignDto;
+  requesterId: string;
+  requester?: AdminWithdrawRelatedUserDto;
+  processedById: string | null;
+  processedBy?: AdminWithdrawRelatedUserDto | null;
+  processedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminProcessWithdrawResponseDto {
+  id: string;
+  status: WithdrawStatus;
+  processedById: string | null;
+  processedAt: string | null;
+  rejectReason: string | null;
+}
+
 export interface AdminCampaignDetailDto {
   id: string;
   title: string;
@@ -180,6 +224,31 @@ export interface AdminCampaignListItemDto {
   viewDetails: AdminCampaignViewDetailsDto;
   deadline: string;
   createdAt: string;
+}
+
+// ── Report Response DTO ─────────────────────────────────────────────────────
+
+export interface AdminReportCampaignDto {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+}
+
+export interface AdminReportResponseDto {
+  id: string;
+  reason: ReportReason;
+  description: string | null;
+  evidenceUrls: string[] | null;
+  status: ReportStatus;
+  campaignId: string;
+  campaign?: AdminReportCampaignDto;
+  reporterId: string;
+  reporter?: UserPublicDto;
+  resolvedById: string | null;
+  resolvedBy?: UserPublicDto;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ── Response DTOs ───────────────────────────────────────────────────────────

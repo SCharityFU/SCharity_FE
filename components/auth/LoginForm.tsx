@@ -5,9 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLoginMutation } from "@/lib/store/features/auth/authApi";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 const loginSchema = z.object({
   email: z.string().email("Định dạng email không hợp lệ"),
@@ -18,6 +20,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loginApi, { isLoading }] = useLoginMutation();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -38,10 +41,14 @@ export function LoginForm() {
       }).unwrap();
       
       if (response.success) {
-        router.push("/");
+        const redirectTo = searchParams.get("redirect") || "/dashboard";
+        toast.success("Đăng nhập thành công");
+        router.push(redirectTo);
       }
-    } catch (err: any) {
-      setServerError(err?.data?.message || "Đăng nhập thất bại. Kiểm tra lại thông tin.");
+    } catch (err: unknown) {
+      const message = getSafeApiErrorMessage(err, "Đăng nhập thất bại. Kiểm tra lại thông tin.");
+      setServerError(message);
+      toast.error(message);
     }
   };
 

@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useVerifyEmailMutation } from "@/lib/store/features/auth/authApi";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 function VerifyEmailContent() {
     const searchParams = useSearchParams();
@@ -27,14 +29,20 @@ function VerifyEmailContent() {
                 await verifyEmail({ token }).unwrap();
                 setStatus("success");
                 setMessage("Tài khoản của bạn đã được xác thực thành công!");
+                toast.success("Tài khoản của bạn đã được xác thực thành công!");
                 
                 // Optional: auto-redirect after 3s
                 setTimeout(() => {
                     router.push("/login");
                 }, 3000);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 setStatus("error");
-                setMessage(err?.data?.message || "Xác thực thất bại. Đường dẫn có thể đã hết hạn hoặc không hợp lệ.");
+                const errorMessage = getSafeApiErrorMessage(
+                    err,
+                    "Xác thực thất bại. Đường dẫn có thể đã hết hạn hoặc không hợp lệ."
+                );
+                setMessage(errorMessage);
+                toast.error(errorMessage);
             }
         };
 

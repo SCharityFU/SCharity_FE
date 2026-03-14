@@ -4,11 +4,18 @@ import type {
   AdminCampaignAnalyticsDto,
   AdminCampaignDetailDto,
   AdminCampaignRequestItemDto,
+  AdminProcessWithdrawResponseDto,
   AdminCampaignListItemDto,
   AdminCampaignsQueryDto,
   AdminCampaignTransactionsQueryDto,
+  AdminReportResponseDto,
+  AdminReportsQueryDto,
   AdminCampaignRequestsQueryDto,
   AdminTransactionsQueryDto,
+  AdminWithdrawRequestItemDto,
+  AdminWithdrawRequestsQueryDto,
+  ProcessWithdrawRequestDto,
+  SuspendCampaignRequestDto,
   ReviewCampaignRequestDto,
 } from "@/dtos/admin";
 
@@ -42,10 +49,54 @@ export const adminApi = createApi({
     "AdminCampaigns",
     "AdminCampaignDetail",
     "AdminCampaignAnalytics",
+    "AdminReports",
     "AdminCampaignRequests",
     "AdminCampaignRequestDetail",
+    "AdminWithdrawRequests",
+    "AdminWithdrawRequestDetail",
   ],
   endpoints: (builder) => ({
+    getAdminWithdrawRequests: builder.query<
+      PaginatedResponseDto<AdminWithdrawRequestItemDto>,
+      AdminWithdrawRequestsQueryDto
+    >({
+      query: ({ page = 1, limit = 10, status } = {}) => ({
+        url: "/admin/withdraw-requests",
+        params: {
+          page,
+          limit,
+          ...(status ? { status } : {}),
+        },
+      }),
+      providesTags: ["AdminWithdrawRequests"],
+    }),
+
+    getAdminWithdrawRequestDetail: builder.query<
+      ApiResponseDto<AdminWithdrawRequestItemDto>,
+      string
+    >({
+      query: (requestId) => `/admin/withdraw-requests/${requestId}`,
+      providesTags: (_result, _error, requestId) => [
+        "AdminWithdrawRequestDetail",
+        { type: "AdminWithdrawRequestDetail" as const, id: requestId },
+      ],
+    }),
+
+    processAdminWithdrawRequest: builder.mutation<
+      ApiResponseDto<AdminProcessWithdrawResponseDto>,
+      { requestId: string; payload: ProcessWithdrawRequestDto }
+    >({
+      query: ({ requestId, payload }) => ({
+        url: `/admin/withdraw-requests/${requestId}/process`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: (_result, _error, { requestId }) => [
+        "AdminWithdrawRequests",
+        { type: "AdminWithdrawRequestDetail" as const, id: requestId },
+      ],
+    }),
+
     getAdminCampaignRequests: builder.query<
       PaginatedResponseDto<AdminCampaignRequestItemDto>,
       AdminCampaignRequestsQueryDto
@@ -108,10 +159,7 @@ export const adminApi = createApi({
       providesTags: ["AdminCampaigns"],
     }),
 
-    getAdminCampaignDetail: builder.query<
-      ApiResponseDto<AdminCampaignDetailDto>,
-      string
-    >({
+    getAdminCampaignDetail: builder.query<ApiResponseDto<AdminCampaignDetailDto>, string>({
       query: (campaignId) => `/admin/campaigns/${campaignId}`,
       providesTags: ["AdminCampaignDetail"],
     }),
@@ -161,10 +209,60 @@ export const adminApi = createApi({
       }),
       providesTags: ["AdminTransactions"],
     }),
+
+    // ── Reports ──────────────────────────────────────────────────────────
+
+    getAdminReports: builder.query<
+      PaginatedResponseDto<AdminReportResponseDto>,
+      AdminReportsQueryDto
+    >({
+      query: ({ page = 1, limit = 10, status } = {}) => ({
+        url: "/admin/reports",
+        params: {
+          page,
+          limit,
+          ...(status ? { status } : {}),
+        },
+      }),
+      providesTags: ["AdminReports"],
+    }),
+
+    resolveReport: builder.mutation<ApiResponseDto<AdminReportResponseDto>, string>({
+      query: (reportId) => ({
+        url: `/admin/reports/${reportId}/resolve`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["AdminReports"],
+    }),
+
+    // ── Suspend / Unsuspend ──────────────────────────────────────────────
+
+    suspendCampaign: builder.mutation<
+      ApiResponseDto,
+      { campaignId: string; body: SuspendCampaignRequestDto }
+    >({
+      query: ({ campaignId, body }) => ({
+        url: `/admin/campaigns/${campaignId}/suspend`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["AdminCampaigns", "AdminCampaignDetail"],
+    }),
+
+    unsuspendCampaign: builder.mutation<ApiResponseDto, string>({
+      query: (campaignId) => ({
+        url: `/admin/campaigns/${campaignId}/unsuspend`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["AdminCampaigns", "AdminCampaignDetail"],
+    }),
   }),
 });
 
 export const {
+  useGetAdminWithdrawRequestsQuery,
+  useGetAdminWithdrawRequestDetailQuery,
+  useProcessAdminWithdrawRequestMutation,
   useGetAdminCampaignRequestsQuery,
   useGetAdminCampaignRequestDetailQuery,
   useReviewAdminCampaignRequestMutation,
@@ -173,4 +271,8 @@ export const {
   useGetAdminCampaignAnalyticsQuery,
   useGetAdminTransactionsQuery,
   useGetAdminCampaignTransactionsQuery,
+  useGetAdminReportsQuery,
+  useResolveReportMutation,
+  useSuspendCampaignMutation,
+  useUnsuspendCampaignMutation,
 } = adminApi;

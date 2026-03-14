@@ -1,6 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../../store';
 
+interface UploadFileResponse {
+  url: string;
+  key: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -43,7 +51,19 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['UserProfile'],
     }),
+
+    uploadMyAsset: builder.mutation<
+      { success: boolean; message: string; data: UploadFileResponse },
+      FormData
+    >({
+      query: (formData) => ({
+        url: '/me/upload',
+        method: 'POST',
+        body: formData,
+        formData: true,
+      }),
+    }),
   }),
 });
 
-export const { useGetMeQuery, useUpdateProfileMutation } = userApi;
+export const { useGetMeQuery, useUpdateProfileMutation, useUploadMyAssetMutation } = userApi;

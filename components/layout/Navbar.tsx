@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, Menu, X, LogOut, LayoutDashboard, FileText, Megaphone, ChevronDown, User } from "lucide-react";
+import { Heart, Menu, X, LogOut, LayoutDashboard, FileText, Megaphone, ChevronDown, User, History, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { logout } from "@/lib/store/features/auth/authSlice";
@@ -85,11 +85,11 @@ export function Navbar() {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => router.push("/dashboard")}>
                                         <LayoutDashboard className="w-4 h-4 text-gray-400" />
-                                        Dashboard
+                                        Quản lý dự án
                                     </DropdownMenuItem>
                                     {isAdmin && (
                                         <DropdownMenuItem onClick={() => router.push("/admin")}>
-                                            <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                                            <Lock className="w-4 h-4 text-gray-400" onClick={() => router.push("/admin")}/>
                                             Quản trị Admin
                                         </DropdownMenuItem>
                                     )}
@@ -100,6 +100,10 @@ export function Navbar() {
                                     <DropdownMenuItem onClick={() => router.push("/dashboard/my-campaigns")}>
                                         <Megaphone className="w-4 h-4 text-gray-400" />
                                         Chiến Dịch Của Tôi
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push("/dashboard/mydonation")}>
+                                        <History className="w-4 h-4 text-gray-400" />
+                                        Lịch Sử Quyên Góp
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => router.push("/profile")}>
                                         <User className="w-4 h-4 text-gray-400" />
@@ -192,6 +196,19 @@ export function Navbar() {
                                 onClick={() => setMobileOpen(false)}
                             >
                                 <Megaphone className="w-4 h-4" /> Chiến Dịch Của Tôi
+                            </Link>
+                            <Link
+                                href="/dashboard/mydonation"
+                                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                <History className="w-4 h-4" /> Lịch Sử Quyên Góp
+                            </Link>
+                            <Link
+                                href="/profile"
+                                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                                onClick={() => setMobileOpen(false)}
+                            >
                                 <User className="w-4 h-4" /> Xem Hồ Sơ
                             </Link>
                             <button

@@ -12,13 +12,22 @@ import {
   CalendarDays,
   Banknote,
   AlertOctagon,
+  Loader2,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import type { PublicCampaignDetailResponseDto } from "@/dtos/campaign";
 import type { DonationResponseDto } from "@/dtos/donation";
-import { formatVND, formatDateOnly } from "@/lib/utils";
+import {
+  formatVND,
+  formatDateOnly,
+  formatCampaignProgressPercent,
+  resolveCampaignProgressPercent,
+} from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { useCreateDonationMutation } from "@/lib/store/features/donation/donationApi";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -43,12 +52,10 @@ function donorGradient(seed: string) {
 
 function ProgressBar({ progress, reached }: { progress: number; reached: boolean }) {
   const [width, setWidth] = useState(0);
-  const fired = useRef(false);
 
   useEffect(() => {
-    if (fired.current) return;
-    fired.current = true;
-    const id = requestAnimationFrame(() => setWidth(Math.min(progress, 100)));
+    const targetWidth = Math.max(0, Math.min(progress, 100));
+    const id = requestAnimationFrame(() => setWidth(targetWidth));
     return () => cancelAnimationFrame(id);
   }, [progress]);
 
@@ -57,7 +64,9 @@ function ProgressBar({ progress, reached }: { progress: number; reached: boolean
       <div
         className={cn(
           "h-full rounded-full transition-[width] duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
-          reached ? "bg-gradient-to-r from-emerald-400 to-teal-500" : "bg-gradient-to-r from-rose-500 to-violet-500",
+          reached
+            ? "bg-gradient-to-r from-emerald-400 to-teal-500"
+            : "bg-gradient-to-r from-rose-500 to-violet-500",
         )}
         style={{ width: `${width}%` }}
       />
@@ -80,11 +89,16 @@ function StatChip({
 }) {
   return (
     <div className="flex-1 flex flex-col items-center gap-1 py-3 glass border border-black/5 rounded-xl">
-      <Icon className={cn("w-4 h-4", urgent ? "text-rose-500" : "text-black/35")} />
-      <span className={cn("text-base font-black tabular-nums leading-none", urgent ? "text-rose-500" : "text-black")}>
+      <Icon className={cn("w-4 h-4", urgent ? "text-rose-500" : "text-black")} />
+      <span
+        className={cn(
+          "text-base font-black tabular-nums leading-none",
+          urgent ? "text-rose-500" : "text-black",
+        )}
+      >
         {value}
       </span>
-      <span className="text-[11px] text-black/35 font-medium">{label}</span>
+      <span className="text-[11px] text-black font-medium">{label}</span>
     </div>
   );
 }
@@ -99,7 +113,7 @@ function DonorRow({ donation, rank }: { donation: DonationResponseDto; rank: num
 
   const rankStyles: Record<number, string> = {
     0: "bg-amber-400/20 text-amber-600 border border-amber-400/40",
-    1: "bg-black/6 text-black/45 border border-black/10",
+    1: "bg-black/6 text-black border border-black/10",
     2: "bg-amber-700/10 text-amber-700 border border-amber-600/25",
   };
 
@@ -134,22 +148,24 @@ function DonorRow({ donation, rank }: { donation: DonationResponseDto; rank: num
             gradient,
           )}
         >
-          {donation.isAnonymous ? <Heart className="w-3.5 h-3.5 fill-white/70 text-white" /> : initial}
+          {donation.isAnonymous ? (
+            <Heart className="w-3.5 h-3.5 fill-white/70 text-white" />
+          ) : (
+            initial
+          )}
         </div>
       )}
 
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-black truncate leading-tight">{name}</p>
-        {donation.message ? (
-          <p className="text-[11px] text-black/35 italic truncate mt-px">"{donation.message}"</p>
-        ) : (
-          <p className="text-[11px] text-black/30 mt-px">{formatDateOnly(donation.createdAt)}</p>
-        )}
+        <p className="text-[11px] text-black mt-px">{formatDateOnly(donation.createdAt)}</p>
       </div>
 
       {/* Amount */}
-      <span className="text-xs font-black text-rose-500 flex-shrink-0 tabular-nums">{formatVND(donation.amount)}</span>
+      <span className="text-xs font-black text-rose-500 flex-shrink-0 tabular-nums">
+        {formatVND(donation.amount)}
+      </span>
     </div>
   );
 }
@@ -160,15 +176,47 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
   const [copied, setCopied] = useState(false);
   const [donorModalOpen, setDonorModalOpen] = useState(false);
 
+  // ── Donate modal state ────────────────────────────────────────────────────
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
+  const [donateAmount, setDonateAmount] = useState<number | "">("");
+  const [donateMessage, setDonateMessage] = useState("");
+  const [donateAnonymous, setDonateAnonymous] = useState(false);
+  const [createDonation, { isLoading: isDonating }] = useCreateDonationMutation();
+
+  const handleDonateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!donateAmount || donateAmount < 10000) return;
+    try {
+      const res = await createDonation({
+        campaignId: campaign.id,
+        amount: Number(donateAmount),
+        message: donateMessage || undefined,
+        isAnonymous: donateAnonymous,
+      }).unwrap();
+      if (res.data?.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
+      }
+    } catch (err: unknown) {
+      toast.error(getSafeApiErrorMessage(err, "Đã xảy ra lỗi khi tạo thanh toán"));
+    }
+  };
+
   // ── Derived values ─────────────────────────────────────────────────────────
   const goal = campaign.goalAmount || 1;
   const raised = campaign.raisedAmount ?? 0;
-  const progress = campaign.progressPercent ?? Math.min((raised / goal) * 100, 100);
+  const progress = resolveCampaignProgressPercent({
+    progressPercent: campaign.progressPercent,
+    raisedAmount: raised,
+    goalAmount: goal,
+  });
   const reached = progress >= 100;
   const remaining = Math.max(0, goal - raised);
 
   const daysLeft = campaign.deadline
-    ? Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(
+        0,
+        Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      )
     : 0;
 
   const isUrgent = daysLeft > 0 && daysLeft <= 7 && campaign.status === "active";
@@ -205,8 +253,12 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             <div className="flex items-center gap-2.5 p-3 mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
               <Trophy className="w-4 h-4 text-emerald-600 flex-shrink-0" />
               <div>
-                <p className="text-xs font-bold text-emerald-800 leading-tight">Đã đạt mục tiêu! 🎉</p>
-                <p className="text-[11px] text-emerald-700 mt-px">Chiến dịch vẫn tiếp tục nhận quyên góp.</p>
+                <p className="text-xs font-bold text-emerald-800 leading-tight">
+                  Đã đạt mục tiêu! 🎉
+                </p>
+                <p className="text-[11px] text-emerald-700 mt-px">
+                  Chiến dịch vẫn tiếp tục nhận quyên góp.
+                </p>
               </div>
             </div>
           )}
@@ -216,7 +268,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             <div className="flex items-center gap-2 p-2.5 mb-4 rounded-xl bg-rose-500/8 border border-rose-500/20">
               <Flame className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
               <p className="text-[11px] font-semibold text-rose-700">
-                {daysLeft === 1 ? "Chỉ còn 1 ngày cuối cùng!" : `Còn ${daysLeft} ngày nữa!`} Hãy ủng hộ ngay.
+                {daysLeft === 1 ? "Chỉ còn 1 ngày cuối cùng!" : `Còn ${daysLeft} ngày nữa!`} Hãy ủng
+                hộ ngay.
               </p>
             </div>
           )}
@@ -225,19 +278,23 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           {isSuspended && (
             <div className="flex items-center gap-2 p-2.5 mb-4 rounded-xl bg-red-500/8 border border-red-500/20">
               <AlertOctagon className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-              <p className="text-[11px] font-semibold text-red-700">Chiến dịch đang tạm ngưng, không nhận quyên góp.</p>
+              <p className="text-[11px] font-semibold text-red-700">
+                Chiến dịch đang tạm ngưng, không nhận quyên góp.
+              </p>
             </div>
           )}
 
           {/* ── Raised amount ──────────────────────────────────────────────── */}
           <div className="mb-1">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-black tabular-nums">{formatVND(raised)}</span>
+              <span className="text-2xl font-black text-black tabular-nums">
+                {formatVND(raised)}
+              </span>
               {reached && <Trophy className="w-4 h-4 text-amber-500 mb-0.5 flex-shrink-0" />}
             </div>
-            <p className="text-xs text-black/40 mt-0.5">
+            <p className="text-xs text-black mt-0.5">
               đã đạt được trong tổng mục tiêu{" "}
-              <span className="font-semibold text-black/60">{formatVND(campaign.goalAmount)}</span>
+              <span className="font-semibold text-black">{formatVND(campaign.goalAmount)}</span>
             </p>
           </div>
 
@@ -248,10 +305,17 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
           {/* Progress label row */}
           <div className="flex items-center justify-between mb-4">
-            <span className={cn("text-xs font-bold tabular-nums", reached ? "text-emerald-600" : "text-rose-500")}>
-              {progress.toFixed(1)}%
+            <span
+              className={cn(
+                "text-xs font-bold tabular-nums",
+                reached ? "text-emerald-600" : "text-rose-500",
+              )}
+            >
+              {formatCampaignProgressPercent(progress)}
             </span>
-            {!reached && <span className="text-[11px] text-black/35">còn thiếu {formatVND(remaining)}</span>}
+            {!reached && (
+              <span className="text-[11px] text-black">còn thiếu {formatVND(remaining)}</span>
+            )}
           </div>
 
           {/* ── Stat chips ────────────────────────────────────────────────── */}
@@ -267,15 +331,18 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
           {/* ── Donate button ─────────────────────────────────────────────── */}
           <button
+            onClick={() => setDonateModalOpen(true)}
             disabled={!isActive}
             className={cn(
               "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
               isActive
                 ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25 hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700 hover:scale-[1.01] active:scale-[0.99]"
-                : "bg-black/6 text-black/30 cursor-not-allowed",
+                : "bg-black/6 text-black/60 cursor-not-allowed",
             )}
           >
-            <Heart className={cn("w-4 h-4", isActive ? "fill-white/80 text-white" : "text-black/25")} />
+            <Heart
+              className={cn("w-4 h-4", isActive ? "fill-white/80 text-white" : "text-black/60")}
+            />
             {isActive ? "Quyên Góp Ngay" : isSuspended ? "Đang tạm ngưng" : "Chiến dịch đã đóng"}
           </button>
 
@@ -286,7 +353,7 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
               "w-full mt-2.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200",
               copied
                 ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-700"
-                : "glass border-black/8 text-black/50 hover:text-black/70 hover:bg-white hover:border-black/12",
+                : "glass border-black/8 text-black/70 hover:text-black hover:bg-white hover:border-black/12",
             )}
           >
             {copied ? (
@@ -304,11 +371,11 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
           {/* ── Deadline footnote ─────────────────────────────────────────── */}
           {campaign.deadline && (
-            <div className="flex items-center justify-center gap-1.5 mt-4 text-[11px] text-black/30">
+            <div className="flex items-center justify-center gap-1.5 mt-4 text-[11px] text-black/70">
               <CalendarDays className="w-3 h-3" />
               <span>
                 Hạn chót:{" "}
-                <span className={cn("font-semibold", isUrgent ? "text-rose-500" : "text-black/45")}>
+                <span className={cn("font-semibold", isUrgent ? "text-rose-500" : "text-black")}>
                   {formatDateOnly(campaign.deadline)}
                 </span>
               </span>
@@ -327,7 +394,9 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
                 </div>
                 <h3 className="text-xs font-bold text-black">Người Ủng Hộ</h3>
               </div>
-              <span className="text-[11px] text-black/35 font-medium">{successDonations.length} lượt</span>
+              <span className="text-[11px] text-black/70 font-medium">
+                {successDonations.length} lượt
+              </span>
             </div>
 
             {/* List */}
@@ -341,7 +410,7 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             {hasMoreDonors && (
               <button
                 onClick={() => setDonorModalOpen(true)}
-                className="w-full flex items-center justify-center gap-1.5 py-3 border-t border-black/5 text-[11px] font-semibold text-black/45 hover:text-black/65 hover:bg-black/[0.02] transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 py-3 border-t border-black/5 text-[11px] font-semibold text-black/70 hover:text-black hover:bg-black/[0.02] transition-colors"
               >
                 Xem tất cả {successDonations.length} người ủng hộ
                 <ChevronRight className="w-3 h-3" />
@@ -355,8 +424,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
               <div className="w-10 h-10 rounded-xl bg-rose-500/8 border border-rose-500/15 flex items-center justify-center mx-auto mb-2.5">
                 <Heart className="w-4 h-4 text-rose-400" />
               </div>
-              <p className="text-xs font-semibold text-black/45">Chưa có ai quyên góp</p>
-              <p className="text-[11px] text-black/30 mt-0.5">Hãy là người đầu tiên ủng hộ!</p>
+              <p className="text-xs font-semibold text-black">Chưa có ai quyên góp</p>
+              <p className="text-[11px] text-black/70 mt-0.5">Hãy là người đầu tiên ủng hộ!</p>
             </div>
           )
         )}
@@ -374,6 +443,107 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             <DonorRow key={d.id} donation={d} rank={i} />
           ))}
         </div>
+      </Modal>
+
+      {/* ── Donate modal ──────────────────────────────────────────────────────── */}
+      <Modal
+        open={donateModalOpen}
+        onClose={() => setDonateModalOpen(false)}
+        title="Quyên Góp"
+        subtitle={`Ủng hộ chiến dịch "${campaign.title}"`}
+      >
+        <form onSubmit={handleDonateSubmit}>
+          {/* Amount */}
+          <div>
+            <label className="text-sm font-semibold text-black mb-1.5 block">
+              Số tiền (VNĐ) <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                required
+                min={10000}
+                step={1000}
+                value={donateAmount}
+                onChange={(e) => setDonateAmount(e.target.value ? Number(e.target.value) : "")}
+                className="w-full px-4 py-3 rounded-xl border border-black/10 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none text-black font-semibold pr-12 transition-colors"
+                placeholder="Ví dụ: 50000"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-black/70 font-semibold">
+                ₫
+              </span>
+            </div>
+            <p className="text-[11px] text-black/70 mt-1">Tối thiểu 10,000 VNĐ</p>
+            {/* Quick amount buttons */}
+            <div className="flex gap-2 mt-2">
+              {[50000, 100000, 200000, 500000].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setDonateAmount(v)}
+                  className={cn(
+                    "flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors",
+                    donateAmount === v
+                      ? "bg-rose-500 text-white border-rose-500"
+                      : "border-black/10 text-black/70 hover:border-rose-500/30 hover:text-rose-500",
+                  )}
+                >
+                  {formatVND(v)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Message (becomes Comment.content + Donation.message) */}
+          <div>
+            <label className="text-sm font-semibold text-black mb-1.5 block">
+              Lời nhắn / Động viên
+            </label>
+            <textarea
+              value={donateMessage}
+              onChange={(e) => setDonateMessage(e.target.value)}
+              maxLength={500}
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-black/10 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none text-sm resize-none transition-colors"
+              placeholder="Gửi gắm lời yêu thương đến chiến dịch..."
+            />
+            <p className="text-[11px] text-black text-right mt-0.5">{donateMessage.length}/500</p>
+          </div>
+
+          {/* Anonymous */}
+          <label className="flex items-center gap-2.5 cursor-pointer select-none mb-3">
+            <input
+              type="checkbox"
+              checked={donateAnonymous}
+              onChange={(e) => setDonateAnonymous(e.target.checked)}
+              className="w-4 h-4 rounded border-black/20 text-rose-500 focus:ring-rose-500"
+            />
+            <span className="text-sm text-black">Ủng hộ ẩn danh</span>
+          </label>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isDonating || !donateAmount || donateAmount < 10000}
+            className={cn(
+              "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200",
+              "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25",
+              "hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+            )}
+          >
+            {isDonating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Heart className="w-4 h-4 fill-white/80" />
+                {donateAmount && donateAmount >= 10000
+                  ? `Tiếp tục thanh toán (${formatVND(Number(donateAmount))})`
+                  : "Nhập số tiền để tiếp tục"}
+              </>
+            )}
+          </button>
+        </form>
       </Modal>
     </>
   );

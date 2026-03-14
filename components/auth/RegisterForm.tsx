@@ -7,6 +7,8 @@ import * as z from "zod";
 import { useRegisterMutation } from "@/lib/store/features/auth/authApi";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 const registerSchema = z.object({
   fullName: z.string().min(2, "Họ và tên ít nhất 2 ký tự").max(100),
@@ -48,11 +50,15 @@ export function RegisterForm() {
       }).unwrap();
       
       if (response.success) {
-        setSuccessMessage("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản trước khi đăng nhập.");
+        const message = "Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản trước khi đăng nhập.";
+        setSuccessMessage(message);
+        toast.success(message);
         // Optional: clear form or redirect after a delay
       }
-    } catch (err: any) {
-      setServerError(err?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+    } catch (err: unknown) {
+      const message = getSafeApiErrorMessage(err, "Đăng ký thất bại. Vui lòng thử lại.");
+      setServerError(message);
+      toast.error(message);
     }
   };
 

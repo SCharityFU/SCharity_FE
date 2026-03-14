@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useAnimatedToast } from "@/components/ui/animated-toast";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 const resetPasswordSchema = z.object({
   password: z
@@ -70,8 +71,8 @@ function ResetPasswordContent() {
       setTimeout(() => {
         router.push("/login");
       }, 3000);
-    } catch (err: any) {
-      const message = err?.data?.message || "Thay đổi mật khẩu thất bại. Đường dẫn có thể đã hết hạn.";
+    } catch (err: unknown) {
+      const message = getSafeApiErrorMessage(err, "Thay đổi mật khẩu thất bại. Đường dẫn có thể đã hết hạn.");
       setServerError(message);
       addToast({
         type: "error",
