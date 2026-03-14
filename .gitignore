@@ -37,3 +37,9 @@ next-env.d.ts
 
 # Jetbrains WebStorm
 .idea/
+
+# Private stuff
+/private/
+
+# Package-lock
+package-lock.json

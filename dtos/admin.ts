@@ -6,8 +6,10 @@ import {
   CampaignStatus,
   WithdrawStatus,
   ReportStatus,
+  ReportReason,
 } from './enums';
 import { DonationChartDataPointDto } from './campaign';
+import { UserPublicDto } from './auth';
 
 // ── Request DTOs ────────────────────────────────────────────────────────────
 
@@ -69,6 +71,98 @@ export interface AdminCampaignTransactionsQueryDto {
   search?: string;
   sortBy?: 'createdAt' | 'amount';
   sortOrder?: 'ASC' | 'DESC';
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface AdminCampaignDetailDto {
+  id: string;
+  title: string;
+  story: string;
+  status: CampaignStatus | string;
+  category: CampaignCategory | string;
+  progressPercent: number;
+  raisedAmount: number;
+  goalAmount: number;
+  donorCount: number;
+  reportCount: number;
+  deadline: string;
+  thumbnailUrl: string | null;
+  mediaUrls: string[] | null;
+  suspendReason: string | null;
+  suspendedAt: string | null;
+  closedAt: string | null;
+  approvedAt: string | null;
+  creator: {
+    id: string;
+    fullName: string;
+    avatarUrl: string | null;
+  };
+  publicView?: {
+    campaignId: string;
+    endpoint: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminCampaignAnalyticsPointDto {
+  date: string;
+  amount: number;
+  count: number;
+}
+
+export interface AdminCampaignAnalyticsDto {
+  campaignId: string;
+  days: number;
+  chartData: AdminCampaignAnalyticsPointDto[];
+}
+
+export interface AdminCampaignViewDetailsDto {
+  campaignId: string;
+  endpoint: string;
+}
+
+export interface AdminCampaignListItemDto {
+  id: string;
+  title: string;
+  organizer: {
+    id: string;
+    fullName: string;
+  };
+  status: string;
+  progressPercent: number;
+  raisedAmount: number;
+  goalAmount: number;
+  fundingProgress: string;
+  viewDetails: AdminCampaignViewDetailsDto;
+  deadline: string;
+  createdAt: string;
+}
+
+// ── Report Response DTO ─────────────────────────────────────────────────────
+
+export interface AdminReportCampaignDto {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+}
+
+export interface AdminReportResponseDto {
+  id: string;
+  reason: ReportReason;
+  description: string | null;
+  evidenceUrls: string[] | null;
+  status: ReportStatus;
+  campaignId: string;
+  campaign?: AdminReportCampaignDto;
+  reporterId: string;
+  reporter?: UserPublicDto;
+  resolvedById: string | null;
+  resolvedBy?: UserPublicDto;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ── Response DTOs ───────────────────────────────────────────────────────────

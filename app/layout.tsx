@@ -7,6 +7,8 @@ import StoreProvider from "@/components/providers/StoreProvider";
 import GoogleProvider from "@/components/providers/GoogleProvider";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "sonner";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -37,12 +39,20 @@ export default function RootLayout({
                 />
             </head>
             <body className="antialiased">
+                <NextTopLoader
+                    color="#f43f5e"
+                    height={3}
+                    showSpinner={false}
+                    crawl={true}
+                    speed={200}
+                />
                 <GoogleProvider>
                     <StoreProvider>
                         <AuthProvider>
                             <Navbar />
                             <main>{children}</main>
                             <Footer />
+                            <Toaster position="top-center" richColors closeButton />
                         </AuthProvider>
                     </StoreProvider>
                 </GoogleProvider>

@@ -18,10 +18,19 @@ const mapCategoryToVietnamese = (category: string) => {
   }
 };
 
+const stripHtmlToText = (value: string) => {
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 export function CampaignCard({ campaign }: { campaign: CampaignDto }) {
   const goalAmount = campaign.goalAmount || 1;
   const progress = campaign.progressPercent ?? Math.min((campaign.raisedAmount / goalAmount) * 100, 100);
   const [liked, setLiked] = useState(false);
+  const storyPreview = stripHtmlToText(campaign.story || "");
 
   // Default fallback if no thumbnailUrl
   const hasImage = !!campaign.thumbnailUrl;
@@ -75,7 +84,7 @@ export function CampaignCard({ campaign }: { campaign: CampaignDto }) {
               {campaign.title}
             </HighlightText>
           </h3>
-          <p className="text-sm text-black/50 line-clamp-2 mb-4">{campaign.story}</p>
+          <p className="text-sm text-black/50 line-clamp-2 mb-4">{storyPreview}</p>
 
           {/* Progress */}
           <div className="mb-4">
