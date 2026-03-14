@@ -84,12 +84,16 @@ export const campaignApi = createApi({
         // GET /campaigns/requests/mine — paginated list of own campaign requests
         getMyRequests: builder.query<
             PaginatedResponseDto<CampaignRequestResponseDto>,
-            { page?: number; limit?: number }
+            { page?: number; limit?: number; status?: string }
         >({
-            query: ({ page = 1, limit = 10 } = {}) => ({
-                url: '/campaigns/requests/mine',
-                params: { page, limit },
-            }),
+            query: ({ page = 1, limit = 10, status } = {}) => {
+                const params: Record<string, any> = { page, limit };
+                if (status) params.status = status;
+                return {
+                    url: '/campaigns/requests/mine',
+                    params,
+                };
+            },
             providesTags: ['CampaignRequest'],
         }),
 

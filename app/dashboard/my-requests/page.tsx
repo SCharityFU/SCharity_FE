@@ -141,9 +141,10 @@ function isTinyMceAuxTarget(target: EventTarget | null): boolean {
 export default function MyRequestsPage() {
     const router = useRouter();
     const [page, setPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
     const limit = 10;
 
-    const { data, isLoading, isFetching } = useGetMyRequestsQuery({ page, limit });
+    const { data, isLoading, isFetching } = useGetMyRequestsQuery({ page, limit, status: statusFilter });
 
     const requests = data?.data ?? [];
     const totalPages = data?.pagination?.totalPages ?? 1;
@@ -379,6 +380,31 @@ export default function MyRequestsPage() {
                     </Magnetic>
                 </div>
 
+                {/* Status Filter Tabs */}
+                <div className="mb-8 flex items-center gap-2 flex-wrap">
+                    {[
+                        { value: undefined, label: "Tất cả" },
+                        { value: "pending", label: "Chờ Duyệt" },
+                        { value: "approved", label: "Đã Duyệt" },
+                        { value: "rejected", label: "Từ chối" },
+                    ].map((option) => (
+                        <button
+                            key={option.value ?? "all"}
+                            onClick={() => {
+                                setStatusFilter(option.value);
+                                setPage(1);
+                            }}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                statusFilter === option.value
+                                    ? "bg-rose-500 text-white shadow-lg"
+                                    : "bg-black/5 text-black hover:bg-black/10"
+                            }`}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Loading skeleton */}
                 {isLoading && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -463,9 +489,9 @@ export default function MyRequestsPage() {
                                                 {req.title}
                                             </h3>
 
-                                            {/* Story preview */}
+                                            {/* Story preview - Text only, no images */}
                                             <p className="text-xs text-black/50 line-clamp-2 leading-relaxed mb-3 flex-1">
-                                                <RichTextContent content={req.story} />
+                                                {plainTextFromHtml(req.story)}
                                             </p>
 
                                             {/* Key Info */}
