@@ -7,14 +7,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format a number as VND currency with dot thousands separator.
- * e.g. 1500000 → "1.500.000 ₫"
- */
-export function formatVND(amount: number): string {
-  return amount.toLocaleString("vi-VN") + " ₫";
-}
-
-/**
  * Format a number as short VND currency.
  * e.g. 1500000 → "1,5 tr" | 2000000000 → "2 tỷ"
  */
