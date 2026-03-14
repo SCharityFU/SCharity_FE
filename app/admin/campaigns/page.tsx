@@ -13,6 +13,8 @@ import {
 import type { AdminCampaignListItemDto } from "@/dtos/admin";
 import { CampaignsFilters } from "@/components/admin/campaigns/CampaignsFilters";
 import { CampaignsTable } from "@/components/admin/campaigns/CampaignsTable";
+import { SuspendCampaignModal } from "@/components/admin/campaigns/SuspendCampaignModal";
+import { UnsuspendConfirmDialog } from "@/components/admin/campaigns/UnsuspendConfirmDialog";
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -70,6 +72,10 @@ export default function AdminCampaignsPage() {
   const pagination = data?.pagination;
 
   const hasActiveFilters = Boolean(debouncedSearch.trim() || status !== "all" || category.trim());
+
+  // Suspend / Unsuspend modal state
+  const [suspendTarget, setSuspendTarget] = useState<{ id: string; title: string } | null>(null);
+  const [unsuspendTarget, setUnsuspendTarget] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     if (!isError) return;
@@ -148,11 +154,27 @@ export default function AdminCampaignsPage() {
           setPage(1);
         }}
         onViewDetails={(id) => router.push(`/admin/campaigns/${id}`)}
+        onSuspend={(id, title) => setSuspendTarget({ id, title })}
+        onUnsuspend={(id, title) => setUnsuspendTarget({ id, title })}
       />
 
       {isFetching && rows.length > 0 && (
         <p className="text-xs text-black/40">Đang cập nhật dữ liệu...</p>
       )}
+
+      <SuspendCampaignModal
+        campaignId={suspendTarget?.id ?? null}
+        campaignTitle={suspendTarget?.title ?? ""}
+        open={!!suspendTarget}
+        onOpenChange={(open) => { if (!open) setSuspendTarget(null); }}
+      />
+
+      <UnsuspendConfirmDialog
+        campaignId={unsuspendTarget?.id ?? null}
+        campaignTitle={unsuspendTarget?.title ?? ""}
+        open={!!unsuspendTarget}
+        onOpenChange={(open) => { if (!open) setUnsuspendTarget(null); }}
+      />
     </div>
   );
 }

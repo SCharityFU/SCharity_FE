@@ -21,6 +21,7 @@ import { formatVND, formatDateOnly } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import { useCreateDonationMutation } from "@/lib/store/features/donation/donationApi";
+import { toast } from "sonner";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -179,7 +180,7 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
         window.location.href = res.data.checkoutUrl;
       }
     } catch (err: any) {
-      alert(err?.data?.message || "Đã xảy ra lỗi khi tạo thanh toán");
+      toast.error(err?.data?.message || "Đã xảy ra lỗi khi tạo thanh toán");
     }
   };
 
