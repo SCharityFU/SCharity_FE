@@ -13,11 +13,13 @@ import {
   useGetAdminCampaignDetailQuery,
   useGetAdminCampaignTransactionsQuery,
 } from "@/lib/store/features/admin/adminApi";
-import { UserRole } from "@/dtos";
+import { UserRole, CampaignStatus } from "@/dtos";
 import { CampaignDetailHeader } from "@/components/admin/campaign-detail/CampaignDetailHeader";
 import { CampaignBasicTab } from "@/components/admin/campaign-detail/CampaignBasicTab";
 import { CampaignAnalyticsTab } from "@/components/admin/campaign-detail/CampaignAnalyticsTab";
 import { CampaignTransactionsTab } from "@/components/admin/campaign-detail/CampaignTransactionsTab";
+import { SuspendCampaignModal } from "@/components/admin/campaigns/SuspendCampaignModal";
+import { UnsuspendConfirmDialog } from "@/components/admin/campaigns/UnsuspendConfirmDialog";
 
 type TabKey = "basic" | "analytics" | "transactions";
 
@@ -119,6 +121,15 @@ export default function AdminCampaignDetailPage() {
   const detailStatusCode = (detailQuery.error as { status?: number } | undefined)?.status;
   const detail = detailQuery.data?.data;
 
+  // Suspend / Unsuspend modal state
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [unsuspendOpen, setUnsuspendOpen] = useState(false);
+
+  const canSuspend =
+    detail?.status === CampaignStatus.ACTIVE ||
+    detail?.status === CampaignStatus.CLOSED;
+  const canUnsuspend = detail?.status === CampaignStatus.SUSPENDED;
+
   if (detailStatusCode === 403) {
     return (
       <div className="p-3 md:p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 text-sm">
@@ -165,6 +176,32 @@ export default function AdminCampaignDetailPage() {
 
       {activeTab === "basic" && detail && <CampaignBasicTab detail={detail} />}
 
+      {/* Suspend / Unsuspend actions */}
+      {detail && (
+        <div className="flex items-center gap-2">
+          {canSuspend && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+              onClick={() => setSuspendOpen(true)}
+            >
+              Tạm dừng chiến dịch
+            </Button>
+          )}
+          {canUnsuspend && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+              onClick={() => setUnsuspendOpen(true)}
+            >
+              Gỡ tạm dừng
+            </Button>
+          )}
+        </div>
+      )}
+
       {activeTab === "analytics" && (
         <CampaignAnalyticsTab
           days={days}
@@ -202,6 +239,20 @@ export default function AdminCampaignDetailPage() {
           }}
         />
       )}
+
+      <SuspendCampaignModal
+        campaignId={campaignId}
+        campaignTitle={detail?.title ?? ""}
+        open={suspendOpen}
+        onOpenChange={setSuspendOpen}
+      />
+
+      <UnsuspendConfirmDialog
+        campaignId={campaignId}
+        campaignTitle={detail?.title ?? ""}
+        open={unsuspendOpen}
+        onOpenChange={setUnsuspendOpen}
+      />
     </div>
   );
 }

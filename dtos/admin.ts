@@ -6,8 +6,10 @@ import {
   CampaignStatus,
   WithdrawStatus,
   ReportStatus,
+  ReportReason,
 } from './enums';
 import { DonationChartDataPointDto } from './campaign';
+import { UserPublicDto } from './auth';
 
 // ── Request DTOs ────────────────────────────────────────────────────────────
 
@@ -136,6 +138,31 @@ export interface AdminCampaignListItemDto {
   viewDetails: AdminCampaignViewDetailsDto;
   deadline: string;
   createdAt: string;
+}
+
+// ── Report Response DTO ─────────────────────────────────────────────────────
+
+export interface AdminReportCampaignDto {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+}
+
+export interface AdminReportResponseDto {
+  id: string;
+  reason: ReportReason;
+  description: string | null;
+  evidenceUrls: string[] | null;
+  status: ReportStatus;
+  campaignId: string;
+  campaign?: AdminReportCampaignDto;
+  reporterId: string;
+  reporter?: UserPublicDto;
+  resolvedById: string | null;
+  resolvedBy?: UserPublicDto;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ── Response DTOs ───────────────────────────────────────────────────────────

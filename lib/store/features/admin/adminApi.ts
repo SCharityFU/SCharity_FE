@@ -6,7 +6,10 @@ import type {
   AdminCampaignListItemDto,
   AdminCampaignsQueryDto,
   AdminCampaignTransactionsQueryDto,
+  AdminReportResponseDto,
+  AdminReportsQueryDto,
   AdminTransactionsQueryDto,
+  SuspendCampaignRequestDto,
 } from "@/dtos/admin";
 
 export type AdminDonationStatus = "pending" | "success" | "failed" | "refunded";
@@ -34,7 +37,7 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics"],
+  tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics", "AdminReports"],
   endpoints: (builder) => ({
     getAdminCampaigns: builder.query<
       PaginatedResponseDto<AdminCampaignListItemDto>,
@@ -106,6 +109,59 @@ export const adminApi = createApi({
       }),
       providesTags: ["AdminTransactions"],
     }),
+
+    // ── Reports ──────────────────────────────────────────────────────────
+
+    getAdminReports: builder.query<
+      PaginatedResponseDto<AdminReportResponseDto>,
+      AdminReportsQueryDto
+    >({
+      query: ({ page = 1, limit = 10, status } = {}) => ({
+        url: "/admin/reports",
+        params: {
+          page,
+          limit,
+          ...(status ? { status } : {}),
+        },
+      }),
+      providesTags: ["AdminReports"],
+    }),
+
+    resolveReport: builder.mutation<
+      ApiResponseDto<AdminReportResponseDto>,
+      string
+    >({
+      query: (reportId) => ({
+        url: `/admin/reports/${reportId}/resolve`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["AdminReports"],
+    }),
+
+    // ── Suspend / Unsuspend ──────────────────────────────────────────────
+
+    suspendCampaign: builder.mutation<
+      ApiResponseDto,
+      { campaignId: string; body: SuspendCampaignRequestDto }
+    >({
+      query: ({ campaignId, body }) => ({
+        url: `/admin/campaigns/${campaignId}/suspend`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["AdminCampaigns", "AdminCampaignDetail"],
+    }),
+
+    unsuspendCampaign: builder.mutation<
+      ApiResponseDto,
+      string
+    >({
+      query: (campaignId) => ({
+        url: `/admin/campaigns/${campaignId}/unsuspend`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["AdminCampaigns", "AdminCampaignDetail"],
+    }),
   }),
 });
 
@@ -115,4 +171,8 @@ export const {
   useGetAdminCampaignAnalyticsQuery,
   useGetAdminTransactionsQuery,
   useGetAdminCampaignTransactionsQuery,
+  useGetAdminReportsQuery,
+  useResolveReportMutation,
+  useSuspendCampaignMutation,
+  useUnsuspendCampaignMutation,
 } = adminApi;
