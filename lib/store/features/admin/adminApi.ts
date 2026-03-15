@@ -10,6 +10,9 @@ import type {
   AdminReportsQueryDto,
   AdminTransactionsQueryDto,
   SuspendCampaignRequestDto,
+  DashboardStatsResponseDto,
+  DonationChartDataPointDto,
+  DashboardChartQueryDto,
 } from "@/dtos/admin";
 
 export type AdminDonationStatus = "pending" | "success" | "failed" | "refunded";
@@ -37,8 +40,27 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics", "AdminReports"],
+  tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics", "AdminReports", "AdminDashboard"],
   endpoints: (builder) => ({
+    getAdminDashboard: builder.query<
+      ApiResponseDto<DashboardStatsResponseDto>,
+      void
+    >({
+      query: () => "/admin/dashboard",
+      providesTags: ["AdminDashboard"],
+    }),
+
+    getAdminDashboardChart: builder.query<
+      ApiResponseDto<DonationChartDataPointDto[]>,
+      DashboardChartQueryDto
+    >({
+      query: ({ interval = "day", days = 30 } = {}) => ({
+        url: "/admin/dashboard/chart",
+        params: { interval, days },
+      }),
+      providesTags: ["AdminDashboard"],
+    }),
+
     getAdminCampaigns: builder.query<
       PaginatedResponseDto<AdminCampaignListItemDto>,
       AdminCampaignsQueryDto
@@ -166,6 +188,8 @@ export const adminApi = createApi({
 });
 
 export const {
+  useGetAdminDashboardQuery,
+  useGetAdminDashboardChartQuery,
   useGetAdminCampaignsQuery,
   useGetAdminCampaignDetailQuery,
   useGetAdminCampaignAnalyticsQuery,
