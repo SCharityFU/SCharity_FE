@@ -1,17 +1,18 @@
-"use client";
+'use client';
 
-import { useDeferredValue, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useAppSelector } from "@/lib/store/hooks";
-import { UserRole, CampaignStatus } from "@/dtos";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useGetAdminCampaignsQuery } from "@/lib/store/features/admin/adminApi";
-import type { AdminCampaignListItemDto } from "@/dtos/admin";
-import { CampaignsFilters } from "@/components/admin/campaigns/CampaignsFilters";
-import { CampaignsTable } from "@/components/admin/campaigns/CampaignsTable";
-import { SuspendCampaignModal } from "@/components/admin/campaigns/SuspendCampaignModal";
-import { UnsuspendConfirmDialog } from "@/components/admin/campaigns/UnsuspendConfirmDialog";
-import { useAnimatedToast } from "@/components/ui/animated-toast";
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { useAppSelector } from '@/lib/store/hooks';
+import { UserRole, CampaignStatus } from '@/dtos';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useGetAdminCampaignsQuery } from '@/lib/store/features/admin/adminApi';
+import type { AdminCampaignListItemDto } from '@/dtos/admin';
+import { CampaignsFilters } from '@/components/admin/campaigns/CampaignsFilters';
+import { CampaignsTable } from '@/components/admin/campaigns/CampaignsTable';
+import { SuspendCampaignModal } from '@/components/admin/campaigns/SuspendCampaignModal';
+import { UnsuspendConfirmDialog } from '@/components/admin/campaigns/UnsuspendConfirmDialog';
+import { useAnimatedToast } from '@/components/ui/animated-toast';
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -26,13 +27,11 @@ export default function AdminCampaignsPage() {
   const searchParams = useSearchParams();
   const lastErrorKeyRef = useRef<string | null>(null);
 
-  const [page, setPage] = useState(() => parsePositiveInt(searchParams.get("page"), 1));
-  const [limit, setLimit] = useState(() =>
-    Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100),
-  );
-  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
-  const [status, setStatus] = useState(() => searchParams.get("status") ?? "all");
-  const [category, setCategory] = useState(() => searchParams.get("category") ?? "");
+  const [page, setPage] = useState(() => parsePositiveInt(searchParams.get('page'), 1));
+  const [limit, setLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get('limit'), 10), 100));
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
+  const [status, setStatus] = useState(() => searchParams.get('status') ?? 'all');
+  const [category, setCategory] = useState(() => searchParams.get('category') ?? '');
 
   const deferredSearch = useDeferredValue(search);
   const debouncedSearch = useDebounce(deferredSearch, 400);
@@ -45,20 +44,20 @@ export default function AdminCampaignsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    params.set("page", String(page));
-    params.set("limit", String(limit));
-    if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
-    if (status !== "all") params.set("status", status);
-    if (category.trim()) params.set("category", category.trim());
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim());
+    if (status !== 'all') params.set('status', status);
+    if (category.trim()) params.set('category', category.trim());
     router.replace(`${pathname}?${params.toString()}`);
-  }, [router, pathname, page, limit, debouncedSearch, status, category]);
+  }, [pathname, page, limit, debouncedSearch, status, category]);
 
   const { data, isFetching, isError, error, refetch } = useGetAdminCampaignsQuery(
     {
       page,
       limit,
       search: debouncedSearch.trim() || undefined,
-      status: status !== "all" ? (status as CampaignStatus) : undefined,
+      status: status !== 'all' ? (status as CampaignStatus) : undefined,
       category: category.trim() || undefined,
     },
     { skip: !isAdmin },
@@ -72,13 +71,11 @@ export default function AdminCampaignsPage() {
   const rows = data?.data ?? latestRowsRef.current;
   const pagination = data?.pagination;
 
-  const hasActiveFilters = Boolean(debouncedSearch.trim() || status !== "all" || category.trim());
+  const hasActiveFilters = Boolean(debouncedSearch.trim() || status !== 'all' || category.trim());
 
   // Suspend / Unsuspend modal state
   const [suspendTarget, setSuspendTarget] = useState<{ id: string; title: string } | null>(null);
-  const [unsuspendTarget, setUnsuspendTarget] = useState<{ id: string; title: string } | null>(
-    null,
-  );
+  const [unsuspendTarget, setUnsuspendTarget] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     if (!isError) {
@@ -88,7 +85,7 @@ export default function AdminCampaignsPage() {
 
     const statusCode = (error as { status?: number })?.status;
     if (statusCode === 401) {
-      router.replace("/login");
+      router.replace('/login');
       return;
     }
 
@@ -98,18 +95,18 @@ export default function AdminCampaignsPage() {
 
     const message =
       statusCode === 404
-        ? "Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404)."
-        : "Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại.";
-    const errorKey = `${statusCode ?? "unknown"}:${message}`;
+        ? 'Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404).'
+        : 'Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại.';
+    const errorKey = `${statusCode ?? 'unknown'}:${message}`;
     if (lastErrorKeyRef.current === errorKey) return;
     lastErrorKeyRef.current = errorKey;
 
     addToast({
-      type: "error",
-      title: "Lỗi tải danh sách chiến dịch",
+      type: 'error',
+      title: 'Lỗi tải danh sách chiến dịch',
       message,
       action: {
-        label: "Thử lại",
+        label: 'Thử lại',
         onClick: () => {
           void refetch();
         },
@@ -133,9 +130,7 @@ export default function AdminCampaignsPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-base md:text-lg font-semibold text-black">Quản lý chiến dịch</h1>
-          <p className="text-xs md:text-sm text-black/50">
-            Theo dõi và quản trị các campaign trên toàn nền tảng.
-          </p>
+          <p className="text-xs md:text-sm text-black/50">Theo dõi và quản trị các campaign trên toàn nền tảng.</p>
         </div>
       </div>
 
@@ -167,9 +162,9 @@ export default function AdminCampaignsPage() {
         }}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={() => {
-          setSearch("");
-          setStatus("all");
-          setCategory("");
+          setSearch('');
+          setStatus('all');
+          setCategory('');
           setPage(1);
         }}
         onViewDetails={(id) => router.push(`/admin/campaigns/${id}`)}
@@ -177,13 +172,11 @@ export default function AdminCampaignsPage() {
         onUnsuspend={(id, title) => setUnsuspendTarget({ id, title })}
       />
 
-      {isFetching && rows.length > 0 && (
-        <p className="text-xs text-black/40">Đang cập nhật dữ liệu...</p>
-      )}
+      {isFetching && rows.length > 0 && <p className="text-xs text-black/40">Đang cập nhật dữ liệu...</p>}
 
       <SuspendCampaignModal
         campaignId={suspendTarget?.id ?? null}
-        campaignTitle={suspendTarget?.title ?? ""}
+        campaignTitle={suspendTarget?.title ?? ''}
         open={!!suspendTarget}
         onOpenChange={(open) => {
           if (!open) setSuspendTarget(null);
@@ -192,7 +185,7 @@ export default function AdminCampaignsPage() {
 
       <UnsuspendConfirmDialog
         campaignId={unsuspendTarget?.id ?? null}
-        campaignTitle={unsuspendTarget?.title ?? ""}
+        campaignTitle={unsuspendTarget?.title ?? ''}
         open={!!unsuspendTarget}
         onOpenChange={(open) => {
           if (!open) setUnsuspendTarget(null);

@@ -1,18 +1,19 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAnimatedToast } from "@/components/ui/animated-toast";
-import { useAppSelector } from "@/lib/store/hooks";
-import { UserRole } from "@/dtos";
+import { useEffect, useRef } from 'react';
+import { useParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAnimatedToast } from '@/components/ui/animated-toast';
+import { useAppSelector } from '@/lib/store/hooks';
+import { UserRole } from '@/dtos';
 import {
   useGetAdminCampaignRequestDetailQuery,
   useReviewAdminCampaignRequestMutation,
-} from "@/lib/store/features/admin/adminApi";
-import type { ReviewCampaignRequestDto } from "@/dtos/admin";
-import { CampaignRequestDetailView } from "@/components/admin/campaign-requests/CampaignRequestDetailView";
+} from '@/lib/store/features/admin/adminApi';
+import type { ReviewCampaignRequestDto } from '@/dtos/admin';
+import { CampaignRequestDetailView } from '@/components/admin/campaign-requests/CampaignRequestDetailView';
 
 export default function AdminCampaignRequestDetailPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -24,13 +25,9 @@ export default function AdminCampaignRequestDetailPage() {
   const { addToast } = useAnimatedToast();
   const loadErrorToastRef = useRef<string | null>(null);
 
-  const {
-    data,
-    isFetching,
-    isError,
-    error,
-    refetch,
-  } = useGetAdminCampaignRequestDetailQuery(requestId, { skip: !isAdmin });
+  const { data, isFetching, isError, error, refetch } = useGetAdminCampaignRequestDetailQuery(requestId, {
+    skip: !isAdmin,
+  });
 
   const [reviewRequest, { isLoading: isSubmitting }] = useReviewAdminCampaignRequestMutation();
 
@@ -43,7 +40,7 @@ export default function AdminCampaignRequestDetailPage() {
     }
 
     if (statusCode === 401) {
-      router.replace("/login");
+      router.replace('/login');
       return;
     }
 
@@ -51,16 +48,16 @@ export default function AdminCampaignRequestDetailPage() {
       return;
     }
 
-    const message = "Không thể tải chi tiết yêu cầu.";
+    const message = 'Không thể tải chi tiết yêu cầu.';
     if (loadErrorToastRef.current === message) return;
     loadErrorToastRef.current = message;
 
     addToast({
-      type: "error",
-      title: "Lỗi tải dữ liệu",
+      type: 'error',
+      title: 'Lỗi tải dữ liệu',
       message,
       action: {
-        label: "Thử lại",
+        label: 'Thử lại',
         onClick: () => {
           void refetch();
         },
@@ -72,9 +69,9 @@ export default function AdminCampaignRequestDetailPage() {
     try {
       await reviewRequest({ requestId, payload }).unwrap();
       addToast({
-        type: "success",
-        title: "Thành công",
-        message: payload.action === "approve" ? "Đã duyệt yêu cầu tạo campaign." : "Đã từ chối yêu cầu tạo campaign.",
+        type: 'success',
+        title: 'Thành công',
+        message: payload.action === 'approve' ? 'Đã duyệt yêu cầu tạo campaign.' : 'Đã từ chối yêu cầu tạo campaign.',
       });
       await refetch();
     } catch (err) {
@@ -86,9 +83,9 @@ export default function AdminCampaignRequestDetailPage() {
 
       if (errorStatus === 409) {
         addToast({
-          type: "warning",
-          title: "Xung đột trạng thái",
-          message: "Request đã được xử lý bởi admin khác. Đang tải dữ liệu mới nhất...",
+          type: 'warning',
+          title: 'Xung đột trạng thái',
+          message: 'Request đã được xử lý bởi admin khác. Đang tải dữ liệu mới nhất...',
         });
         await refetch();
         return;
@@ -97,17 +94,17 @@ export default function AdminCampaignRequestDetailPage() {
       if (errorStatus === 400 && requestError.data?.errors?.length) {
         const first = requestError.data.errors[0];
         addToast({
-          type: "error",
-          title: "Dữ liệu chưa hợp lệ",
-          message: first?.message || "Dữ liệu gửi lên chưa hợp lệ.",
+          type: 'error',
+          title: 'Dữ liệu chưa hợp lệ',
+          message: first?.message || 'Dữ liệu gửi lên chưa hợp lệ.',
         });
         return;
       }
 
       addToast({
-        type: "error",
-        title: "Xử lý thất bại",
-        message: requestError.data?.message || "Không thể xử lý yêu cầu. Vui lòng thử lại.",
+        type: 'error',
+        title: 'Xử lý thất bại',
+        message: requestError.data?.message || 'Không thể xử lý yêu cầu. Vui lòng thử lại.',
       });
     }
   };
@@ -126,7 +123,7 @@ export default function AdminCampaignRequestDetailPage() {
       <div className="rounded-lg border border-black/10 bg-white p-4 space-y-2">
         <p className="text-base font-semibold text-black">Request not found</p>
         <p className="text-sm text-black/55">Yêu cầu tạo campaign không tồn tại hoặc đã bị xóa.</p>
-        <Button variant="outline" size="sm" onClick={() => router.push("/admin/campaign-requests")}>
+        <Button variant="outline" size="sm" onClick={() => router.push('/admin/campaign-requests')}>
           Quay lại danh sách
         </Button>
       </div>
@@ -160,13 +157,7 @@ export default function AdminCampaignRequestDetailPage() {
         </div>
       )}
 
-      {detail && (
-        <CampaignRequestDetailView
-          detail={detail}
-          submitting={isSubmitting}
-          onReview={handleReview}
-        />
-      )}
+      {detail && <CampaignRequestDetailView detail={detail} submitting={isSubmitting} onReview={handleReview} />}
     </div>
   );
 }

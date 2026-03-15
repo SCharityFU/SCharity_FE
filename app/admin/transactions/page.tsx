@@ -1,15 +1,13 @@
-"use client";
+'use client';
 
-import { useDeferredValue, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  useGetAdminTransactionsQuery,
-} from "@/lib/store/features/admin/adminApi";
-import { useAppSelector } from "@/lib/store/hooks";
-import { UserRole } from "@/dtos";
-import { useDebounce } from "@/hooks/useDebounce";
-import { TransactionsTable } from "@/components/admin/transactions/TransactionsTable";
-import { useAnimatedToast } from "@/components/ui/animated-toast";
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'nextjs-toploader/app';
+import { useGetAdminTransactionsQuery } from '@/lib/store/features/admin/adminApi';
+import { useAppSelector } from '@/lib/store/hooks';
+import { UserRole } from '@/dtos';
+import { useDebounce } from '@/hooks/useDebounce';
+import { TransactionsTable } from '@/components/admin/transactions/TransactionsTable';
+import { useAnimatedToast } from '@/components/ui/animated-toast';
 
 export default function AdminTransactionsPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -19,8 +17,8 @@ export default function AdminTransactionsPage() {
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [search, setSearch] = useState('');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
   const deferredSearch = useDeferredValue(search);
   const debouncedSearch = useDebounce(deferredSearch, 500);
 
@@ -32,7 +30,7 @@ export default function AdminTransactionsPage() {
 
   const { data, isFetching, isError, error } = useGetAdminTransactionsQuery(
     { page, limit, search: debouncedSearch.trim(), sortOrder },
-    { skip: !isAdmin }
+    { skip: !isAdmin },
   );
 
   const rows = data?.data ?? [];
@@ -46,21 +44,21 @@ export default function AdminTransactionsPage() {
 
     const statusCode = (error as { status?: number })?.status;
     if (statusCode === 401) {
-      router.replace("/login");
+      router.replace('/login');
       return;
     }
 
     const message = statusCode
       ? `Không thể tải danh sách giao dịch. Mã lỗi: ${statusCode}`
-      : "Không thể tải danh sách giao dịch. Vui lòng thử lại.";
-    const errorKey = `${statusCode ?? "unknown"}:${message}`;
+      : 'Không thể tải danh sách giao dịch. Vui lòng thử lại.';
+    const errorKey = `${statusCode ?? 'unknown'}:${message}`;
 
     if (lastErrorKeyRef.current === errorKey) return;
     lastErrorKeyRef.current = errorKey;
 
     addToast({
-      type: "error",
-      title: "Lỗi tải dữ liệu",
+      type: 'error',
+      title: 'Lỗi tải dữ liệu',
       message,
     });
   }, [isError, error, addToast, router]);

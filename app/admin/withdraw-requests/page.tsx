@@ -1,12 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useAnimatedToast } from "@/components/ui/animated-toast";
-import { useAppSelector } from "@/lib/store/hooks";
-import { UserRole, WithdrawStatus } from "@/dtos";
-import { useGetAdminWithdrawRequestsQuery } from "@/lib/store/features/admin/adminApi";
-import { WithdrawRequestsTable } from "@/components/admin/withdraw-requests/WithdrawRequestsTable";
+import { useEffect, useRef, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { useAnimatedToast } from '@/components/ui/animated-toast';
+import { useAppSelector } from '@/lib/store/hooks';
+import { UserRole, WithdrawStatus } from '@/dtos';
+import { useGetAdminWithdrawRequestsQuery } from '@/lib/store/features/admin/adminApi';
+import { WithdrawRequestsTable } from '@/components/admin/withdraw-requests/WithdrawRequestsTable';
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   const parsed = Number(value);
@@ -21,10 +22,10 @@ function parseStatus(value: string | null): WithdrawStatus {
 }
 
 const statusTabs: { value: WithdrawStatus; label: string }[] = [
-  { value: WithdrawStatus.PENDING, label: "Đang chờ" },
-  { value: WithdrawStatus.APPROVED, label: "Đã duyệt" },
-  { value: WithdrawStatus.REJECTED, label: "Đã từ chối" },
-  { value: WithdrawStatus.COMPLETED, label: "Hoàn tất" },
+  { value: WithdrawStatus.PENDING, label: 'Đang chờ' },
+  { value: WithdrawStatus.APPROVED, label: 'Đã duyệt' },
+  { value: WithdrawStatus.REJECTED, label: 'Đã từ chối' },
+  { value: WithdrawStatus.COMPLETED, label: 'Hoàn tất' },
 ];
 
 export default function AdminWithdrawRequestsPage() {
@@ -37,21 +38,21 @@ export default function AdminWithdrawRequestsPage() {
   const searchParams = useSearchParams();
   const lastErrorKeyRef = useRef<string | null>(null);
 
-  const [page, setPage] = useState(() => parsePositiveInt(searchParams.get("page"), 1));
-  const [limit, setLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100));
-  const [status, setStatus] = useState<WithdrawStatus>(() => parseStatus(searchParams.get("status")));
+  const [page, setPage] = useState(() => parsePositiveInt(searchParams.get('page'), 1));
+  const [limit, setLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get('limit'), 10), 100));
+  const [status, setStatus] = useState<WithdrawStatus>(() => parseStatus(searchParams.get('status')));
 
   useEffect(() => {
     const params = new URLSearchParams();
-    params.set("page", String(page));
-    params.set("limit", String(limit));
-    params.set("status", status);
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    params.set('status', status);
     router.replace(`${pathname}?${params.toString()}`);
-  }, [router, pathname, page, limit, status]);
+  }, [pathname, page, limit, status]);
 
   const { data, isFetching, isError, error, refetch } = useGetAdminWithdrawRequestsQuery(
     { page, limit, status },
-    { skip: !isAdmin }
+    { skip: !isAdmin },
   );
 
   const rows = data?.data ?? [];
@@ -65,7 +66,7 @@ export default function AdminWithdrawRequestsPage() {
     }
 
     if (statusCode === 401) {
-      router.replace("/login");
+      router.replace('/login');
       return;
     }
 
@@ -73,19 +74,20 @@ export default function AdminWithdrawRequestsPage() {
       return;
     }
 
-    const message = statusCode === 404
-      ? "Không tìm thấy endpoint yêu cầu rút tiền (404)."
-      : "Lỗi hệ thống khi tải danh sách yêu cầu rút tiền. Vui lòng thử lại.";
-    const errorKey = `${statusCode ?? "unknown"}:${message}`;
+    const message =
+      statusCode === 404
+        ? 'Không tìm thấy endpoint yêu cầu rút tiền (404).'
+        : 'Lỗi hệ thống khi tải danh sách yêu cầu rút tiền. Vui lòng thử lại.';
+    const errorKey = `${statusCode ?? 'unknown'}:${message}`;
     if (lastErrorKeyRef.current === errorKey) return;
     lastErrorKeyRef.current = errorKey;
 
     addToast({
-      type: "error",
-      title: "Lỗi tải danh sách yêu cầu",
+      type: 'error',
+      title: 'Lỗi tải danh sách yêu cầu',
       message,
       action: {
-        label: "Thử lại",
+        label: 'Thử lại',
         onClick: () => {
           void refetch();
         },
@@ -119,9 +121,7 @@ export default function AdminWithdrawRequestsPage() {
               setPage(1);
             }}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              status === tab.value
-                ? "bg-rose-500 text-white"
-                : "bg-black/[0.04] text-black/65 hover:text-black"
+              status === tab.value ? 'bg-rose-500 text-white' : 'bg-black/[0.04] text-black/65 hover:text-black'
             }`}
           >
             {tab.label}

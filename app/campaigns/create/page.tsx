@@ -1,41 +1,32 @@
-"use client";
+'use client';
 
-import { useState, useRef, useCallback, useEffect, type DragEvent } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { CampaignCategory } from "@/dtos/enums";
-import { useSubmitCampaignRequestMutation } from "@/lib/store/features/campaign/campaignApi";
-import { useUploadMyAssetMutation } from "@/lib/store/features/user/userApi";
-import { useVietQRBanks } from "@/hooks/useVietQRBanks";
-import { useAuth } from "@/hooks/useAuth";
-import { BasicInfoSection } from "@/components/campaign/create/BasicInfoSection";
-import { CreateCampaignActions } from "@/components/campaign/create/CreateCampaignActions";
-import { CreateCampaignFeedback } from "@/components/campaign/create/CreateCampaignFeedback";
-import { CreateCampaignHeader } from "@/components/campaign/create/CreateCampaignHeader";
-import { MediaUploadSection } from "@/components/campaign/create/MediaUploadSection";
-import { ProofDocumentsSection } from "@/components/campaign/create/ProofDocumentsSection";
-import { StoryEditorSection } from "@/components/campaign/create/StoryEditorSection";
-import { SubmitConfirmDialog } from "@/components/campaign/create/SubmitConfirmDialog";
-import { ValidationWarnings } from "@/components/campaign/create/ValidationWarnings";
+import { useState, useRef, useCallback, useEffect, type DragEvent } from 'react';
+import { useRouter } from 'nextjs-toploader/app';
+import { motion } from 'motion/react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { CampaignCategory } from '@/dtos/enums';
+import { useSubmitCampaignRequestMutation } from '@/lib/store/features/campaign/campaignApi';
+import { useUploadMyAssetMutation } from '@/lib/store/features/user/userApi';
+import { useVietQRBanks } from '@/hooks/useVietQRBanks';
+import { useAuth } from '@/hooks/useAuth';
+import { BasicInfoSection } from '@/components/campaign/create/BasicInfoSection';
+import { CreateCampaignActions } from '@/components/campaign/create/CreateCampaignActions';
+import { CreateCampaignFeedback } from '@/components/campaign/create/CreateCampaignFeedback';
+import { CreateCampaignHeader } from '@/components/campaign/create/CreateCampaignHeader';
+import { MediaUploadSection } from '@/components/campaign/create/MediaUploadSection';
+import { ProofDocumentsSection } from '@/components/campaign/create/ProofDocumentsSection';
+import { StoryEditorSection } from '@/components/campaign/create/StoryEditorSection';
+import { SubmitConfirmDialog } from '@/components/campaign/create/SubmitConfirmDialog';
+import { ValidationWarnings } from '@/components/campaign/create/ValidationWarnings';
 import {
   createCampaignFormDefaultValues,
   createCampaignFormSchema,
   type CreateCampaignFormValues,
-} from "@/components/campaign/create/schema";
-import {
-  CATEGORY_LABELS,
-  DRAFT_STORAGE_KEY,
-  GOAL_PRESETS,
-  TITLE_MAX,
-} from "@/components/campaign/create/constants";
-import type {
-  CampaignDraft,
-  FeedbackMessage,
-  ProofPreview,
-} from "@/components/campaign/create/types";
+} from '@/components/campaign/create/schema';
+import { CATEGORY_LABELS, DRAFT_STORAGE_KEY, GOAL_PRESETS, TITLE_MAX } from '@/components/campaign/create/constants';
+import type { CampaignDraft, FeedbackMessage, ProofPreview } from '@/components/campaign/create/types';
 import {
   formatDateVN,
   formatVND,
@@ -43,8 +34,8 @@ import {
   parseCurrencyInput,
   removeDiacritics,
   shortVND,
-} from "@/components/campaign/create/utils";
-import { Button } from "@/components/ui/button";
+} from '@/components/campaign/create/utils';
+import { Button } from '@/components/ui/button';
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
@@ -66,21 +57,21 @@ export default function CreateCampaignPage() {
     handleSubmit: handleFormSubmit,
   } = useForm<CreateCampaignFormValues>({
     resolver: zodResolver(createCampaignFormSchema),
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues: createCampaignFormDefaultValues,
   });
 
   // Form state
-  const [goalRaw, setGoalRaw] = useState("");
+  const [goalRaw, setGoalRaw] = useState('');
 
-  const title = watch("title");
-  const goalAmount = watch("goalAmount");
-  const deadline = watch("deadline");
-  const category = watch("category") || "";
-  const story = watch("story");
-  const bankName = watch("bankName");
-  const accountNumber = watch("accountNumber");
-  const accountHolderName = watch("accountHolderName");
+  const title = watch('title');
+  const goalAmount = watch('goalAmount');
+  const deadline = watch('deadline');
+  const category = watch('category') || '';
+  const story = watch('story');
+  const bankName = watch('bankName');
+  const accountNumber = watch('accountNumber');
+  const accountHolderName = watch('accountHolderName');
 
   // Bank list from VietQR API
   const {
@@ -121,7 +112,7 @@ export default function CreateCampaignPage() {
   };
 
   const shouldBlockForKyc = isAuthenticated && !user?.isKycVerified;
-  console.log("Current user:", user);
+  console.log('Current user:', user);
 
   // ── Load draft from localStorage on mount ─────────────────────────────────
 
@@ -131,15 +122,15 @@ export default function CreateCampaignPage() {
       if (!raw) return;
       const draft: CampaignDraft = JSON.parse(raw);
 
-      setValue("title", draft.title || "", { shouldValidate: false });
-      setValue("goalAmount", draft.goalAmount || 0, { shouldValidate: false });
-      setGoalRaw(draft.goalRaw || "");
-      setValue("deadline", draft.deadline || "", { shouldValidate: false });
-      setValue("category", draft.category || "", { shouldValidate: false });
-      setValue("story", draft.storyHtml || "", { shouldValidate: false });
-      setValue("bankName", draft.bankName || "", { shouldValidate: false });
-      setValue("accountNumber", draft.accountNumber || "", { shouldValidate: false });
-      setValue("accountHolderName", draft.accountHolderName || "", { shouldValidate: false });
+      setValue('title', draft.title || '', { shouldValidate: false });
+      setValue('goalAmount', draft.goalAmount || 0, { shouldValidate: false });
+      setGoalRaw(draft.goalRaw || '');
+      setValue('deadline', draft.deadline || '', { shouldValidate: false });
+      setValue('category', draft.category || '', { shouldValidate: false });
+      setValue('story', draft.storyHtml || '', { shouldValidate: false });
+      setValue('bankName', draft.bankName || '', { shouldValidate: false });
+      setValue('accountNumber', draft.accountNumber || '', { shouldValidate: false });
+      setValue('accountHolderName', draft.accountHolderName || '', { shouldValidate: false });
       setMediaPreviews(draft.mediaPreviews || []);
       setCoverIndex(draft.coverIndex || 0);
     } catch {
@@ -154,7 +145,7 @@ export default function CreateCampaignPage() {
     if (redirectSeconds === null) return;
 
     if (redirectSeconds <= 0) {
-      router.push("/dashboard/my-requests");
+      router.push('/dashboard/my-requests');
       return;
     }
 
@@ -169,17 +160,17 @@ export default function CreateCampaignPage() {
 
   const handleGoalChange = (raw: string) => {
     const num = parseCurrencyInput(raw);
-    setValue("goalAmount", num, { shouldValidate: true, shouldDirty: true });
-    setGoalRaw(num > 0 ? formatVND(num) : "");
+    setValue('goalAmount', num, { shouldValidate: true, shouldDirty: true });
+    setGoalRaw(num > 0 ? formatVND(num) : '');
   };
 
   const handleGoalPreset = (preset: number) => {
-    setValue("goalAmount", preset, { shouldValidate: true, shouldDirty: true });
+    setValue('goalAmount', preset, { shouldValidate: true, shouldDirty: true });
     setGoalRaw(formatVND(preset));
   };
 
   const addFiles = useCallback((files: FileList | File[]) => {
-    const newFiles = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const newFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
     if (newFiles.length === 0) return;
 
     setMediaFiles((prev) => [...prev, ...newFiles]);
@@ -215,19 +206,19 @@ export default function CreateCampaignPage() {
 
   const handleUploadStoryImage = async (file: File) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     try {
       const response = await uploadMyAsset(formData).unwrap();
       const imageUrl = response.data?.url;
 
       if (!imageUrl) {
-        throw new Error("Không nhận được URL ảnh từ server.");
+        throw new Error('Không nhận được URL ảnh từ server.');
       }
 
       return imageUrl;
     } catch (err: unknown) {
-      const message = getDisplayErrorMessage(err, "Upload ảnh thất bại. Vui lòng thử lại.");
+      const message = getDisplayErrorMessage(err, 'Upload ảnh thất bại. Vui lòng thử lại.');
       toast.error(message);
       throw new Error(message);
     }
@@ -235,20 +226,18 @@ export default function CreateCampaignPage() {
 
   // Proof document handlers
   const addProofFiles = useCallback((files: FileList | File[]) => {
-    const allowed = Array.from(files).filter(
-      (f) => f.type.startsWith("image/") || f.type === "application/pdf",
-    );
+    const allowed = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type === 'application/pdf');
     if (allowed.length === 0) return;
     setProofFiles((prev) => [...prev, ...allowed]);
     allowed.forEach((file) => {
-      if (file.type.startsWith("image/")) {
+      if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (ev) => {
           setProofPreviews((prev) => [
             ...prev,
             {
               name: file.name,
-              type: "image",
+              type: 'image',
               url: ev.target?.result as string,
             },
           ]);
@@ -259,8 +248,8 @@ export default function CreateCampaignPage() {
           ...prev,
           {
             name: file.name,
-            type: "pdf",
-            url: "",
+            type: 'pdf',
+            url: '',
           },
         ]);
       }
@@ -304,7 +293,7 @@ export default function CreateCampaignPage() {
       // Separate the cover image (thumbnail) from media files
       const thumbnailFile = mediaFiles[coverIndex] || undefined;
       const otherMediaFiles = mediaFiles.filter((_, i) => i !== coverIndex);
-      const categoryValue = values.category === "" ? CampaignCategory.OTHER : values.category;
+      const categoryValue = values.category === '' ? CampaignCategory.OTHER : values.category;
       await submitRequest({
         data: {
           title: values.title,
@@ -325,17 +314,17 @@ export default function CreateCampaignPage() {
 
       // Clear saved draft on successful submit
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-      const successMessage = "Chiến dịch đã được gửi duyệt thành công!";
-      setFeedbackMsg({ type: "success", text: successMessage });
+      const successMessage = 'Chiến dịch đã được gửi duyệt thành công!';
+      setFeedbackMsg({ type: 'success', text: successMessage });
       setRedirectSeconds(REDIRECT_SECONDS);
       toast.success(successMessage, {
         description: `Sẽ chuyển về trang Yêu Cầu Của Tôi sau ${REDIRECT_SECONDS} giây.`,
         duration: REDIRECT_SECONDS * 1000,
       });
     } catch (err: unknown) {
-      const message = getDisplayErrorMessage(err, "Có lỗi xảy ra, vui lòng thử lại.");
+      const message = getDisplayErrorMessage(err, 'Có lỗi xảy ra, vui lòng thử lại.');
       setFeedbackMsg({
-        type: "error",
+        type: 'error',
         text: message,
       });
       toast.error(message);
@@ -353,7 +342,7 @@ export default function CreateCampaignPage() {
       goalAmount: values.goalAmount,
       goalRaw,
       deadline: values.deadline,
-      category: (values.category as CampaignCategory | "") || "",
+      category: (values.category as CampaignCategory | '') || '',
       storyHtml: values.story,
       bankName: values.bankName,
       accountNumber: values.accountNumber,
@@ -364,12 +353,12 @@ export default function CreateCampaignPage() {
     };
     try {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
-      const successMessage = "Đã lưu nháp thành công! Dữ liệu sẽ được khôi phục khi bạn quay lại.";
-      setFeedbackMsg({ type: "success", text: successMessage });
+      const successMessage = 'Đã lưu nháp thành công! Dữ liệu sẽ được khôi phục khi bạn quay lại.';
+      setFeedbackMsg({ type: 'success', text: successMessage });
       toast.success(successMessage);
     } catch {
-      const errorMessage = "Không thể lưu nháp. Bộ nhớ trình duyệt có thể đã đầy.";
-      setFeedbackMsg({ type: "error", text: errorMessage });
+      const errorMessage = 'Không thể lưu nháp. Bộ nhớ trình duyệt có thể đã đầy.';
+      setFeedbackMsg({ type: 'error', text: errorMessage });
       toast.error(errorMessage);
     }
   };
@@ -390,10 +379,10 @@ export default function CreateCampaignPage() {
               Bạn cần xác thực KYC trước khi tạo chiến dịch
             </h1>
             <p className="text-black/70 leading-relaxed mb-8">
-              Để đảm bảo minh bạch và an toàn cho cộng đồng, tài khoản của bạn cần hoàn tất xác thực
-              KYC trước khi gửi yêu cầu tạo chiến dịch gây quỹ.
+              Để đảm bảo minh bạch và an toàn cho cộng đồng, tài khoản của bạn cần hoàn tất xác thực KYC trước khi gửi
+              yêu cầu tạo chiến dịch gây quỹ.
             </p>
-            <Button onClick={() => router.push("/kyc")} variant="outline">
+            <Button onClick={() => router.push('/kyc')} variant="outline">
               Đi tới trang KYC
             </Button>
           </motion.div>
@@ -423,16 +412,14 @@ export default function CreateCampaignPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           className={`glass-card rounded-2xl p-6 md:p-8 ${
-            isLockedAfterSuccess ? "pointer-events-none opacity-80" : ""
+            isLockedAfterSuccess ? 'pointer-events-none opacity-80' : ''
           }`}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <BasicInfoSection
               title={title}
               titleMax={TITLE_MAX}
-              onTitleChange={(value) =>
-                setValue("title", value, { shouldValidate: true, shouldDirty: true })
-              }
+              onTitleChange={(value) => setValue('title', value, { shouldValidate: true, shouldDirty: true })}
               goalRaw={goalRaw}
               goalAmount={goalAmount}
               goalPresets={GOAL_PRESETS}
@@ -441,25 +428,19 @@ export default function CreateCampaignPage() {
               shortVND={shortVND}
               deadline={deadline}
               minDeadline={getTomorrowISO()}
-              onDeadlineChange={(value) =>
-                setValue("deadline", value, { shouldValidate: true, shouldDirty: true })
-              }
+              onDeadlineChange={(value) => setValue('deadline', value, { shouldValidate: true, shouldDirty: true })}
               formatDateVN={formatDateVN}
               category={category}
-              onCategoryChange={(value) =>
-                setValue("category", value, { shouldValidate: true, shouldDirty: true })
-              }
+              onCategoryChange={(value) => setValue('category', value, { shouldValidate: true, shouldDirty: true })}
               categoryLabels={CATEGORY_LABELS}
-              onBankNameChange={(value) =>
-                setValue("bankName", value, { shouldValidate: true, shouldDirty: true })
-              }
+              onBankNameChange={(value) => setValue('bankName', value, { shouldValidate: true, shouldDirty: true })}
               accountNumber={accountNumber}
               onAccountNumberChange={(value) =>
-                setValue("accountNumber", value, { shouldValidate: true, shouldDirty: true })
+                setValue('accountNumber', value, { shouldValidate: true, shouldDirty: true })
               }
               accountHolderName={accountHolderName}
               onAccountHolderNameChange={(value) =>
-                setValue("accountHolderName", value, { shouldValidate: true, shouldDirty: true })
+                setValue('accountHolderName', value, { shouldValidate: true, shouldDirty: true })
               }
               normalizeAccountHolderName={removeDiacritics}
               bankSearch={bankSearch}
@@ -475,9 +456,7 @@ export default function CreateCampaignPage() {
             <div className="space-y-6">
               <StoryEditorSection
                 story={story}
-                onStoryChange={(value) =>
-                  setValue("story", value, { shouldValidate: true, shouldDirty: true })
-                }
+                onStoryChange={(value) => setValue('story', value, { shouldValidate: true, shouldDirty: true })}
                 onUploadImage={handleUploadStoryImage}
               />
               <MediaUploadSection
@@ -513,7 +492,7 @@ export default function CreateCampaignPage() {
           <CreateCampaignActions
             isValid={isValid}
             isSubmitting={isLoading || isLockedAfterSuccess}
-            onCancel={() => router.push("/campaigns")}
+            onCancel={() => router.push('/campaigns')}
             onSaveDraft={handleSaveDraft}
             onOpenConfirm={async () => {
               if (isLoading || isLockedAfterSuccess) return;
@@ -524,9 +503,9 @@ export default function CreateCampaignPage() {
                 return;
               }
 
-              const firstError = validationErrors[0] || "Biểu mẫu chưa hợp lệ.";
+              const firstError = validationErrors[0] || 'Biểu mẫu chưa hợp lệ.';
               const message = `Biểu mẫu chưa hợp lệ: ${firstError}`;
-              setFeedbackMsg({ type: "error", text: message });
+              setFeedbackMsg({ type: 'error', text: message });
               toast.warning(message);
             }}
           />

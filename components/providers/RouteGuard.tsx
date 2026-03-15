@@ -1,32 +1,26 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useAppSelector } from "@/lib/store/hooks";
-import { Loader2 } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { useAppSelector } from '@/lib/store/hooks';
+import { Loader2 } from 'lucide-react';
 
 // ── Route definitions ─────────────────────────────────────────────────────────
 
 /** Routes that require the user to be authenticated */
-const AUTH_ROUTES = [
-  "/dashboard",
-  "/campaigns/create",
-  "/profile",
-  "/kyc",
-];
+const AUTH_ROUTES = ['/dashboard', '/campaigns/create', '/profile', '/kyc'];
 
 /** Routes that require the `admin` role */
-const ADMIN_ROUTES = ["/admin"];
+const ADMIN_ROUTES = ['/admin'];
 
 /** Routes that should redirect to dashboard if already logged in */
-const GUEST_ONLY_ROUTES = ["/login", "/register"];
+const GUEST_ONLY_ROUTES = ['/login', '/register'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function matchRoute(pathname: string, routes: string[]): boolean {
-  return routes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
+  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -46,7 +40,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     // 1. Guest-only pages → redirect to dashboard if already logged in
     if (matchRoute(pathname, GUEST_ONLY_ROUTES)) {
       if (isAuthenticated) {
-        router.replace("/dashboard");
+        router.replace('/dashboard');
         return;
       }
       setAuthorized(true);
@@ -59,8 +53,8 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
         router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
         return;
       }
-      if (user?.role !== "admin") {
-        router.replace("/dashboard");
+      if (user?.role !== 'admin') {
+        router.replace('/dashboard');
         return;
       }
       setAuthorized(true);

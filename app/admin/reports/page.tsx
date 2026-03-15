@@ -1,20 +1,18 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAppSelector } from "@/lib/store/hooks";
-import { ReportStatus, UserRole } from "@/dtos";
-import {
-  useGetAdminReportsQuery,
-  useResolveReportMutation,
-} from "@/lib/store/features/admin/adminApi";
-import type { AdminReportResponseDto } from "@/dtos/admin";
-import { ReportsFilters } from "@/components/admin/reports/ReportsFilters";
-import { ReportsTable } from "@/components/admin/reports/ReportsTable";
-import { ReportDetailModal } from "@/components/admin/reports/ReportDetailModal";
-import { SuspendCampaignModal } from "@/components/admin/campaigns/SuspendCampaignModal";
+import { useEffect, useRef, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { AlertTriangle, RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAppSelector } from '@/lib/store/hooks';
+import { ReportStatus, UserRole } from '@/dtos';
+import { useGetAdminReportsQuery, useResolveReportMutation } from '@/lib/store/features/admin/adminApi';
+import type { AdminReportResponseDto } from '@/dtos/admin';
+import { ReportsFilters } from '@/components/admin/reports/ReportsFilters';
+import { ReportsTable } from '@/components/admin/reports/ReportsTable';
+import { ReportDetailModal } from '@/components/admin/reports/ReportDetailModal';
+import { SuspendCampaignModal } from '@/components/admin/campaigns/SuspendCampaignModal';
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -27,21 +25,14 @@ export default function AdminReportsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [page, setPage] = useState(() =>
-    parsePositiveInt(searchParams.get("page"), 1),
-  );
-  const [limit, setLimit] = useState(() =>
-    Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100),
-  );
-  const [status, setStatus] = useState(
-    () => searchParams.get("status") ?? "all",
-  );
+  const [page, setPage] = useState(() => parsePositiveInt(searchParams.get('page'), 1));
+  const [limit, setLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get('limit'), 10), 100));
+  const [status, setStatus] = useState(() => searchParams.get('status') ?? 'all');
 
   const isAdmin = user?.role === UserRole.ADMIN;
 
   // Detail modal
-  const [selectedReport, setSelectedReport] =
-    useState<AdminReportResponseDto | null>(null);
+  const [selectedReport, setSelectedReport] = useState<AdminReportResponseDto | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
   // Suspend modal
@@ -51,8 +42,7 @@ export default function AdminReportsPage() {
   } | null>(null);
 
   // Resolve
-  const [resolveReport, { isLoading: isResolving }] =
-    useResolveReportMutation();
+  const [resolveReport, { isLoading: isResolving }] = useResolveReportMutation();
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,22 +51,20 @@ export default function AdminReportsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    params.set("page", String(page));
-    params.set("limit", String(limit));
-    if (status !== "all") params.set("status", status);
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    if (status !== 'all') params.set('status', status);
     router.replace(`${pathname}?${params.toString()}`);
-  }, [router, pathname, page, limit, status]);
+  }, [pathname, page, limit, status]);
 
-  const { data, isFetching, isError, error, refetch } =
-    useGetAdminReportsQuery(
-      {
-        page,
-        limit,
-        status:
-          status !== "all" ? (status as ReportStatus) : undefined,
-      },
-      { skip: !isAdmin },
-    );
+  const { data, isFetching, isError, error, refetch } = useGetAdminReportsQuery(
+    {
+      page,
+      limit,
+      status: status !== 'all' ? (status as ReportStatus) : undefined,
+    },
+    { skip: !isAdmin },
+  );
 
   const latestRowsRef = useRef<AdminReportResponseDto[]>([]);
   if (data?.data) {
@@ -85,13 +73,13 @@ export default function AdminReportsPage() {
 
   const rows = data?.data ?? latestRowsRef.current;
   const pagination = data?.pagination;
-  const hasActiveFilters = status !== "all";
+  const hasActiveFilters = status !== 'all';
 
   useEffect(() => {
     if (!isError) return;
     const statusCode = (error as { status?: number })?.status;
     if (statusCode === 401) {
-      router.replace("/login");
+      router.replace('/login');
     }
   }, [isError, error, router]);
 
@@ -111,10 +99,7 @@ export default function AdminReportsPage() {
     setDetailOpen(true);
   };
 
-  const handleSuspendCampaign = (
-    campaignId: string,
-    campaignTitle: string,
-  ) => {
+  const handleSuspendCampaign = (campaignId: string, campaignTitle: string) => {
     setDetailOpen(false);
     setSuspendTarget({ campaignId, title: campaignTitle });
   };
@@ -122,12 +107,8 @@ export default function AdminReportsPage() {
   if (!isAdmin) {
     return (
       <div className="p-3 md:p-4">
-        <h1 className="text-base md:text-lg font-semibold text-black">
-          Quản lý báo cáo
-        </h1>
-        <p className="mt-2 text-sm text-red-600">
-          Bạn không có quyền truy cập trang quản trị này.
-        </p>
+        <h1 className="text-base md:text-lg font-semibold text-black">Quản lý báo cáo</h1>
+        <p className="mt-2 text-sm text-red-600">Bạn không có quyền truy cập trang quản trị này.</p>
       </div>
     );
   }
@@ -138,19 +119,12 @@ export default function AdminReportsPage() {
     <div className="space-y-3 p-1">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-base md:text-lg font-semibold text-black">
-            Quản lý báo cáo
-          </h1>
-          <p className="text-xs md:text-sm text-black/50">
-            Xem xét và xử lý các báo cáo vi phạm từ người dùng.
-          </p>
+          <h1 className="text-base md:text-lg font-semibold text-black">Quản lý báo cáo</h1>
+          <p className="text-xs md:text-sm text-black/50">Xem xét và xử lý các báo cáo vi phạm từ người dùng.</p>
         </div>
       </div>
 
-      <ReportsFilters
-        status={status}
-        onStatusChange={setStatus}
-      />
+      <ReportsFilters status={status} onStatusChange={setStatus} />
 
       {isError && statusCode !== 401 && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-center justify-between gap-2">
@@ -178,7 +152,7 @@ export default function AdminReportsPage() {
         }}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={() => {
-          setStatus("all");
+          setStatus('all');
           setPage(1);
         }}
         onViewDetail={handleViewDetail}
@@ -186,9 +160,7 @@ export default function AdminReportsPage() {
         resolvingId={resolvingId}
       />
 
-      {isFetching && rows.length > 0 && (
-        <p className="text-xs text-black/40">Đang cập nhật dữ liệu...</p>
-      )}
+      {isFetching && rows.length > 0 && <p className="text-xs text-black/40">Đang cập nhật dữ liệu...</p>}
 
       {/* Report detail modal */}
       <ReportDetailModal
@@ -203,7 +175,7 @@ export default function AdminReportsPage() {
       {/* Suspend campaign modal */}
       <SuspendCampaignModal
         campaignId={suspendTarget?.campaignId ?? null}
-        campaignTitle={suspendTarget?.title ?? ""}
+        campaignTitle={suspendTarget?.title ?? ''}
         open={!!suspendTarget}
         onOpenChange={(open) => {
           if (!open) setSuspendTarget(null);

@@ -1,3 +1,7 @@
+import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from 'recharts';
+import type { ChartConfig } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+
 interface AnalyticsPoint {
   date: string;
   value: number;
@@ -7,96 +11,191 @@ interface AnalyticsLineChartProps {
   title: string;
   points: AnalyticsPoint[];
   valueFormatter?: (value: number) => string;
+  yAxisLabel?: string;
+  yAxisTickFormatter?: (value: number) => string;
+  onPointSelect?: (payload: { date: string; value: number }) => void;
 }
 
 function formatShortDate(value: string): string {
+  const parts = value.split('-');
+  if (parts.length === 3) return `${parts[2]}-${parts[1]}`;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 }
+
+function toVNDayKey(value: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  return formatter.format(date);
+}
+
+function extractPointFromChartEvent(event: unknown): {
+  date: string;
+  value: number;
+} | null {
+  if (!event || typeof event !== 'object') return null;
+
+  const activePayload = (event as { activePayload?: Array<{ payload?: { date?: string; value?: number } }> })
+    .activePayload;
+  const payload = activePayload?.[0]?.payload;
+  if (!payload?.date) return null;
+
+  return {
+    date: payload.date,
+    value: Number(payload.value ?? 0),
+  };
+}
+
+const chartConfig = {
+  value: {
+    label: 'Giá trị',
+    color: '#f43f5e',
+  },
+} satisfies ChartConfig;
 
 export function AnalyticsLineChart({
   title,
   points,
   valueFormatter = (v) => String(v),
+  yAxisLabel,
+  yAxisTickFormatter,
+  onPointSelect,
 }: AnalyticsLineChartProps) {
-  const width = 640;
-  const height = 240;
-  const padding = 24;
-  const innerWidth = width - padding * 2;
-  const innerHeight = height - padding * 2;
+  const normalizedPoints = points.map((point) => ({
+    date: toVNDayKey(point.date),
+    dateLabel: formatShortDate(toVNDayKey(point.date)),
+    value: Number.isFinite(point.value) ? point.value : 0,
+  }));
 
-  if (!points.length) {
+  if (!normalizedPoints.length) {
     return (
       <div className="rounded-xl border border-black/10 bg-white p-4">
-        <p className="text-sm font-semibold text-black mb-2">{title}</p>
+        <p className="mb-2 text-sm font-semibold text-black">{title}</p>
         <p className="text-sm text-black/45">Chưa có dữ liệu biểu đồ.</p>
       </div>
     );
   }
 
-  const maxValue = Math.max(...points.map((p) => p.value), 1);
-  const minValue = Math.min(...points.map((p) => p.value), 0);
-  const valueRange = Math.max(1, maxValue - minValue);
-
-  const pathPoints = points.map((point, index) => {
-    const x = padding + (index / Math.max(1, points.length - 1)) * innerWidth;
-    const y = padding + ((maxValue - point.value) / valueRange) * innerHeight;
-    return { x, y, point };
-  });
-
-  const pathD = pathPoints
-    .map((p, idx) => `${idx === 0 ? "M" : "L"}${p.x},${p.y}`)
-    .join(" ");
-
-  const lastPoint = points[points.length - 1];
+  const latestMeaningfulPoint =
+    [...normalizedPoints].reverse().find((point) => point.value > 0) ?? normalizedPoints[normalizedPoints.length - 1];
+  const chartMinWidth = Math.max(640, normalizedPoints.length * 56);
+  const tickFormatter = yAxisTickFormatter ?? valueFormatter;
 
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4">
       <div className="mb-3 flex items-end justify-between gap-2">
         <p className="text-sm font-semibold text-black">{title}</p>
-        <p className="text-xs text-black/50">Hiện tại: {valueFormatter(lastPoint.value)}</p>
+        <p className="text-xs text-black/50">Hiện tại: {valueFormatter(latestMeaningfulPoint.value)}</p>
       </div>
 
       <div className="w-full overflow-x-auto">
-        <svg viewBox={`0 0 ${width} ${height}`} className="min-w-[640px] w-full h-auto">
-          <line
-            x1={padding}
-            y1={height - padding}
-            x2={width - padding}
-            y2={height - padding}
-            stroke="rgba(0,0,0,0.1)"
-          />
-          <line
-            x1={padding}
-            y1={padding}
-            x2={padding}
-            y2={height - padding}
-            stroke="rgba(0,0,0,0.1)"
-          />
+        <ChartContainer
+          config={chartConfig}
+          className="h-[260px] aspect-auto [&_.recharts-wrapper:focus]:outline-none [&_.recharts-surface:focus]:outline-none"
+          style={{ minWidth: `${chartMinWidth}px` }}
+        >
+          <AreaChart
+            data={normalizedPoints}
+            margin={{ top: 8, right: 12, left: 4, bottom: 8 }}
+            onClick={(event) => {
+              if (!onPointSelect) return;
+              const point = extractPointFromChartEvent(event);
+              if (!point) return;
+              onPointSelect(point);
+            }}
+          >
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
 
-          <path d={pathD} fill="none" stroke="#f43f5e" strokeWidth="2.5" />
+            <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} tickMargin={8} minTickGap={24} />
 
-          {pathPoints.map((p, index) => (
-            <circle key={`${p.point.date}-${index}`} cx={p.x} cy={p.y} r="3" fill="#f43f5e" />
-          ))}
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={70}
+              allowDecimals={false}
+              tickFormatter={(value) => tickFormatter(Number(value))}
+              label={
+                yAxisLabel
+                  ? {
+                      value: yAxisLabel,
+                      angle: -90,
+                      position: 'insideLeft',
+                      offset: -2,
+                      style: { textAnchor: 'middle', fill: 'rgba(0,0,0,0.55)', fontSize: 11 },
+                    }
+                  : undefined
+              }
+            />
 
-          {pathPoints.map((p, index) => {
-            if (index % Math.ceil(points.length / 6) !== 0 && index !== points.length - 1) return null;
-            return (
-              <text
-                key={`label-${p.point.date}-${index}`}
-                x={p.x}
-                y={height - 8}
-                textAnchor="middle"
-                fontSize="10"
-                fill="rgba(0,0,0,0.45)"
-              >
-                {formatShortDate(p.point.date)}
-              </text>
-            );
-          })}
-        </svg>
+            <ReferenceLine y={0} stroke="rgba(0,0,0,0.2)" strokeWidth={1} />
+
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  className="pointer-events-none"
+                  indicator="line"
+                  labelFormatter={(_, payload) => {
+                    const dateValue = payload?.[0]?.payload?.date as string | undefined;
+                    return dateValue ? `Ngày ${formatShortDate(dateValue)}` : '';
+                  }}
+                  formatter={(value) => (
+                    <span className="font-medium text-foreground">{valueFormatter(Number(value))}</span>
+                  )}
+                />
+              }
+            />
+
+            <Area
+              dataKey="value"
+              type="monotone"
+              stroke="var(--color-value)"
+              fill="var(--color-value)"
+              fillOpacity={0.2}
+              strokeWidth={2}
+              activeDot={{ r: 6, style: { cursor: onPointSelect ? 'pointer' : 'default' } }}
+              dot={(props) => {
+                const point = props.payload as { date?: string; value?: number };
+                const date = point?.date;
+                const value = Number(point?.value ?? 0);
+
+                return (
+                  <g>
+                    <circle
+                      cx={props.cx}
+                      cy={props.cy}
+                      r={4}
+                      fill="var(--color-value)"
+                      style={{ cursor: onPointSelect ? 'pointer' : 'default' }}
+                    />
+                    <circle
+                      cx={props.cx}
+                      cy={props.cy}
+                      r={11}
+                      fill="transparent"
+                      style={{ cursor: onPointSelect ? 'pointer' : 'default' }}
+                      onClick={() => {
+                        if (!onPointSelect || !date) return;
+                        onPointSelect({ date, value });
+                      }}
+                    />
+                  </g>
+                );
+              }}
+            />
+          </AreaChart>
+        </ChartContainer>
       </div>
     </div>
   );

@@ -1,18 +1,19 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAnimatedToast } from "@/components/ui/animated-toast";
-import { WithdrawRequestDetailView } from "@/components/admin/withdraw-requests/WithdrawRequestDetailView";
-import { useAppSelector } from "@/lib/store/hooks";
-import { UserRole } from "@/dtos";
-import type { ProcessWithdrawRequestDto } from "@/dtos/admin";
+import { useEffect, useRef } from 'react';
+import { useParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAnimatedToast } from '@/components/ui/animated-toast';
+import { WithdrawRequestDetailView } from '@/components/admin/withdraw-requests/WithdrawRequestDetailView';
+import { useAppSelector } from '@/lib/store/hooks';
+import { UserRole } from '@/dtos';
+import type { ProcessWithdrawRequestDto } from '@/dtos/admin';
 import {
   useGetAdminWithdrawRequestDetailQuery,
   useProcessAdminWithdrawRequestMutation,
-} from "@/lib/store/features/admin/adminApi";
+} from '@/lib/store/features/admin/adminApi';
 
 export default function AdminWithdrawRequestDetailPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -24,13 +25,9 @@ export default function AdminWithdrawRequestDetailPage() {
   const { addToast } = useAnimatedToast();
   const loadErrorToastRef = useRef<string | null>(null);
 
-  const {
-    data,
-    isFetching,
-    isError,
-    error,
-    refetch,
-  } = useGetAdminWithdrawRequestDetailQuery(requestId, { skip: !isAdmin });
+  const { data, isFetching, isError, error, refetch } = useGetAdminWithdrawRequestDetailQuery(requestId, {
+    skip: !isAdmin,
+  });
 
   const [processRequest, { isLoading: isSubmitting }] = useProcessAdminWithdrawRequestMutation();
 
@@ -43,7 +40,7 @@ export default function AdminWithdrawRequestDetailPage() {
     }
 
     if (statusCode === 401) {
-      router.replace("/login");
+      router.replace('/login');
       return;
     }
 
@@ -51,16 +48,16 @@ export default function AdminWithdrawRequestDetailPage() {
       return;
     }
 
-    const message = "Không thể tải chi tiết yêu cầu rút tiền.";
+    const message = 'Không thể tải chi tiết yêu cầu rút tiền.';
     if (loadErrorToastRef.current === message) return;
     loadErrorToastRef.current = message;
 
     addToast({
-      type: "error",
-      title: "Lỗi tải dữ liệu",
+      type: 'error',
+      title: 'Lỗi tải dữ liệu',
       message,
       action: {
-        label: "Thử lại",
+        label: 'Thử lại',
         onClick: () => {
           void refetch();
         },
@@ -72,11 +69,9 @@ export default function AdminWithdrawRequestDetailPage() {
     try {
       await processRequest({ requestId, payload }).unwrap();
       addToast({
-        type: "success",
-        title: "Thành công",
-        message: payload.action === "approve"
-          ? "Đã duyệt yêu cầu rút tiền."
-          : "Đã từ chối yêu cầu rút tiền.",
+        type: 'success',
+        title: 'Thành công',
+        message: payload.action === 'approve' ? 'Đã duyệt yêu cầu rút tiền.' : 'Đã từ chối yêu cầu rút tiền.',
       });
       await refetch();
     } catch (err) {
@@ -88,9 +83,9 @@ export default function AdminWithdrawRequestDetailPage() {
 
       if (errorStatus === 409) {
         addToast({
-          type: "warning",
-          title: "Xung đột trạng thái",
-          message: "Yêu cầu đã được xử lý bởi admin khác. Đang tải dữ liệu mới nhất...",
+          type: 'warning',
+          title: 'Xung đột trạng thái',
+          message: 'Yêu cầu đã được xử lý bởi admin khác. Đang tải dữ liệu mới nhất...',
         });
         await refetch();
         return;
@@ -99,17 +94,17 @@ export default function AdminWithdrawRequestDetailPage() {
       if (errorStatus === 400 && requestError.data?.errors?.length) {
         const first = requestError.data.errors[0];
         addToast({
-          type: "error",
-          title: "Dữ liệu chưa hợp lệ",
-          message: first?.message || "Dữ liệu gửi lên chưa hợp lệ.",
+          type: 'error',
+          title: 'Dữ liệu chưa hợp lệ',
+          message: first?.message || 'Dữ liệu gửi lên chưa hợp lệ.',
         });
         return;
       }
 
       addToast({
-        type: "error",
-        title: "Xử lý thất bại",
-        message: requestError.data?.message || "Không thể xử lý yêu cầu. Vui lòng thử lại.",
+        type: 'error',
+        title: 'Xử lý thất bại',
+        message: requestError.data?.message || 'Không thể xử lý yêu cầu. Vui lòng thử lại.',
       });
     }
   };
@@ -128,7 +123,7 @@ export default function AdminWithdrawRequestDetailPage() {
       <div className="rounded-lg border border-black/10 bg-white p-4 space-y-2">
         <p className="text-base font-semibold text-black">Không tìm thấy yêu cầu</p>
         <p className="text-sm text-black/55">Yêu cầu rút tiền không tồn tại hoặc đã bị xóa.</p>
-        <Button variant="outline" size="sm" onClick={() => router.push("/admin/withdraw-requests")}>
+        <Button variant="outline" size="sm" onClick={() => router.push('/admin/withdraw-requests')}>
           Quay lại danh sách
         </Button>
       </div>
@@ -162,13 +157,7 @@ export default function AdminWithdrawRequestDetailPage() {
         </div>
       )}
 
-      {detail && (
-        <WithdrawRequestDetailView
-          detail={detail}
-          submitting={isSubmitting}
-          onProcess={handleProcess}
-        />
-      )}
+      {detail && <WithdrawRequestDetailView detail={detail} submitting={isSubmitting} onProcess={handleProcess} />}
     </div>
   );
 }
