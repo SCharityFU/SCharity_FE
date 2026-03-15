@@ -46,7 +46,7 @@ function removeDiacritics(str: string): string {
 export default function UpdateBankInfoPage() {
     const router = useRouter();
     const params = useParams();
-    const requestId = params.requestId as string;
+    const requestId = params.id as string;
 
     const [updateBankInfo, { isLoading }] = useUpdateRequestBankInfoMutation();
 

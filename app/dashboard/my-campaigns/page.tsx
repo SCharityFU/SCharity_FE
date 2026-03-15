@@ -1,74 +1,60 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
-import {
-  ArrowLeft,
-  Heart,
-  Users,
-  Calendar,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  BarChart3,
-} from "lucide-react";
-import { CampaignStatus, CampaignCategory } from "@/dtos/enums";
-import type { CampaignDto } from "@/dtos/campaign";
-import { HighlightText } from "@/components/ui/highlight-text";
-import { RainbowButton } from "@/components/ui/rainbow-button";
-import { Button } from "@/components/ui/button";
-import { Magnetic } from "@/components/ui/magnetic";
-import { useGetMyCampaignsQuery } from "@/lib/store/features/campaign/campaignApi";
-import {
-  formatCampaignProgressPercent,
-  formatVND,
-  resolveCampaignProgressPercent,
-} from "@/lib/utils";
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, Heart, Users, Calendar, Plus, ChevronLeft, ChevronRight, Eye, BarChart3 } from 'lucide-react';
+import { CampaignStatus, CampaignCategory } from '@/dtos/enums';
+import type { CampaignDto } from '@/dtos/campaign';
+import { HighlightText } from '@/components/ui/highlight-text';
+import { RainbowButton } from '@/components/ui/rainbow-button';
+import { Button } from '@/components/ui/button';
+import { Magnetic } from '@/components/ui/magnetic';
+import { useGetMyCampaignsQuery } from '@/lib/store/features/campaign/campaignApi';
+import { formatCampaignProgressPercent, formatVND, resolveCampaignProgressPercent } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   [CampaignStatus.PENDING]: {
-    label: "Chờ duyệt",
-    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    label: 'Chờ duyệt',
+    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
   },
   [CampaignStatus.ACTIVE]: {
-    label: "Đang chạy",
-    color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    label: 'Đang chạy',
+    color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
   },
   [CampaignStatus.CLOSED]: {
-    label: "Đã đóng",
-    color: "text-gray-500 bg-gray-500/10 border-gray-500/20",
+    label: 'Đã đóng',
+    color: 'text-gray-500 bg-gray-500/10 border-gray-500/20',
   },
   [CampaignStatus.SUSPENDED]: {
-    label: "Tạm dừng",
-    color: "text-red-500 bg-red-500/10 border-red-500/20",
+    label: 'Tạm dừng',
+    color: 'text-red-500 bg-red-500/10 border-red-500/20',
   },
   [CampaignStatus.COMPLETED]: {
-    label: "Hoàn thành",
-    color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+    label: 'Hoàn thành',
+    color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
   },
   [CampaignStatus.WITHDRAWN]: {
-    label: "Đã rút",
-    color: "text-violet-500 bg-violet-500/10 border-violet-500/20",
+    label: 'Đã rút',
+    color: 'text-violet-500 bg-violet-500/10 border-violet-500/20',
   },
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  [CampaignCategory.DAVA]: "Nạn nhân chất độc da cam",
-  [CampaignCategory.EDUCATION]: "Giáo dục",
-  [CampaignCategory.MEDICAL]: "Y tế",
-  [CampaignCategory.DISASTER]: "Thiên tai",
-  [CampaignCategory.COMMUNITY]: "Cộng đồng",
-  [CampaignCategory.ENVIRONMENT]: "Môi trường",
-  [CampaignCategory.OTHER]: "Khác",
+  [CampaignCategory.DAVA]: 'Nạn nhân chất độc da cam',
+  [CampaignCategory.EDUCATION]: 'Giáo dục',
+  [CampaignCategory.MEDICAL]: 'Y tế',
+  [CampaignCategory.DISASTER]: 'Thiên tai',
+  [CampaignCategory.COMMUNITY]: 'Cộng đồng',
+  [CampaignCategory.ENVIRONMENT]: 'Môi trường',
+  [CampaignCategory.OTHER]: 'Khác',
 };
 
 function toSafeNumber(value: unknown): number {
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  if (typeof value === "string") {
-    const parsed = Number(value.trim().replace(/,/g, ""));
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim().replace(/,/g, ''));
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
@@ -97,7 +83,7 @@ export default function MyCampaignsPage() {
         <div className="flex items-start justify-between mb-10">
           <div>
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push('/dashboard')}
               className="flex items-center gap-1 text-sm text-black/40 hover:text-black/70 transition-colors mb-2"
             >
               <ArrowLeft className="w-4 h-4" /> Dashboard
@@ -112,7 +98,7 @@ export default function MyCampaignsPage() {
           <Magnetic intensity={0.3} range={60}>
             <Link href="/campaigns/create">
               <RainbowButton
-                colors={["#f43f5e", "#8b5cf6", "#f43f5e"]}
+                colors={['#f43f5e', '#8b5cf6', '#f43f5e']}
                 duration={2.5}
                 borderWidth={1.5}
                 className="text-sm"
@@ -127,7 +113,7 @@ export default function MyCampaignsPage() {
         {/* Content */}
         {isLoading && (
           <div className="space-y-4">
-            {["s1", "s2", "s3"].map((key) => (
+            {['s1', 's2', 's3'].map((key) => (
               <div key={key} className="glass-card rounded-2xl p-6 animate-pulse">
                 <div className="h-5 bg-black/10 rounded w-1/3 mb-3" />
                 <div className="h-4 bg-black/10 rounded w-full mb-2" />
@@ -141,9 +127,7 @@ export default function MyCampaignsPage() {
           <div className="glass-card rounded-2xl p-12 text-center">
             <Heart className="w-12 h-12 text-black/20 mx-auto mb-4" />
             <p className="text-black/50 text-lg mb-2">Chưa có chiến dịch nào</p>
-            <p className="text-black/30 text-sm mb-6">
-              Bắt đầu gây quỹ bằng cách tạo chiến dịch đầu tiên
-            </p>
+            <p className="text-black/30 text-sm mb-6">Bắt đầu gây quỹ bằng cách tạo chiến dịch đầu tiên</p>
             <Link href="/campaigns/create">
               <Button>
                 <Plus className="w-4 h-4" />
@@ -158,8 +142,7 @@ export default function MyCampaignsPage() {
             <div className="space-y-4">
               <AnimatePresence mode="popLayout">
                 {campaigns.map((c: CampaignDto, i: number) => {
-                  const statusCfg =
-                    STATUS_LABELS[c.status] ?? STATUS_LABELS[CampaignStatus.PENDING];
+                  const statusCfg = STATUS_LABELS[c.status] ?? STATUS_LABELS[CampaignStatus.PENDING];
                   const remaining = daysLeft(c.deadline);
                   const raisedAmount = toSafeNumber(c.raisedAmount);
                   const goalAmount = toSafeNumber(c.goalAmount);
@@ -218,7 +201,7 @@ export default function MyCampaignsPage() {
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" />
-                              {remaining > 0 ? `${remaining} ngày còn lại` : "Đã hết hạn"}
+                              {remaining > 0 ? `${remaining} ngày còn lại` : 'Đã hết hạn'}
                             </span>
                           </div>
                         </div>

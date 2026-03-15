@@ -16,6 +16,7 @@ import { UpdateCategory } from "@/dtos/enums";
 import { formatDateOnly } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { RichTextContent } from "@/components/ui/rich-text-content";
 
 // ── Category config ───────────────────────────────────────────────────────────
 
@@ -121,7 +122,8 @@ function UpdateRow({ update, isLast }: { update: CampaignUpdateResponseDto; isLa
         <h3 className="text-sm font-bold text-black leading-snug mb-1.5">{update.title}</h3>
 
         {/* Body */}
-        <p className="text-sm text-black/60 leading-relaxed whitespace-pre-wrap">{update.content}</p>
+        <p className="text-sm text-black/60 leading-relaxed whitespace-pre-wrap">
+         <RichTextContent content={update.content} /></p>
 
         {/* Media thumbnails */}
         {hasMedia && (

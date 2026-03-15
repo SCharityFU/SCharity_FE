@@ -1,32 +1,23 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  BarChart3,
-  FolderKanban,
-  Users,
-  Flag,
-  Settings,
-  HandCoins,
-  ClipboardCheck,
-  WalletMinimal,
-} from "lucide-react";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { BarChart3, FolderKanban, Users, Flag, Settings, HandCoins, ClipboardCheck, WalletMinimal } from 'lucide-react';
 
 const adminMenu = [
-  { label: "Tổng quan", href: "/admin", icon: BarChart3 },
-  { label: "Xem yêu cầu tạo chiến dịch", href: "/admin/campaign-requests", icon: ClipboardCheck },
-  { label: "Xem yêu cầu rút tiền", href: "/admin/withdraw-requests", icon: HandCoins },
-  { label: "Quản lý chiến dịch", href: "/admin/campaigns", icon: FolderKanban },
-  { label: "Quản lý giao dịch", href: "/admin/transactions", icon: WalletMinimal },
-  { label: "Quản lý người dùng", href: "/admin/users", icon: Users },
-  { label: "Báo cáo", href: "/admin/reports", icon: Flag },
-  { label: "Cài đặt", href: "/admin/settings", icon: Settings },
+  { label: 'Tổng quan', href: '/admin', icon: BarChart3 },
+  { label: 'Yêu cầu tạo chiến dịch', href: '/admin/campaign-requests', icon: ClipboardCheck },
+  { label: 'Yêu cầu rút tiền', href: '/admin/withdraw-requests', icon: HandCoins },
+  { label: 'Quản lý chiến dịch', href: '/admin/campaigns', icon: FolderKanban },
+  { label: 'Quản lý giao dịch', href: '/admin/transactions', icon: WalletMinimal },
+  { label: 'Quản lý người dùng', href: '/admin/users', icon: Users },
+  { label: 'Báo cáo', href: '/admin/reports', icon: Flag },
+  { label: 'Cài đặt', href: '/admin/settings', icon: Settings },
 ];
 
 function isActivePath(pathname: string, href: string): boolean {
-  if (href === "/admin") {
-    return pathname === "/admin";
+  if (href === '/admin') {
+    return pathname === '/admin';
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -51,9 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-colors ${
-                    active
-                      ? "bg-rose-500 text-white"
-                      : "text-black/60 hover:text-black hover:bg-black/[0.04]"
+                    active ? 'bg-rose-500 text-white' : 'text-black/60 hover:text-black hover:bg-black/[0.04]'
                   }`}
                 >
                   <Icon className="w-4 h-4" />

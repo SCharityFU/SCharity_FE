@@ -1,68 +1,66 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, FileText, Loader2 } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, FileText, Loader2 } from 'lucide-react';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
+import type { CreateCampaignFormValues } from '@/components/campaign/create/schema';
 
 type QuillInstance = {
   root: { innerHTML: string };
   clipboard: { dangerouslyPasteHTML: (html: string) => void };
-  on: (eventName: "text-change", handler: () => void) => void;
+  on: (eventName: 'text-change', handler: () => void) => void;
   getSelection: (focus?: boolean) => { index: number; length: number } | null;
   getLength: () => number;
-  insertEmbed: (index: number, type: "image", value: string, source?: string) => void;
+  insertEmbed: (index: number, type: 'image', value: string, source?: string) => void;
   setSelection: (index: number, length: number) => void;
 };
 
 interface StoryEditorSectionProps {
-  story: string;
-  onStoryChange: (value: string) => void;
   onUploadImage: (file: File) => Promise<string>;
 }
 
-export function StoryEditorSection({
-  story,
-  onStoryChange,
-  onUploadImage,
-}: StoryEditorSectionProps) {
+export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
+  const { control, setValue } = useFormContext<CreateCampaignFormValues>();
+  const story = useWatch({ control, name: 'story' }) ?? '';
   const editorRootRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<QuillInstance | null>(null);
-  const onStoryChangeRef = useRef(onStoryChange);
+  const setStoryRef = useRef(setValue);
   const initialStoryRef = useRef(story);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
-    onStoryChangeRef.current = onStoryChange;
-  }, [onStoryChange]);
+    setStoryRef.current = setValue;
+  }, [setValue]);
 
   const storyLength = useMemo(() => {
     if (!story) return 0;
-    if (typeof window === "undefined") return 0;
+    if (typeof window === 'undefined') return 0;
     const parser = new DOMParser();
-    const doc = parser.parseFromString(story, "text/html");
-    return (doc.body.textContent || "").trim().length;
+    const doc = parser.parseFromString(story, 'text/html');
+    return (doc.body.textContent || '').trim().length;
   }, [story]);
 
   useEffect(() => {
     let mounted = true;
 
     const initQuill = async () => {
-      const { default: Quill } = await import("quill");
+      const { default: Quill } = await import('quill');
       if (!mounted || !editorRootRef.current || quillRef.current) return;
 
       const quill = new Quill(editorRootRef.current, {
-        theme: "snow",
-        placeholder: "Kể câu chuyện về chiến dịch của bạn... (ít nhất 50 ký tự)",
+        theme: 'snow',
+        placeholder: 'Kể câu chuyện về chiến dịch của bạn... (ít nhất 50 ký tự)',
         modules: {
           toolbar: {
             container: [
               [{ header: [1, 2, 3, false] }],
-              ["bold", "italic", "underline", "strike"],
-              [{ list: "ordered" }, { list: "bullet" }],
-              ["blockquote", "link", "image"],
-              ["clean"],
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ list: 'ordered' }, { list: 'bullet' }],
+              ['blockquote', 'link', 'image'],
+              ['clean'],
             ],
             handlers: {
               image: () => {
@@ -77,8 +75,11 @@ export function StoryEditorSection({
         quill.clipboard.dangerouslyPasteHTML(initialStoryRef.current);
       }
 
-      quill.on("text-change", () => {
-        onStoryChangeRef.current(quill.root.innerHTML);
+      quill.on('text-change', () => {
+        setStoryRef.current('story', quill.root.innerHTML, {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
       });
 
       quillRef.current = quill as QuillInstance;
@@ -100,7 +101,7 @@ export function StoryEditorSection({
     if (story === currentHtml) return;
 
     const selection = quill.getSelection();
-    quill.clipboard.dangerouslyPasteHTML(story || "");
+    quill.clipboard.dangerouslyPasteHTML(story || '');
     if (selection) {
       quill.setSelection(selection.index, selection.length);
     }
@@ -108,16 +109,16 @@ export function StoryEditorSection({
 
   const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    event.target.value = "";
+    event.target.value = '';
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Chỉ hỗ trợ upload tệp ảnh cho nội dung bài viết.");
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Chỉ hỗ trợ upload tệp ảnh cho nội dung bài viết.');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setUploadError("Kích thước ảnh vượt quá 10MB.");
+      setUploadError('Kích thước ảnh vượt quá 10MB.');
       return;
     }
 
@@ -130,10 +131,10 @@ export function StoryEditorSection({
     try {
       const imageUrl = await onUploadImage(file);
       const range = quill.getSelection(true) || { index: quill.getLength(), length: 0 };
-      quill.insertEmbed(range.index, "image", imageUrl, "user");
+      quill.insertEmbed(range.index, 'image', imageUrl, 'user');
       quill.setSelection(range.index + 1, 0);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Upload ảnh thất bại. Vui lòng thử lại.";
+      const message = error instanceof Error ? error.message : 'Upload ảnh thất bại. Vui lòng thử lại.';
       setUploadError(message);
     } finally {
       setIsUploading(false);
@@ -147,13 +148,7 @@ export function StoryEditorSection({
         Câu chuyện chiến dịch
       </Label>
 
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleImageFileChange}
-      />
+      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
 
       <div className="rounded-xl overflow-hidden border border-black/10 bg-white/60">
         <div ref={editorRootRef} className="quill-editor min-h-[220px]" />

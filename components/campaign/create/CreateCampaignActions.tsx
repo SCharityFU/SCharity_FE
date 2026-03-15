@@ -1,8 +1,7 @@
-import { ArrowLeft, Save, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Save, Send } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CreateCampaignActionsProps {
-  isValid: boolean;
   isSubmitting: boolean;
   onCancel: () => void;
   onSaveDraft: () => void;
@@ -10,7 +9,6 @@ interface CreateCampaignActionsProps {
 }
 
 export function CreateCampaignActions({
-  isValid,
   isSubmitting,
   onCancel,
   onSaveDraft,
@@ -32,12 +30,12 @@ export function CreateCampaignActions({
 
       <Button
         onClick={onOpenConfirm}
-        disabled={!isValid || isSubmitting}
-        variant={"default"}
-        className={!isValid || isSubmitting ? "opacity-50 cursor-not-allowed" : ""}
+        disabled={isSubmitting}
+        variant={'default'}
+        className={isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
       >
         <Send className="w-4 h-4" />
-        {isSubmitting ? "Đang gửi..." : "Gửi Duyệt"}
+        {isSubmitting ? 'Đang gửi...' : 'Gửi Duyệt'}
       </Button>
     </div>
   );

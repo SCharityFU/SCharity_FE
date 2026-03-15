@@ -28,7 +28,7 @@ export const campaignApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['CampaignRequest', 'MyCampaign'],
+    tagTypes: ['CampaignRequest', 'MyCampaign', 'CampaignUpdate'],
     endpoints: (builder) => ({
         submitCampaignRequest: builder.mutation<
             ApiResponseDto<CampaignRequestResponseDto>,
@@ -85,12 +85,16 @@ export const campaignApi = createApi({
         // GET /campaigns/requests/mine — paginated list of own campaign requests
         getMyRequests: builder.query<
             PaginatedResponseDto<CampaignRequestResponseDto>,
-            { page?: number; limit?: number }
+            { page?: number; limit?: number; status?: string }
         >({
-            query: ({ page = 1, limit = 10 } = {}) => ({
-                url: '/campaigns/requests/mine',
-                params: { page, limit },
-            }),
+            query: ({ page = 1, limit = 10, status } = {}) => {
+                const params: Record<string, any> = { page, limit };
+                if (status) params.status = status;
+                return {
+                    url: '/campaigns/requests/mine',
+                    params,
+                };
+            },
             providesTags: ['CampaignRequest'],
         }),
 
@@ -181,6 +185,94 @@ export const campaignApi = createApi({
             },
             invalidatesTags: ['CampaignRequest'],
         }),
+
+        // GET /campaigns/:id/updates — get campaign updates with optional status filter
+        getCampaignUpdates: builder.query<
+            PaginatedResponseDto<any>,
+            { campaignId: string; page?: number; limit?: number; status?: string }
+        >({
+            query: ({ campaignId = '', page = 1, limit = 10, status }) => {
+                const params: Record<string, any> = { page, limit };
+                if (status && ['all', 'draft', 'published'].includes(status)) {
+                    params.status = status;
+                }
+                return {
+                    url: `/campaigns/${campaignId}/updates`,
+                    params,
+                };
+            },
+            providesTags: ['CampaignUpdate'],
+        }),
+
+        // POST /campaigns/:id/updates — create a new campaign update
+        createCampaignUpdate: builder.mutation<
+            ApiResponseDto<any>,
+            { campaignId: string; data: { title: string; content: string; isDraft: boolean } }
+        >({
+            query: ({ campaignId, data }) => ({
+                url: `/campaigns/${campaignId}/updates`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['CampaignUpdate'],
+        }),
+
+        // PUT /campaigns/:id/updates/:updateId — update a campaign update
+        updateCampaignUpdate: builder.mutation<
+            ApiResponseDto<any>,
+            { campaignId: string; updateId: string; data: { title: string; content: string; isDraft: boolean } }
+        >({
+            query: ({ campaignId, updateId, data }) => ({
+                url: `/campaigns/${campaignId}/updates/${updateId}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['CampaignUpdate'],
+        }),
+
+        // DELETE /campaigns/:id/updates/:updateId — delete a campaign update
+        deleteCampaignUpdate: builder.mutation<
+            ApiResponseDto<void>,
+            { campaignId: string; updateId: string }
+        >({
+            query: ({ campaignId, updateId }) => ({
+                url: `/campaigns/${campaignId}/updates/${updateId}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['CampaignUpdate'],
+        }),
+
+        // PUT /campaigns/:id — update campaign details
+        updateCampaign: builder.mutation<
+            ApiResponseDto<CampaignDto>,
+            { campaignId: string; data: { title?: string; story?: string; goalAmount?: number; deadline?: string; category?: string }; thumbnail?: File }
+        >({
+            query: ({ campaignId, data, thumbnail }) => {
+                if (thumbnail) {
+                    const formData = new FormData();
+                    if (data.title) formData.append('title', data.title);
+                    if (data.story) formData.append('story', data.story);
+                    if (data.goalAmount !== undefined) formData.append('goalAmount', String(data.goalAmount));
+                    if (data.deadline) formData.append('deadline', data.deadline);
+                    if (data.category) formData.append('category', data.category);
+                    formData.append('thumbnail', thumbnail);
+
+                    return {
+                        url: `/campaigns/${campaignId}`,
+                        method: 'PUT',
+                        body: formData,
+                        formData: true,
+                    };
+                }
+
+                return {
+                    url: `/campaigns/${campaignId}`,
+                    method: 'PUT',
+                    body: data,
+                };
+            },
+            invalidatesTags: ['MyCampaign'],
+        }),
     }),
 });
 
@@ -191,4 +283,9 @@ export const {
     useGetMyCampaignsQuery,
     useUpdateRequestBankInfoMutation,
     useUpdateCampaignRequestMutation,
+    useGetCampaignUpdatesQuery,
+    useCreateCampaignUpdateMutation,
+    useUpdateCampaignUpdateMutation,
+    useDeleteCampaignUpdateMutation,
+    useUpdateCampaignMutation,
 } = campaignApi;
