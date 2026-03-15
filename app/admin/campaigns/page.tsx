@@ -2,19 +2,16 @@
 
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/lib/store/hooks";
 import { UserRole, CampaignStatus } from "@/dtos";
 import { useDebounce } from "@/hooks/useDebounce";
-import {
-  useGetAdminCampaignsQuery,
-} from "@/lib/store/features/admin/adminApi";
+import { useGetAdminCampaignsQuery } from "@/lib/store/features/admin/adminApi";
 import type { AdminCampaignListItemDto } from "@/dtos/admin";
 import { CampaignsFilters } from "@/components/admin/campaigns/CampaignsFilters";
 import { CampaignsTable } from "@/components/admin/campaigns/CampaignsTable";
 import { SuspendCampaignModal } from "@/components/admin/campaigns/SuspendCampaignModal";
 import { UnsuspendConfirmDialog } from "@/components/admin/campaigns/UnsuspendConfirmDialog";
+import { useAnimatedToast } from "@/components/ui/animated-toast";
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -24,11 +21,15 @@ function parsePositiveInt(value: string | null, fallback: number) {
 export default function AdminCampaignsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const router = useRouter();
+  const { addToast } = useAnimatedToast();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lastErrorKeyRef = useRef<string | null>(null);
 
   const [page, setPage] = useState(() => parsePositiveInt(searchParams.get("page"), 1));
-  const [limit, setLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100));
+  const [limit, setLimit] = useState(() =>
+    Math.min(parsePositiveInt(searchParams.get("limit"), 10), 100),
+  );
   const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [status, setStatus] = useState(() => searchParams.get("status") ?? "all");
   const [category, setCategory] = useState(() => searchParams.get("category") ?? "");
@@ -60,7 +61,7 @@ export default function AdminCampaignsPage() {
       status: status !== "all" ? (status as CampaignStatus) : undefined,
       category: category.trim() || undefined,
     },
-    { skip: !isAdmin }
+    { skip: !isAdmin },
   );
 
   const latestRowsRef = useRef<AdminCampaignListItemDto[]>([]);
@@ -75,15 +76,46 @@ export default function AdminCampaignsPage() {
 
   // Suspend / Unsuspend modal state
   const [suspendTarget, setSuspendTarget] = useState<{ id: string; title: string } | null>(null);
-  const [unsuspendTarget, setUnsuspendTarget] = useState<{ id: string; title: string } | null>(null);
+  const [unsuspendTarget, setUnsuspendTarget] = useState<{ id: string; title: string } | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (!isError) return;
+    if (!isError) {
+      lastErrorKeyRef.current = null;
+      return;
+    }
+
     const statusCode = (error as { status?: number })?.status;
     if (statusCode === 401) {
       router.replace("/login");
+      return;
     }
-  }, [isError, error, router]);
+
+    if (statusCode === 403) {
+      return;
+    }
+
+    const message =
+      statusCode === 404
+        ? "Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404)."
+        : "Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại.";
+    const errorKey = `${statusCode ?? "unknown"}:${message}`;
+    if (lastErrorKeyRef.current === errorKey) return;
+    lastErrorKeyRef.current = errorKey;
+
+    addToast({
+      type: "error",
+      title: "Lỗi tải danh sách chiến dịch",
+      message,
+      action: {
+        label: "Thử lại",
+        onClick: () => {
+          void refetch();
+        },
+      },
+    });
+  }, [isError, error, router, addToast, refetch]);
 
   if (!isAdmin) {
     return (
@@ -101,7 +133,9 @@ export default function AdminCampaignsPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-base md:text-lg font-semibold text-black">Quản lý chiến dịch</h1>
-          <p className="text-xs md:text-sm text-black/50">Theo dõi và quản trị các campaign trên toàn nền tảng.</p>
+          <p className="text-xs md:text-sm text-black/50">
+            Theo dõi và quản trị các campaign trên toàn nền tảng.
+          </p>
         </div>
       </div>
 
@@ -117,21 +151,6 @@ export default function AdminCampaignsPage() {
       {isError && statusCode === 403 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
           Bạn không có quyền truy cập dữ liệu chiến dịch quản trị.
-        </div>
-      )}
-
-      {isError && statusCode !== 401 && statusCode !== 403 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1">
-            <AlertTriangle className="w-4 h-4" />
-            {statusCode === 404
-              ? "Không tìm thấy endpoint dữ liệu chiến dịch quản trị (404)."
-              : "Lỗi hệ thống khi tải danh sách chiến dịch. Vui lòng thử lại."}
-          </span>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RotateCw className="w-3.5 h-3.5" />
-            Thử lại
-          </Button>
         </div>
       )}
 
@@ -166,14 +185,18 @@ export default function AdminCampaignsPage() {
         campaignId={suspendTarget?.id ?? null}
         campaignTitle={suspendTarget?.title ?? ""}
         open={!!suspendTarget}
-        onOpenChange={(open) => { if (!open) setSuspendTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) setSuspendTarget(null);
+        }}
       />
 
       <UnsuspendConfirmDialog
         campaignId={unsuspendTarget?.id ?? null}
         campaignTitle={unsuspendTarget?.title ?? ""}
         open={!!unsuspendTarget}
-        onOpenChange={(open) => { if (!open) setUnsuspendTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) setUnsuspendTarget(null);
+        }}
       />
     </div>
   );

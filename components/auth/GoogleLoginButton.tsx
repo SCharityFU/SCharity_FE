@@ -4,13 +4,14 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useLoginWithGoogleMutation } from "@/lib/store/features/auth/authApi";
 import { setCredentials } from "@/lib/store/features/auth/authSlice";
 import { useAppDispatch } from "@/lib/store/hooks";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { LogIn } from "lucide-react";
 
 export function GoogleLoginButton({ fullWidth = false }: { fullWidth?: boolean }) {
     const dispatch = useAppDispatch();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [loginWithGoogle, { isLoading }] = useLoginWithGoogleMutation();
 
     const login = useGoogleLogin({
@@ -29,7 +30,8 @@ export function GoogleLoginButton({ fullWidth = false }: { fullWidth?: boolean }
                     token: result.data.accessToken
                 }));
 
-                router.push("/");
+                const redirectTo = searchParams.get("redirect") || "/dashboard";
+                router.push(redirectTo);
             } catch (error) {
                 console.error("Login failed:", error);
             }

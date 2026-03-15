@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSuspendCampaignMutation } from "@/lib/store/features/admin/adminApi";
 import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 interface SuspendCampaignModalProps {
   campaignId: string | null;
@@ -43,8 +44,8 @@ export function SuspendCampaignModal({
       onOpenChange(false);
       toast.success("Đã tạm dừng chiến dịch thành công");
       onSuccess?.();
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Tạm dừng chiến dịch thất bại");
+    } catch (err: unknown) {
+      toast.error(getSafeApiErrorMessage(err, "Tạm dừng chiến dịch thất bại"));
     }
   };
 

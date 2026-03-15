@@ -65,7 +65,7 @@ export const authApi = createApi({
         }
       },
     }),
-    
+
     register: builder.mutation<AuthResponse, RegisterRequest>({
       query: (userData) => ({
         url: '/auth/register',
@@ -96,11 +96,11 @@ export const authApi = createApi({
         }
       },
     }),
-    
+
     getProfile: builder.query<AuthResponse['data']['user'], void>({
       query: () => '/auth/me',
     }),
-    
+
     logout: builder.mutation<{ success: boolean; message: string }, void>({
       query: () => ({
         url: '/auth/logout',
@@ -171,10 +171,10 @@ export const authApi = createApi({
   }),
 });
 
-export const { 
+export const {
   useLoginMutation,
   useRegisterMutation,
-  useLoginWithGoogleMutation, 
+  useLoginWithGoogleMutation,
   useGetProfileQuery,
   useLogoutMutation,
   useVerifyEmailMutation,

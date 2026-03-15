@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, Menu, X, LogOut, LayoutDashboard, FileText, Megaphone, ChevronDown, User, History } from "lucide-react";
+import { Heart, Menu, X, LogOut, LayoutDashboard, FileText, Megaphone, ChevronDown, User, History, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { logout } from "@/lib/store/features/auth/authSlice";
@@ -85,11 +85,11 @@ export function Navbar() {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => router.push("/dashboard")}>
                                         <LayoutDashboard className="w-4 h-4 text-gray-400" />
-                                        Dashboard
+                                        Quản lý dự án
                                     </DropdownMenuItem>
                                     {isAdmin && (
                                         <DropdownMenuItem onClick={() => router.push("/admin")}>
-                                            <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                                            <Lock className="w-4 h-4 text-gray-400" onClick={() => router.push("/admin")}/>
                                             Quản trị Admin
                                         </DropdownMenuItem>
                                     )}
