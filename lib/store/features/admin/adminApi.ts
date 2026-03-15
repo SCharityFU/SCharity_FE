@@ -16,6 +16,9 @@ import type {
   AdminWithdrawRequestsQueryDto,
   ProcessWithdrawRequestDto,
   SuspendCampaignRequestDto,
+  DashboardStatsResponseDto,
+  DonationChartDataPointDto,
+  DashboardChartQueryDto,
   ReviewCampaignRequestDto,
 } from "@/dtos/admin";
 
@@ -54,8 +57,27 @@ export const adminApi = createApi({
     "AdminCampaignRequestDetail",
     "AdminWithdrawRequests",
     "AdminWithdrawRequestDetail",
+    "AdminDashboard"
   ],
   endpoints: (builder) => ({
+    getAdminDashboard: builder.query<
+      ApiResponseDto<DashboardStatsResponseDto>,
+      void
+    >({
+      query: () => "/admin/dashboard",
+      providesTags: ["AdminDashboard"],
+    }),
+
+    getAdminDashboardChart: builder.query<
+      ApiResponseDto<DonationChartDataPointDto[]>,
+      DashboardChartQueryDto
+    >({
+      query: ({ interval = "day", days = 30 } = {}) => ({
+        url: "/admin/dashboard/chart",
+        params: { interval, days },
+      }),
+      providesTags: ["AdminDashboard"],
+    }),
     getAdminWithdrawRequests: builder.query<
       PaginatedResponseDto<AdminWithdrawRequestItemDto>,
       AdminWithdrawRequestsQueryDto
@@ -260,6 +282,8 @@ export const adminApi = createApi({
 });
 
 export const {
+  useGetAdminDashboardQuery,
+  useGetAdminDashboardChartQuery,
   useGetAdminWithdrawRequestsQuery,
   useGetAdminWithdrawRequestDetailQuery,
   useProcessAdminWithdrawRequestMutation,

@@ -16,11 +16,11 @@ export const makeStore = () => {
     reducer: {
       auth: authReducer,
       [authApi.reducerPath]: authApi.reducer,
+      [adminApi.reducerPath]: adminApi.reducer,
       [reportApi.reducerPath]: reportApi.reducer,
       [campaignApi.reducerPath]: campaignApi.reducer,
       [homeApi.reducerPath]: homeApi.reducer,
       [userApi.reducerPath]: userApi.reducer,
-      [adminApi.reducerPath]: adminApi.reducer,
       [donationApi.reducerPath]: donationApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
