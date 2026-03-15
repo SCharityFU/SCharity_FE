@@ -1,8 +1,9 @@
 import { useMemo } from "react";
-import { Eye } from "lucide-react";
+import { Eye, ShieldAlert, ShieldCheck } from "lucide-react";
 import { AnimatedTable, ColumnDef } from "@/components/ui/animated-table";
 import { Button } from "@/components/ui/button";
 import type { AdminCampaignListItemDto } from "@/dtos/admin";
+import { CampaignStatus } from "@/dtos";
 import {
   campaignStatusClassName,
   campaignStatusLabel,
@@ -21,6 +22,8 @@ interface CampaignsTableProps {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   onViewDetails: (campaignId: string) => void;
+  onSuspend?: (campaignId: string, title: string) => void;
+  onUnsuspend?: (campaignId: string, title: string) => void;
 }
 
 export function CampaignsTable({
@@ -34,6 +37,8 @@ export function CampaignsTable({
   hasActiveFilters,
   onClearFilters,
   onViewDetails,
+  onSuspend,
+  onUnsuspend,
 }: CampaignsTableProps) {
   const columns = useMemo<ColumnDef<AdminCampaignListItemDto>[]>(
     () => [
@@ -83,20 +88,52 @@ export function CampaignsTable({
         id: "actions",
         header: "Thao tác",
         align: "right",
-        cell: (row) => (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            onClick={() => onViewDetails(row.viewDetails?.campaignId || row.id)}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Xem chi tiết
-          </Button>
-        ),
+        cell: (row) => {
+          const id = row.viewDetails?.campaignId || row.id;
+          const canSuspend =
+            row.status === CampaignStatus.ACTIVE ||
+            row.status === CampaignStatus.CLOSED;
+          const canUnsuspend = row.status === CampaignStatus.SUSPENDED;
+
+          return (
+            <div className="flex items-center justify-end gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={() => onViewDetails(id)}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Chi tiết
+              </Button>
+              {canSuspend && onSuspend && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-orange-600 border-orange-200 hover:bg-orange-50"
+                  onClick={() => onSuspend(id, row.title)}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Tạm dừng
+                </Button>
+              )}
+              {canUnsuspend && onUnsuspend && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                  onClick={() => onUnsuspend(id, row.title)}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Gỡ tạm dừng
+                </Button>
+              )}
+            </div>
+          );
+        },
       },
     ],
-    [onViewDetails]
+    [onViewDetails, onSuspend, onUnsuspend]
   );
 
   return (

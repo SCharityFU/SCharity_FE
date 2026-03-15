@@ -75,6 +75,7 @@ export interface CampaignDto {
   deadline: string;
   status: CampaignStatus;
   category: CampaignCategory;
+  tags?: string[] | null;
   thumbnailUrl: string | null;
   mediaUrls: string[] | null;
   suspendReason: string | null;

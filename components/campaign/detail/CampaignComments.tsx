@@ -48,8 +48,8 @@ function EmptyState() {
         <MessageCircle className="w-5 h-5 text-rose-400" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-black/45">Chưa có lời chúc nào</p>
-        <p className="text-xs text-black/30 mt-0.5">Hãy quyên góp và để lại lời động viên!</p>
+        <p className="text-sm font-semibold text-black">Chưa có lời chúc nào</p>
+        <p className="text-xs text-black mt-0.5">Hãy quyên góp và để lại lời động viên!</p>
       </div>
     </div>
   );
@@ -58,7 +58,9 @@ function EmptyState() {
 // ── Comment card ──────────────────────────────────────────────────────────────
 
 function CommentCard({ comment }: { comment: CommentResponseDto }) {
-  const displayName = comment.isAnonymous ? "Nhà hảo tâm ẩn danh" : (comment.donor?.fullName ?? "Khách");
+  const displayName = comment.isAnonymous
+    ? "Nhà hảo tâm ẩn danh"
+    : (comment.donor?.fullName ?? "Khách");
 
   const gradient = getGradient(displayName);
   const initial = displayName.charAt(0).toUpperCase();
@@ -103,8 +105,10 @@ function CommentCard({ comment }: { comment: CommentResponseDto }) {
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-1">
-            <span className="text-xs font-bold text-black leading-tight truncate">{displayName}</span>
-            <span className="text-[11px] text-black/30 whitespace-nowrap flex-shrink-0 mt-px">
+            <span className="text-xs font-bold text-black leading-tight truncate">
+              {displayName}
+            </span>
+            <span className="text-[11px] text-black whitespace-nowrap flex-shrink-0 mt-px">
               {relativeTime(comment.createdAt)}
             </span>
           </div>
@@ -118,7 +122,7 @@ function CommentCard({ comment }: { comment: CommentResponseDto }) {
           )}
 
           {/* Text */}
-          <p className="text-sm text-black/65 leading-relaxed">{comment.content}</p>
+          <p className="text-sm text-black leading-relaxed">{comment.content}</p>
         </div>
       </div>
     </div>
@@ -147,9 +151,11 @@ export function CampaignComments({ campaign }: { campaign: PublicCampaignDetailR
               <MessageCircle className="w-3.5 h-3.5 text-rose-500" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-black leading-tight">Lời Chúc &amp; Động Viên</h2>
+              <h2 className="text-sm font-bold text-black leading-tight">
+                Lời Chúc &amp; Động Viên
+              </h2>
               {donorCommentCount > 0 && (
-                <p className="text-[11px] text-black/35 mt-px">
+                <p className="text-[11px] text-black mt-px">
                   {donorCommentCount} trong số {comments.length} người đã quyên góp
                 </p>
               )}
@@ -180,7 +186,7 @@ export function CampaignComments({ campaign }: { campaign: PublicCampaignDetailR
         {hasMore && (
           <button
             onClick={() => setModalOpen(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-3.5 border-t border-black/5 text-xs font-semibold text-black/50 hover:text-black/75 hover:bg-black/[0.02] transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 py-3.5 border-t border-black/5 text-xs font-semibold text-black hover:text-black/75 hover:bg-black/[0.02] transition-colors"
           >
             Xem tất cả {comments.length} lời chúc
             <ChevronRight className="w-3.5 h-3.5" />

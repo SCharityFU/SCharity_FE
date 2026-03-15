@@ -10,7 +10,7 @@ import { CampaignCategory } from "@/dtos/enums";
 import CampaignGrid from "@/components/campaign/CampaignGrid";
 import { useDebounce } from "@/hooks/useDebounce";
 
-const categories = ["Tất Cả", "Giáo Dục", "Y Tế", "Môi Trường", "Cứu Trợ", "Xã Hội"];
+const categories = ["Tất Cả", "Nạn Nhân CĐDC", "Giáo Dục", "Y Tế", "Môi Trường", "Cứu Trợ", "Xã Hội"];
 
 export default function CampaignsPage() {
   const [search, setSearch] = useState("");
@@ -29,6 +29,8 @@ export default function CampaignsPage() {
     switch (cat) {
       case "Tất Cả":
         return undefined;
+      case "Nạn Nhân CĐDC":
+        return CampaignCategory.DAVA;
       case "Giáo Dục":
         return CampaignCategory.EDUCATION;
       case "Y Tế":

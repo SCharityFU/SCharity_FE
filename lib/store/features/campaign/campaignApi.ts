@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { ApiResponseDto, PaginatedResponseDto } from '@/dtos/common';
+import type { RootState } from '@/lib/store/store';
 import type {
     CampaignRequestResponseDto,
     SubmitCampaignRequestDto,
@@ -21,7 +22,7 @@ export const campaignApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1',
         prepareHeaders: (headers, { getState }) => {
-            const token = (getState() as any).auth.token;
+            const token = (getState() as RootState).auth.token;
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
             }

@@ -6,6 +6,7 @@ import { useGetCampaignDetailQuery } from "@/lib/store/features/home/homeApi";
 import { CampaignImageSlider } from "@/components/campaign/detail/CampaignImageSlider";
 import { CampaignHeader } from "@/components/campaign/detail/CampaignHeader";
 import { CampaignStory } from "@/components/campaign/detail/CampaignStory";
+import { CampaignMediaSection } from "@/components/campaign/detail/CampaignMediaSection";
 import { CampaignUpdates } from "@/components/campaign/detail/CampaignUpdates";
 import { CampaignComments } from "@/components/campaign/detail/CampaignComments";
 import { CampaignSidebar } from "@/components/campaign/detail/CampaignSidebar";
@@ -133,10 +134,13 @@ export default function CampaignDetailPage() {
             {/* 3. Story */}
             <CampaignStory campaign={campaign} />
 
-            {/* 4. Updates */}
+            {/* 4. Related media */}
+            <CampaignMediaSection mediaUrls={images} />
+
+            {/* 5. Updates */}
             <CampaignUpdates campaign={campaign} />
 
-            {/* 5. Comments */}
+            {/* 6. Comments */}
             <CampaignComments campaign={campaign} />
           </div>
 

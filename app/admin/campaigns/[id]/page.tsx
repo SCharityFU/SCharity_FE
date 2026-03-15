@@ -1,25 +1,29 @@
-"use client";
+'use client';
 
-import { useDeferredValue, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, ArrowLeft, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useAppSelector } from "@/lib/store/hooks";
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
+import { AlertTriangle, ArrowLeft, RotateCw } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useAppSelector } from '@/lib/store/hooks';
 import {
   AdminDonationItem,
   useGetAdminCampaignAnalyticsQuery,
   useGetAdminCampaignDetailQuery,
   useGetAdminCampaignTransactionsQuery,
-} from "@/lib/store/features/admin/adminApi";
-import { UserRole } from "@/dtos";
-import { CampaignDetailHeader } from "@/components/admin/campaign-detail/CampaignDetailHeader";
-import { CampaignBasicTab } from "@/components/admin/campaign-detail/CampaignBasicTab";
-import { CampaignAnalyticsTab } from "@/components/admin/campaign-detail/CampaignAnalyticsTab";
-import { CampaignTransactionsTab } from "@/components/admin/campaign-detail/CampaignTransactionsTab";
+} from '@/lib/store/features/admin/adminApi';
+import { UserRole, CampaignStatus } from '@/dtos';
+import { CampaignDetailHeader } from '@/components/admin/campaign-detail/CampaignDetailHeader';
+import { CampaignBasicTab } from '@/components/admin/campaign-detail/CampaignBasicTab';
+import { CampaignAnalyticsTab } from '@/components/admin/campaign-detail/CampaignAnalyticsTab';
+import { CampaignTransactionsTab } from '@/components/admin/campaign-detail/CampaignTransactionsTab';
+import { useAnimatedToast } from '@/components/ui/animated-toast';
+import { SuspendCampaignModal } from '@/components/admin/campaigns/SuspendCampaignModal';
+import { UnsuspendConfirmDialog } from '@/components/admin/campaigns/UnsuspendConfirmDialog';
+import { Button } from '@/components/ui/button';
 
-type TabKey = "basic" | "analytics" | "transactions";
+type TabKey = 'basic' | 'analytics' | 'transactions';
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   const n = Number(value);
@@ -32,31 +36,36 @@ export default function AdminCampaignDetailPage() {
   const campaignId = params.id;
 
   const router = useRouter();
+  const { addToast } = useAnimatedToast();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const detailErrorToastRef = useRef<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
-    const tab = searchParams.get("tab");
-    return tab === "analytics" || tab === "transactions" ? tab : "basic";
+    const tab = searchParams.get('tab');
+    return tab === 'analytics' || tab === 'transactions' ? tab : 'basic';
   });
-  const [days, setDays] = useState(() => parsePositiveInt(searchParams.get("days"), 30));
+  const [days, setDays] = useState(() => parsePositiveInt(searchParams.get('days'), 30));
 
-  const [txPage, setTxPage] = useState(() => parsePositiveInt(searchParams.get("txPage"), 1));
-  const [txLimit, setTxLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get("txLimit"), 10), 100));
-  const [txSearch, setTxSearch] = useState(() => searchParams.get("txSearch") ?? "");
-  const [txSortBy, setTxSortBy] = useState<"createdAt" | "amount">(
-    () => (searchParams.get("txSortBy") === "amount" ? "amount" : "createdAt")
+  const [txPage, setTxPage] = useState(() => parsePositiveInt(searchParams.get('txPage'), 1));
+  const [txLimit, setTxLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get('txLimit'), 10), 100));
+  const [txSearch, setTxSearch] = useState(() => searchParams.get('txSearch') ?? '');
+  const [txSortBy, setTxSortBy] = useState<'createdAt' | 'amount'>(() =>
+    searchParams.get('txSortBy') === 'amount' ? 'amount' : 'createdAt',
   );
-  const [txSortOrder, setTxSortOrder] = useState<"ASC" | "DESC">(
-    () => (searchParams.get("txSortOrder") === "ASC" ? "ASC" : "DESC")
+  const [txSortOrder, setTxSortOrder] = useState<'ASC' | 'DESC'>(() =>
+    searchParams.get('txSortOrder') === 'ASC' ? 'ASC' : 'DESC',
   );
-  const [startDate, setStartDate] = useState(() => searchParams.get("startDate") ?? "");
-  const [endDate, setEndDate] = useState(() => searchParams.get("endDate") ?? "");
+  const [startDate, setStartDate] = useState(() => searchParams.get('startDate') ?? '');
+  const [endDate, setEndDate] = useState(() => searchParams.get('endDate') ?? '');
+  const [analyticsSelectedDate, setAnalyticsSelectedDate] = useState<string | null>(null);
 
   const isAdmin = user?.role === UserRole.ADMIN;
   const deferredTxSearch = useDeferredValue(txSearch);
   const debouncedTxSearch = useDebounce(deferredTxSearch, 400);
-  const hasInvalidDateRange = Boolean(startDate && endDate && new Date(startDate).getTime() > new Date(endDate).getTime());
+  const hasInvalidDateRange = Boolean(
+    startDate && endDate && new Date(startDate).getTime() > new Date(endDate).getTime(),
+  );
 
   useEffect(() => {
     setTxPage(1);
@@ -64,22 +73,22 @@ export default function AdminCampaignDetailPage() {
 
   useEffect(() => {
     const url = new URLSearchParams();
-    url.set("tab", activeTab);
-    url.set("days", String(days));
-    url.set("txPage", String(txPage));
-    url.set("txLimit", String(txLimit));
-    if (debouncedTxSearch.trim()) url.set("txSearch", debouncedTxSearch.trim());
-    url.set("txSortBy", txSortBy);
-    url.set("txSortOrder", txSortOrder);
-    if (startDate) url.set("startDate", startDate);
-    if (endDate) url.set("endDate", endDate);
+    url.set('tab', activeTab);
+    url.set('days', String(days));
+    url.set('txPage', String(txPage));
+    url.set('txLimit', String(txLimit));
+    if (debouncedTxSearch.trim()) url.set('txSearch', debouncedTxSearch.trim());
+    url.set('txSortBy', txSortBy);
+    url.set('txSortOrder', txSortOrder);
+    if (startDate) url.set('startDate', startDate);
+    if (endDate) url.set('endDate', endDate);
     router.replace(`${pathname}?${url.toString()}`);
-  }, [router, pathname, activeTab, days, txPage, txLimit, debouncedTxSearch, txSortBy, txSortOrder, startDate, endDate]);
+  }, [activeTab, days, txPage, txLimit, debouncedTxSearch, txSortBy, txSortOrder, startDate, endDate, pathname]);
 
   const detailQuery = useGetAdminCampaignDetailQuery(campaignId, { skip: !isAdmin });
   const analyticsQuery = useGetAdminCampaignAnalyticsQuery(
     { campaignId, days },
-    { skip: !isAdmin || activeTab !== "analytics" }
+    { skip: !isAdmin || activeTab !== 'analytics' },
   );
   const transactionsQuery = useGetAdminCampaignTransactionsQuery(
     {
@@ -94,7 +103,23 @@ export default function AdminCampaignDetailPage() {
         endDate: !hasInvalidDateRange && endDate ? endDate : undefined,
       },
     },
-    { skip: !isAdmin || activeTab !== "transactions" }
+    { skip: !isAdmin || activeTab !== 'transactions' },
+  );
+  const analyticsDateTransactionsQuery = useGetAdminCampaignTransactionsQuery(
+    {
+      campaignId,
+      query: {
+        page: 1,
+        limit: 20,
+        sortBy: 'createdAt',
+        sortOrder: 'DESC',
+        startDate: analyticsSelectedDate || undefined,
+        endDate: analyticsSelectedDate || undefined,
+      },
+    },
+    {
+      skip: !isAdmin || activeTab !== 'analytics' || !analyticsSelectedDate,
+    },
   );
 
   const txRowsRef = useRef<AdminDonationItem[]>([]);
@@ -103,9 +128,31 @@ export default function AdminCampaignDetailPage() {
   }
 
   useEffect(() => {
+    if (!detailQuery.isError) {
+      detailErrorToastRef.current = null;
+      return;
+    }
+
     const statusCode = (detailQuery.error as { status?: number } | undefined)?.status;
-    if (statusCode === 401) router.replace("/login");
-  }, [detailQuery.error, router]);
+    if (statusCode === 401) router.replace('/login');
+    if (statusCode === 401 || statusCode === 403 || statusCode === 404) return;
+
+    const message = 'Không thể tải chi tiết chiến dịch.';
+    if (detailErrorToastRef.current === message) return;
+    detailErrorToastRef.current = message;
+
+    addToast({
+      type: 'error',
+      title: 'Lỗi tải dữ liệu',
+      message,
+      action: {
+        label: 'Thử lại',
+        onClick: () => {
+          void detailQuery.refetch();
+        },
+      },
+    });
+  }, [detailQuery.isError, detailQuery.error, detailQuery.refetch, addToast, router]);
 
   if (!isAdmin) {
     return (
@@ -118,6 +165,13 @@ export default function AdminCampaignDetailPage() {
 
   const detailStatusCode = (detailQuery.error as { status?: number } | undefined)?.status;
   const detail = detailQuery.data?.data;
+
+  // Suspend / Unsuspend modal state
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [unsuspendOpen, setUnsuspendOpen] = useState(false);
+
+  const canSuspend = detail?.status === CampaignStatus.ACTIVE || detail?.status === CampaignStatus.CLOSED;
+  const canUnsuspend = detail?.status === CampaignStatus.SUSPENDED;
 
   if (detailStatusCode === 403) {
     return (
@@ -163,19 +217,52 @@ export default function AdminCampaignDetailPage() {
         </div>
       )}
 
-      {activeTab === "basic" && detail && <CampaignBasicTab detail={detail} />}
+      {activeTab === 'basic' && detail && <CampaignBasicTab detail={detail} />}
 
-      {activeTab === "analytics" && (
+      {/* Suspend / Unsuspend actions */}
+      {detail && (
+        <div className="flex items-center gap-2">
+          {canSuspend && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+              onClick={() => setSuspendOpen(true)}
+            >
+              Tạm dừng chiến dịch
+            </Button>
+          )}
+          {canUnsuspend && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+              onClick={() => setUnsuspendOpen(true)}
+            >
+              Gỡ tạm dừng
+            </Button>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'analytics' && (
         <CampaignAnalyticsTab
           days={days}
           onDaysChange={(value) => setDays(parsePositiveInt(String(value), 30))}
           chartData={analyticsQuery.data?.data?.chartData ?? []}
           isError={analyticsQuery.isError}
           onRetry={() => analyticsQuery.refetch()}
+          selectedDate={analyticsSelectedDate}
+          onSelectDateFromChart={setAnalyticsSelectedDate}
+          onClearSelectedDate={() => setAnalyticsSelectedDate(null)}
+          selectedDateDonations={analyticsDateTransactionsQuery.data?.data ?? []}
+          isLoadingSelectedDateDonations={analyticsDateTransactionsQuery.isFetching}
+          isSelectedDateDonationsError={analyticsDateTransactionsQuery.isError}
+          onRetrySelectedDateDonations={() => analyticsDateTransactionsQuery.refetch()}
         />
       )}
 
-      {activeTab === "transactions" && (
+      {activeTab === 'transactions' && (
         <CampaignTransactionsTab
           rows={transactionsQuery.data?.data ?? txRowsRef.current}
           pagination={transactionsQuery.data?.pagination}
@@ -202,6 +289,20 @@ export default function AdminCampaignDetailPage() {
           }}
         />
       )}
+
+      <SuspendCampaignModal
+        campaignId={campaignId}
+        campaignTitle={detail?.title ?? ''}
+        open={suspendOpen}
+        onOpenChange={setSuspendOpen}
+      />
+
+      <UnsuspendConfirmDialog
+        campaignId={campaignId}
+        campaignTitle={detail?.title ?? ''}
+        open={unsuspendOpen}
+        onOpenChange={setUnsuspendOpen}
+      />
     </div>
   );
 }

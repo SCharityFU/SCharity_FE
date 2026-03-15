@@ -46,12 +46,16 @@ export function TransactionsTable({
         id: "createdAt",
         header: "Thời gian",
         sortable: true,
-        cell: (row) => <span className="text-sm text-black/70">{formatDateTime(row.createdAt)}</span>,
+        cell: (row) => (
+          <span className="text-sm text-black/70">{formatDateTime(row.createdAt)}</span>
+        ),
       },
       {
         id: "message",
         header: "Lời nhắn",
-        cell: (row) => <span className="text-sm text-black/70 line-clamp-2">{row.message || "-"}</span>,
+        cell: (row) => (
+          <span className="text-sm text-black/70 line-clamp-2">{row.message || "-"}</span>
+        ),
       },
       {
         id: "amount",
@@ -59,27 +63,29 @@ export function TransactionsTable({
         align: "right",
         cell: (row) => <span className="font-semibold text-black">{formatVND(row.amount)}</span>,
       },
-      {
-        id: "bankName",
-        header: "Ngân hàng",
-        cell: (row) => <span className="text-sm text-black/70">{row.bankName || "-"}</span>,
-      },
-      {
-        id: "bankAccount",
-        header: "Tài khoản",
-        cell: (row) => <span className="font-mono text-xs text-black/70">{row.bankAccount || "-"}</span>,
-      },
+      // {
+      //   id: "bankName",
+      //   header: "Ngân hàng",
+      //   cell: (row) => <span className="text-sm text-black/70">{row.bankName || "-"}</span>,
+      // },
+      // {
+      //   id: "bankAccount",
+      //   header: "Tài khoản",
+      //   cell: (row) => <span className="font-mono text-xs text-black/70">{row.bankAccount || "-"}</span>,
+      // },
       {
         id: "status",
         header: "Trạng thái",
         cell: (row) => (
-          <span className={`inline-flex px-2 py-1 rounded-md text-xs font-semibold ${statusClassName(row.status)}`}>
+          <span
+            className={`inline-flex px-2 py-1 rounded-md text-xs font-semibold ${statusClassName(row.status)}`}
+          >
             {statusLabel(row.status)}
           </span>
         ),
       },
     ],
-    []
+    [],
   );
 
   const sortDirection: SortDirection = sortOrder === "ASC" ? "asc" : "desc";
