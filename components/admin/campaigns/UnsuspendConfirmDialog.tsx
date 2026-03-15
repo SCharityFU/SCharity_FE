@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useUnsuspendCampaignMutation } from "@/lib/store/features/admin/adminApi";
 import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 interface UnsuspendConfirmDialogProps {
   campaignId: string | null;
@@ -37,8 +38,8 @@ export function UnsuspendConfirmDialog({
       onOpenChange(false);
       toast.success("Đã gỡ tạm dừng chiến dịch thành công");
       onSuccess?.();
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Gỡ tạm dừng chiến dịch thất bại");
+    } catch (err: unknown) {
+      toast.error(getSafeApiErrorMessage(err, "Gỡ tạm dừng chiến dịch thất bại"));
     }
   };
 

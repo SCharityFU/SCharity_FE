@@ -26,14 +26,12 @@ export default function KycVerificationPage() {
   
   const [verifyKyc, { isLoading, error, data: result }] = useVerifyKycMutation();
 
-  // Redirect if not logged in or already verified
+  // Redirect if already verified (auth check handled by RouteGuard)
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    } else if (user?.isKycVerified) {
+    if (user?.isKycVerified) {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, user?.isKycVerified, router]);
+  }, [user?.isKycVerified, router]);
 
   // Clean up stream on unmount
   useEffect(() => {
@@ -383,7 +381,7 @@ export default function KycVerificationPage() {
                 <div className="w-24 h-24 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mb-6">
                   <CheckCircle2 className="w-12 h-12" />
                 </div>
-                <h2 className="text-3xl font-black text-black mb-3 text-emerald-600">Thành Công!</h2>
+                <h2 className="text-3xl font-black text-emerald-600 mb-3">Thành Công!</h2>
                 <p className="text-gray-600 mb-6">Tài khoản của bạn đã được xác thực danh tính (eKYC).</p>
                 
                 <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 mb-8 w-full text-left">

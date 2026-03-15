@@ -11,6 +11,8 @@ import { AvatarCropModal } from "@/components/ui/AvatarCropModal";
 import { Loader2, Camera, Check, KeyRound, LogOut, User, LayoutDashboard, FileText, Megaphone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 const DEFAULT_AVATAR =
   "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg";
@@ -99,7 +101,9 @@ export default function ProfilePage() {
     if (avatarBlob) formData.append("avatar", avatarBlob, "avatar.jpg");
     try {
       const res = await updateProfile(formData).unwrap();
-      setSuccessMsg("Cập nhật hồ sơ thành công!");
+      const successMessage = "Cập nhật hồ sơ thành công!";
+      setSuccessMsg(successMessage);
+      toast.success(successMessage);
       setAvatarBlob(null);
       const token = localStorage.getItem("access_token") || "";
       if (res.data) {
@@ -110,8 +114,10 @@ export default function ProfilePage() {
       }
       refetch();
       setTimeout(() => setSuccessMsg(null), 4000);
-    } catch (err: any) {
-      setServerError(err?.data?.message || "Cập nhật thất bại. Vui lòng thử lại.");
+    } catch (err: unknown) {
+      const message = getSafeApiErrorMessage(err, "Cập nhật thất bại. Vui lòng thử lại.");
+      setServerError(message);
+      toast.error(message);
     }
   };
 
@@ -271,7 +277,7 @@ export default function ProfilePage() {
                   <p className="font-google-sans-bold text-zinc-500">Tính năng đổi mật khẩu</p>
                   <p className="text-sm mt-1">Sẽ được xây dựng sớm</p>
                   <a href="/forgot-password" className="mt-4 inline-block text-sm text-rose-600 hover:underline">
-                    Dùng "Quên mật khẩu" → Đặt lại qua email
+                    Dùng &quot;Quên mật khẩu&quot; → Đặt lại qua email
                   </a>
                 </div>
               )}

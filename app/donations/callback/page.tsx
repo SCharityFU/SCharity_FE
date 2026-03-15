@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useVerifyPaymentMutation } from "@/lib/store/features/donation/donationApi";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft, Heart } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { getSafeApiErrorMessage } from "@/lib/api-error";
 
 function CallbackContent() {
   const searchParams = useSearchParams();
@@ -32,9 +33,11 @@ function CallbackContent() {
       try {
         await verifyPayment(Number(orderCode)).unwrap();
         setStatus("success");
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const message = getSafeApiErrorMessage(err, "Không thể xác nhận giao dịch");
         setStatus("error");
-        setErrorMessage(err?.data?.message || "Không thể xác nhận giao dịch");
+        setErrorMessage(message);
+        toast.error(message);
       }
     };
 

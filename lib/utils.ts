@@ -36,6 +36,8 @@ export function formatDateVN(dateStr: string): string {
 
 export const mapCategoryToVietnamese = (category: string) => {
   switch (category) {
+    case CampaignCategory.DAVA:
+      return "Nạn Nhân Chất Độc Da Cam";
     case CampaignCategory.EDUCATION:
       return "Giáo Dục";
     case CampaignCategory.MEDICAL:
@@ -61,3 +63,114 @@ export const formatDate = (dateStr: string) =>
 
 export const formatDateOnly = (dateStr: string) =>
   new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(dateStr));
+
+const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
+
+const toSafeNumber = (value: unknown) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().replace(/,/g, "");
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
+const parseNullableNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().replace(/,/g, "");
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+};
+
+export const resolveCampaignProgressPercent = ({
+  progressPercent,
+  raisedAmount,
+  goalAmount,
+}: {
+  progressPercent?: number | string | null;
+  raisedAmount?: number | string | null;
+  goalAmount?: number | string | null;
+}) => {
+  const raised = Math.max(0, toSafeNumber(raisedAmount));
+  const goal = Math.max(0, toSafeNumber(goalAmount));
+  const fallbackPercent = goal > 0 ? (raised / goal) * 100 : 0;
+  const rawProgress = parseNullableNumber(progressPercent);
+
+  if (rawProgress === null) {
+    return clampPercent(fallbackPercent);
+  }
+
+  const direct = clampPercent(rawProgress);
+  const scaled = clampPercent(rawProgress * 100);
+
+  if (goal > 0) {
+    const directDiff = Math.abs(direct - fallbackPercent);
+    const scaledDiff = Math.abs(scaled - fallbackPercent);
+    return scaledDiff + 0.05 < directDiff ? scaled : direct;
+  }
+
+  if (Math.abs(rawProgress) <= 1) {
+    return scaled;
+  }
+
+  return direct;
+};
+
+export const formatCampaignProgressPercent = (value: number) => {
+  if (!Number.isFinite(value) || value <= 0) return "0%";
+  if (value >= 100) return "100%";
+  if (value < 1) return `${value.toFixed(2)}%`;
+  if (value < 10) return `${value.toFixed(1)}%`;
+  return `${value.toFixed(0)}%`;
+};
+
+export const formatAmountByMagnitude = (amount: number | string | null | undefined) => {
+  const safe = toSafeNumber(amount);
+  const abs = Math.abs(safe);
+
+  let divisor = 1;
+  let unit = "";
+  let decimals = 0;
+
+  if (abs >= 1_000_000_000) {
+    divisor = 1_000_000_000;
+    unit = " tỷ";
+    decimals = abs < 10_000_000_000 ? 1 : 0;
+  } else if (abs >= 1_000_000) {
+    divisor = 1_000_000;
+    unit = " tr";
+    decimals = abs < 10_000_000 ? 2 : 1;
+  } else if (abs >= 1_000) {
+    divisor = 1_000;
+    unit = "k";
+    decimals = abs < 100_000 ? 1 : 0;
+  }
+
+  const value = safe / divisor;
+  const rounded = Number(value.toFixed(decimals));
+  const formatted = `${new Intl.NumberFormat("vi-VN", {
+    maximumFractionDigits: decimals,
+  }).format(rounded)}${unit}`;
+
+  return {
+    value: rounded,
+    unit,
+    decimals,
+    formatted,
+  };
+};

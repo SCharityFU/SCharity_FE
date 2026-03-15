@@ -4,7 +4,6 @@ import { useDeferredValue, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, ArrowLeft, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAppSelector } from "@/lib/store/hooks";
 import {
@@ -18,8 +17,10 @@ import { CampaignDetailHeader } from "@/components/admin/campaign-detail/Campaig
 import { CampaignBasicTab } from "@/components/admin/campaign-detail/CampaignBasicTab";
 import { CampaignAnalyticsTab } from "@/components/admin/campaign-detail/CampaignAnalyticsTab";
 import { CampaignTransactionsTab } from "@/components/admin/campaign-detail/CampaignTransactionsTab";
+import { useAnimatedToast } from "@/components/ui/animated-toast";
 import { SuspendCampaignModal } from "@/components/admin/campaigns/SuspendCampaignModal";
 import { UnsuspendConfirmDialog } from "@/components/admin/campaigns/UnsuspendConfirmDialog";
+import { Button } from "@/components/ui/button";
 
 type TabKey = "basic" | "analytics" | "transactions";
 
@@ -34,8 +35,10 @@ export default function AdminCampaignDetailPage() {
   const campaignId = params.id;
 
   const router = useRouter();
+  const { addToast } = useAnimatedToast();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const detailErrorToastRef = useRef<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     const tab = searchParams.get("tab");
@@ -44,13 +47,15 @@ export default function AdminCampaignDetailPage() {
   const [days, setDays] = useState(() => parsePositiveInt(searchParams.get("days"), 30));
 
   const [txPage, setTxPage] = useState(() => parsePositiveInt(searchParams.get("txPage"), 1));
-  const [txLimit, setTxLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get("txLimit"), 10), 100));
-  const [txSearch, setTxSearch] = useState(() => searchParams.get("txSearch") ?? "");
-  const [txSortBy, setTxSortBy] = useState<"createdAt" | "amount">(
-    () => (searchParams.get("txSortBy") === "amount" ? "amount" : "createdAt")
+  const [txLimit, setTxLimit] = useState(() =>
+    Math.min(parsePositiveInt(searchParams.get("txLimit"), 10), 100),
   );
-  const [txSortOrder, setTxSortOrder] = useState<"ASC" | "DESC">(
-    () => (searchParams.get("txSortOrder") === "ASC" ? "ASC" : "DESC")
+  const [txSearch, setTxSearch] = useState(() => searchParams.get("txSearch") ?? "");
+  const [txSortBy, setTxSortBy] = useState<"createdAt" | "amount">(() =>
+    searchParams.get("txSortBy") === "amount" ? "amount" : "createdAt",
+  );
+  const [txSortOrder, setTxSortOrder] = useState<"ASC" | "DESC">(() =>
+    searchParams.get("txSortOrder") === "ASC" ? "ASC" : "DESC",
   );
   const [startDate, setStartDate] = useState(() => searchParams.get("startDate") ?? "");
   const [endDate, setEndDate] = useState(() => searchParams.get("endDate") ?? "");
@@ -58,7 +63,9 @@ export default function AdminCampaignDetailPage() {
   const isAdmin = user?.role === UserRole.ADMIN;
   const deferredTxSearch = useDeferredValue(txSearch);
   const debouncedTxSearch = useDebounce(deferredTxSearch, 400);
-  const hasInvalidDateRange = Boolean(startDate && endDate && new Date(startDate).getTime() > new Date(endDate).getTime());
+  const hasInvalidDateRange = Boolean(
+    startDate && endDate && new Date(startDate).getTime() > new Date(endDate).getTime(),
+  );
 
   useEffect(() => {
     setTxPage(1);
@@ -76,12 +83,24 @@ export default function AdminCampaignDetailPage() {
     if (startDate) url.set("startDate", startDate);
     if (endDate) url.set("endDate", endDate);
     router.replace(`${pathname}?${url.toString()}`);
-  }, [router, pathname, activeTab, days, txPage, txLimit, debouncedTxSearch, txSortBy, txSortOrder, startDate, endDate]);
+  }, [
+    router,
+    pathname,
+    activeTab,
+    days,
+    txPage,
+    txLimit,
+    debouncedTxSearch,
+    txSortBy,
+    txSortOrder,
+    startDate,
+    endDate,
+  ]);
 
   const detailQuery = useGetAdminCampaignDetailQuery(campaignId, { skip: !isAdmin });
   const analyticsQuery = useGetAdminCampaignAnalyticsQuery(
     { campaignId, days },
-    { skip: !isAdmin || activeTab !== "analytics" }
+    { skip: !isAdmin || activeTab !== "analytics" },
   );
   const transactionsQuery = useGetAdminCampaignTransactionsQuery(
     {
@@ -96,7 +115,7 @@ export default function AdminCampaignDetailPage() {
         endDate: !hasInvalidDateRange && endDate ? endDate : undefined,
       },
     },
-    { skip: !isAdmin || activeTab !== "transactions" }
+    { skip: !isAdmin || activeTab !== "transactions" },
   );
 
   const txRowsRef = useRef<AdminDonationItem[]>([]);
@@ -105,9 +124,31 @@ export default function AdminCampaignDetailPage() {
   }
 
   useEffect(() => {
+    if (!detailQuery.isError) {
+      detailErrorToastRef.current = null;
+      return;
+    }
+
     const statusCode = (detailQuery.error as { status?: number } | undefined)?.status;
     if (statusCode === 401) router.replace("/login");
-  }, [detailQuery.error, router]);
+    if (statusCode === 401 || statusCode === 403 || statusCode === 404) return;
+
+    const message = "Không thể tải chi tiết chiến dịch.";
+    if (detailErrorToastRef.current === message) return;
+    detailErrorToastRef.current = message;
+
+    addToast({
+      type: "error",
+      title: "Lỗi tải dữ liệu",
+      message,
+      action: {
+        label: "Thử lại",
+        onClick: () => {
+          void detailQuery.refetch();
+        },
+      },
+    });
+  }, [detailQuery.isError, detailQuery.error, detailQuery.refetch, addToast, router]);
 
   if (!isAdmin) {
     return (
@@ -126,8 +167,7 @@ export default function AdminCampaignDetailPage() {
   const [unsuspendOpen, setUnsuspendOpen] = useState(false);
 
   const canSuspend =
-    detail?.status === CampaignStatus.ACTIVE ||
-    detail?.status === CampaignStatus.CLOSED;
+    detail?.status === CampaignStatus.ACTIVE || detail?.status === CampaignStatus.CLOSED;
   const canUnsuspend = detail?.status === CampaignStatus.SUSPENDED;
 
   if (detailStatusCode === 403) {
@@ -143,7 +183,10 @@ export default function AdminCampaignDetailPage() {
       <div className="p-4 rounded-lg border border-black/10 bg-white space-y-2">
         <p className="text-base font-semibold text-black">Không tìm thấy chiến dịch.</p>
         <p className="text-sm text-black/55">Campaign có thể đã bị xóa hoặc không tồn tại.</p>
-        <Link href="/admin/campaigns" className="text-sm text-rose-600 hover:underline inline-flex items-center gap-1">
+        <Link
+          href="/admin/campaigns"
+          className="text-sm text-rose-600 hover:underline inline-flex items-center gap-1"
+        >
           <ArrowLeft className="w-4 h-4" /> Quay lại danh sách
         </Link>
       </div>
@@ -161,18 +204,21 @@ export default function AdminCampaignDetailPage() {
         onOpenPublicView={(id) => router.push(`/campaigns/${id}`)}
       />
 
-      {detailQuery.isError && detailStatusCode !== 401 && detailStatusCode !== 403 && detailStatusCode !== 404 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1">
-            <AlertTriangle className="w-4 h-4" />
-            Không thể tải chi tiết chiến dịch.
-          </span>
-          <Button variant="outline" size="sm" onClick={() => detailQuery.refetch()}>
-            <RotateCw className="w-3.5 h-3.5" />
-            Thử lại
-          </Button>
-        </div>
-      )}
+      {detailQuery.isError &&
+        detailStatusCode !== 401 &&
+        detailStatusCode !== 403 &&
+        detailStatusCode !== 404 && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1">
+              <AlertTriangle className="w-4 h-4" />
+              Không thể tải chi tiết chiến dịch.
+            </span>
+            <Button variant="outline" size="sm" onClick={() => detailQuery.refetch()}>
+              <RotateCw className="w-3.5 h-3.5" />
+              Thử lại
+            </Button>
+          </div>
+        )}
 
       {activeTab === "basic" && detail && <CampaignBasicTab detail={detail} />}
 

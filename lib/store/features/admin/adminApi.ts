@@ -3,16 +3,23 @@ import type { ApiResponseDto, PaginatedResponseDto } from "@/dtos/common";
 import type {
   AdminCampaignAnalyticsDto,
   AdminCampaignDetailDto,
+  AdminCampaignRequestItemDto,
+  AdminProcessWithdrawResponseDto,
   AdminCampaignListItemDto,
   AdminCampaignsQueryDto,
   AdminCampaignTransactionsQueryDto,
   AdminReportResponseDto,
   AdminReportsQueryDto,
+  AdminCampaignRequestsQueryDto,
   AdminTransactionsQueryDto,
+  AdminWithdrawRequestItemDto,
+  AdminWithdrawRequestsQueryDto,
+  ProcessWithdrawRequestDto,
   SuspendCampaignRequestDto,
   DashboardStatsResponseDto,
   DonationChartDataPointDto,
   DashboardChartQueryDto,
+  ReviewCampaignRequestDto,
 } from "@/dtos/admin";
 
 export type AdminDonationStatus = "pending" | "success" | "failed" | "refunded";
@@ -40,7 +47,18 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["AdminTransactions", "AdminCampaigns", "AdminCampaignDetail", "AdminCampaignAnalytics", "AdminReports", "AdminDashboard"],
+  tagTypes: [
+    "AdminTransactions",
+    "AdminCampaigns",
+    "AdminCampaignDetail",
+    "AdminCampaignAnalytics",
+    "AdminReports",
+    "AdminCampaignRequests",
+    "AdminCampaignRequestDetail",
+    "AdminWithdrawRequests",
+    "AdminWithdrawRequestDetail",
+    "AdminDashboard"
+  ],
   endpoints: (builder) => ({
     getAdminDashboard: builder.query<
       ApiResponseDto<DashboardStatsResponseDto>,
@@ -60,6 +78,91 @@ export const adminApi = createApi({
       }),
       providesTags: ["AdminDashboard"],
     }),
+    getAdminWithdrawRequests: builder.query<
+      PaginatedResponseDto<AdminWithdrawRequestItemDto>,
+      AdminWithdrawRequestsQueryDto
+    >({
+      query: ({ page = 1, limit = 10, status } = {}) => ({
+        url: "/admin/withdraw-requests",
+        params: {
+          page,
+          limit,
+          ...(status ? { status } : {}),
+        },
+      }),
+      providesTags: ["AdminWithdrawRequests"],
+    }),
+
+    getAdminWithdrawRequestDetail: builder.query<
+      ApiResponseDto<AdminWithdrawRequestItemDto>,
+      string
+    >({
+      query: (requestId) => `/admin/withdraw-requests/${requestId}`,
+      providesTags: (_result, _error, requestId) => [
+        "AdminWithdrawRequestDetail",
+        { type: "AdminWithdrawRequestDetail" as const, id: requestId },
+      ],
+    }),
+
+    processAdminWithdrawRequest: builder.mutation<
+      ApiResponseDto<AdminProcessWithdrawResponseDto>,
+      { requestId: string; payload: ProcessWithdrawRequestDto }
+    >({
+      query: ({ requestId, payload }) => ({
+        url: `/admin/withdraw-requests/${requestId}/process`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: (_result, _error, { requestId }) => [
+        "AdminWithdrawRequests",
+        { type: "AdminWithdrawRequestDetail" as const, id: requestId },
+      ],
+    }),
+
+    getAdminCampaignRequests: builder.query<
+      PaginatedResponseDto<AdminCampaignRequestItemDto>,
+      AdminCampaignRequestsQueryDto
+    >({
+      query: ({ page = 1, limit = 10, status } = {}) => ({
+        url: "/admin/campaign-requests",
+        params: {
+          page,
+          limit,
+          ...(status ? { status } : {}),
+        },
+      }),
+      providesTags: ["AdminCampaignRequests"],
+    }),
+
+    getAdminCampaignRequestDetail: builder.query<
+      ApiResponseDto<AdminCampaignRequestItemDto>,
+      string
+    >({
+      query: (requestId) => `/admin/campaign-requests/${requestId}`,
+      providesTags: (_result, _error, requestId) => [
+        "AdminCampaignRequestDetail",
+        { type: "AdminCampaignRequestDetail" as const, id: requestId },
+      ],
+    }),
+
+    reviewAdminCampaignRequest: builder.mutation<
+      ApiResponseDto<AdminCampaignRequestItemDto>,
+      { requestId: string; payload: ReviewCampaignRequestDto }
+    >({
+      query: ({ requestId, payload }) => ({
+        url: `/admin/campaign-requests/${requestId}/review`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: (_result, _error, { requestId }) => [
+        "AdminCampaignRequests",
+        "AdminCampaignDetail",
+        "AdminCampaigns",
+        "AdminCampaignAnalytics",
+        "AdminTransactions",
+        { type: "AdminCampaignRequestDetail" as const, id: requestId },
+      ],
+    }),
 
     getAdminCampaigns: builder.query<
       PaginatedResponseDto<AdminCampaignListItemDto>,
@@ -78,10 +181,7 @@ export const adminApi = createApi({
       providesTags: ["AdminCampaigns"],
     }),
 
-    getAdminCampaignDetail: builder.query<
-      ApiResponseDto<AdminCampaignDetailDto>,
-      string
-    >({
+    getAdminCampaignDetail: builder.query<ApiResponseDto<AdminCampaignDetailDto>, string>({
       query: (campaignId) => `/admin/campaigns/${campaignId}`,
       providesTags: ["AdminCampaignDetail"],
     }),
@@ -149,10 +249,7 @@ export const adminApi = createApi({
       providesTags: ["AdminReports"],
     }),
 
-    resolveReport: builder.mutation<
-      ApiResponseDto<AdminReportResponseDto>,
-      string
-    >({
+    resolveReport: builder.mutation<ApiResponseDto<AdminReportResponseDto>, string>({
       query: (reportId) => ({
         url: `/admin/reports/${reportId}/resolve`,
         method: "PUT",
@@ -174,10 +271,7 @@ export const adminApi = createApi({
       invalidatesTags: ["AdminCampaigns", "AdminCampaignDetail"],
     }),
 
-    unsuspendCampaign: builder.mutation<
-      ApiResponseDto,
-      string
-    >({
+    unsuspendCampaign: builder.mutation<ApiResponseDto, string>({
       query: (campaignId) => ({
         url: `/admin/campaigns/${campaignId}/unsuspend`,
         method: "PUT",
@@ -190,6 +284,12 @@ export const adminApi = createApi({
 export const {
   useGetAdminDashboardQuery,
   useGetAdminDashboardChartQuery,
+  useGetAdminWithdrawRequestsQuery,
+  useGetAdminWithdrawRequestDetailQuery,
+  useProcessAdminWithdrawRequestMutation,
+  useGetAdminCampaignRequestsQuery,
+  useGetAdminCampaignRequestDetailQuery,
+  useReviewAdminCampaignRequestMutation,
   useGetAdminCampaignsQuery,
   useGetAdminCampaignDetailQuery,
   useGetAdminCampaignAnalyticsQuery,

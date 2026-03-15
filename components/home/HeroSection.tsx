@@ -8,6 +8,7 @@ import { Magnetic } from "@/components/ui/magnetic";
 import { HighlightText } from "@/components/ui/highlight-text";
 import { useGetActiveUserCountQuery } from "@/lib/store/features/home/homeApi";
 import { NumberCounter } from "@/components/ui/number-counter";
+import { Button } from "../ui/button";
 
 export function HeroSection() {
   const { data: userCount = 50000, isLoading } = useGetActiveUserCountQuery();
@@ -55,24 +56,18 @@ export function HeroSection() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Magnetic intensity={0.4} range={80}>
             <Link href="/campaigns">
-              <RainbowButton
-                colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#22c55e", "#f43f5e"]}
-                duration={2.5}
-                borderWidth={2}
-                className="text-base px-2"
-              >
+              <Button className="text-base px-2" variant={"default"}>
                 Khám Phá Chiến Dịch
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </RainbowButton>
+              </Button>
             </Link>
           </Magnetic>
           <Magnetic intensity={0.3} range={60}>
-            <Link
-              href="/campaigns/create"
-              className="px-8 py-3 rounded-lg glass border border-black/20 text-black font-medium hover:bg-black/10 transition-colors flex items-center gap-2"
-            >
-              <Heart className="w-5 h-5 text-rose-400" />
-              Tạo Chiến Dịch
+            <Link href="/campaigns/create">
+              <Button className="text-base px-2" variant={"outline"}>
+                <Heart className="w-5 h-5 text-rose-400" />
+                Tạo Chiến Dịch
+              </Button>
             </Link>
           </Magnetic>
         </div>

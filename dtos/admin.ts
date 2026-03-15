@@ -75,6 +75,92 @@ export interface AdminCampaignTransactionsQueryDto {
   endDate?: string;
 }
 
+export interface AdminCampaignRequestBankInfoDto {
+  bankName: string;
+  accountNumber: string;
+  accountHolderName: string;
+}
+
+export interface AdminCampaignRequestUserDto {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  status: string;
+  avatarUrl: string | null;
+  phoneNumber: string | null;
+  googleId: string | null;
+  isEmailVerified: boolean;
+  isKycVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminCampaignRequestItemDto {
+  id: string;
+  title: string;
+  story: string;
+  goalAmount: number;
+  deadline: string;
+  thumbnailUrl: string | null;
+  mediaUrls: string[];
+  category: CampaignCategory | string;
+  status: CampaignRequestStatus;
+  rejectReason: string | null;
+  bankInfo: AdminCampaignRequestBankInfoDto;
+  proofDocuments: string[];
+  requesterId: string;
+  requester: AdminCampaignRequestUserDto;
+  reviewedById: string | null;
+  reviewedBy: AdminCampaignRequestUserDto | null;
+  reviewedAt: string | null;
+  campaignId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminWithdrawBankInfoDto {
+  bankName: string;
+  accountNumber: string;
+  accountHolderName: string;
+}
+
+export interface AdminWithdrawRelatedCampaignDto {
+  id: string;
+  title?: string;
+}
+
+export interface AdminWithdrawRelatedUserDto {
+  id: string;
+  fullName?: string;
+  email?: string;
+}
+
+export interface AdminWithdrawRequestItemDto {
+  id: string;
+  amount: number;
+  status: WithdrawStatus;
+  rejectReason: string | null;
+  bankInfo: AdminWithdrawBankInfoDto;
+  campaignId: string;
+  campaign?: AdminWithdrawRelatedCampaignDto;
+  requesterId: string;
+  requester?: AdminWithdrawRelatedUserDto;
+  processedById: string | null;
+  processedBy?: AdminWithdrawRelatedUserDto | null;
+  processedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminProcessWithdrawResponseDto {
+  id: string;
+  status: WithdrawStatus;
+  processedById: string | null;
+  processedAt: string | null;
+  rejectReason: string | null;
+}
+
 export interface AdminCampaignDetailDto {
   id: string;
   title: string;

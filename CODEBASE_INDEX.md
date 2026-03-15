@@ -1,125 +1,181 @@
 # SCharity FE Codebase Index
 
-Last updated: 2026-03-12 (admin layout added)
+Last updated: 2026-03-15
 
 ## Overview
-- Stack: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Redux Toolkit + RTK Query.
-- Runtime scripts:
-  - `npm run dev` -> starts at port 3001
-  - `npm run build`
-  - `npm run start` -> serves at port 3001
-  - `npm run lint`
+- Stack: Next.js 15.2.1 (App Router), React 19, TypeScript 5, Tailwind CSS 3.4
+- State/Data: Redux Toolkit + RTK Query
+- UI: Shadcn/Radix-based components, Lucide icons, Motion, Sonner
+- Forms/Validation: React Hook Form + Zod
+- Dev port: 3001 (`npm run dev`)
+- API base (default): `http://localhost:3000/api/v1` via `NEXT_PUBLIC_API_URL`
+- Alias: `@/*` -> `./*`
 
-## Root Structure
-- `app/`: Next.js App Router pages and route segments.
-- `components/`: Reusable UI and feature components.
-- `lib/store/`: Redux store setup, typed hooks, feature slices/apis.
-- `hooks/`: Shared custom hooks.
-- `dtos/`: Shared request/response/domain TypeScript types.
-- `public/assets/`: Static assets.
-- `.agents/workflows/`: Internal guidance docs (`theme-rules.md`, `rtk-guideline.md`).
+## Scripts
+| Script | Command |
+|---|---|
+| dev | `next dev -p 3001` |
+| build | `next build` |
+| start | `next start -p 3001` |
+| lint | `next lint` |
+
+## Top-Level Structure
+```
+app/                 # Next.js routes and layouts
+components/          # Feature and shared UI components
+dtos/                # Shared request/response and domain types
+hooks/               # Reusable hooks
+lib/                 # Utilities and Redux store
+public/assets/       # Static assets
+private/             # Internal notes/prompts
+```
 
 ## Route Index (app)
-- `app/page.tsx`: Home page.
-- `app/campaigns/page.tsx`: Campaign listing page.
-- `app/campaigns/[id]/page.tsx`: Campaign detail page.
-- `app/campaigns/create/page.tsx`: Campaign creation page.
-- `app/admin/layout.tsx`: Shared admin layout with sidebar navigation.
-- `app/admin/page.tsx`: Default admin dashboard route.
-- `app/admin/campaigns/page.tsx`: Admin campaigns management table (filters/search/pagination).
-- `app/admin/campaigns/[id]/page.tsx`: Admin campaign detail with tabs (basic/analytics/transactions).
-- `app/admin/transactions/page.tsx`: Admin donation transactions list (search/sort/pagination).
-- `app/dashboard/page.tsx`: Dashboard root.
-- `app/dashboard/my-campaigns/page.tsx`: Current user's campaigns.
-- `app/dashboard/my-requests/page.tsx`: Withdrawal/requests listing.
-- `app/dashboard/my-requests/[requestId]/bank-info/page.tsx`: Bank info for a request.
-- `app/login/page.tsx`: Login page.
-- `app/register/page.tsx`: Register page.
-- `app/forgot-password/page.tsx`: Forgot password flow.
-- `app/reset-password/page.tsx`: Reset password flow.
-- `app/verify-email/page.tsx`: Verify email flow.
-- `app/kyc/page.tsx`: KYC page.
-- `app/layout.tsx`: Root app layout.
-- `app/not-found.tsx`: Not found page.
-- `app/globals.css`: Global styles.
 
-## Component Index
-- `components/layout/`
-  - `Navbar.tsx`
-  - `Footer.tsx`
-- `components/home/`
-  - `HeroSection.tsx`
-  - `FeaturedCampaignsSection.tsx`
-  - `FeaturesSection.tsx`
-  - `HowItWorksSection.tsx`
-  - `StatsSection.tsx`
-  - `CTABanner.tsx`
-- `components/campaign/`
-  - `CampaignGrid.tsx`
-  - `detail/`:
-    - `CampaignHeader.tsx`
-    - `CampaignImageSlider.tsx`
-    - `CampaignSidebar.tsx`
-    - `CampaignStory.tsx`
-    - `CampaignComments.tsx`
-    - `CampaignUpdates.tsx`
-- `components/campaigns/`
-  - `CampaignCard.tsx`
-  - `ReportCampaignModal.tsx`
-- `components/auth/`
-  - `LoginForm.tsx`
-  - `RegisterForm.tsx`
-  - `GoogleLoginButton.tsx`
-- `components/providers/`
-  - `StoreProvider.tsx`
-  - `AuthProvider.tsx`
-  - `GoogleProvider.tsx`
-- `components/ui/`: Design system and animated utility components.
-  - `rich-text-content.tsx`: Reusable renderer for custom rich-text HTML/plain content.
-- `components/admin/campaign-detail/AnalyticsLineChart.tsx`: Reusable line chart for admin campaign analytics.
-  - `CampaignDetailHeader.tsx`: Header + tab navigation for admin campaign detail.
-  - `CampaignBasicTab.tsx`: Basic info tab content.
-  - `CampaignAnalyticsTab.tsx`: Analytics tab content.
-  - `CampaignTransactionsTab.tsx`: Transactions tab table and filters.
-  - `campaignDetailUtils.ts`: Shared format/status helpers for admin campaign detail UI.
- - `components/admin/campaigns/`
-  - `CampaignsFilters.tsx`: Filter/search controls for admin campaigns list.
-  - `CampaignsTable.tsx`: Admin campaigns table with pagination and actions.
-  - `campaignsUtils.ts`: Shared format/status helpers for campaigns list.
- - `components/admin/transactions/`
-  - `TransactionsTable.tsx`: Admin transactions table + search + sorting.
-  - `transactionsUtils.ts`: Shared format/status helpers for transactions list.
+### App Shell
+- `app/layout.tsx`
+- `app/globals.css`
+- `app/loading.tsx`
+- `app/not-found.tsx`
+- `app/page.tsx`
 
-## State and Data Layer Index
-- `lib/store/store.ts`: Store configuration, reducer registration, middleware.
-- `lib/store/hooks.ts`: Typed Redux hooks.
-- `lib/store/features/auth/`
-  - `authApi.ts`: Auth endpoints.
-  - `authSlice.ts`: Auth client state.
-- `lib/store/features/campaign/campaignApi.ts`: Campaign endpoints.
-- `lib/store/features/home/homeApi.ts`: Home page endpoints.
-- `lib/store/features/report/reportApi.ts`: Report endpoints.
-- `lib/store/features/admin/adminApi.ts`: Admin endpoints (platform/campaign transactions).
+### Public/User-Facing Routes
+- `/campaigns` -> `app/campaigns/page.tsx`
+- `/campaigns/[id]` -> `app/campaigns/[id]/page.tsx`
+- `/campaigns/create` -> `app/campaigns/create/page.tsx`
+- `/login` -> `app/login/page.tsx`
+- `/register` -> `app/register/page.tsx`
+- `/forgot-password` -> `app/forgot-password/page.tsx`
+- `/reset-password` -> `app/reset-password/page.tsx`
+- `/verify-email` -> `app/verify-email/page.tsx`
+- `/donations/callback` -> `app/donations/callback/page.tsx`
 
-## DTO Index
-- `dtos/index.ts`: Barrel export for DTO modules.
-- DTO modules:
-  - `admin.ts`
-  - `auth.ts`
-  - `campaign.ts`
-  - `common.ts`
-  - `donation.ts`
-  - `enums.ts`
-  - `user.ts`
-  - `withdraw.ts`
+### Authenticated User Routes
+- `/dashboard` -> `app/dashboard/page.tsx`
+- `/dashboard/my-campaigns` -> `app/dashboard/my-campaigns/page.tsx`
+- `/dashboard/my-requests` -> `app/dashboard/my-requests/page.tsx`
+- `/dashboard/my-requests/[requestId]/bank-info` -> `app/dashboard/my-requests/[requestId]/bank-info/page.tsx`
+- `/dashboard/mydonation` -> `app/dashboard/mydonation/page.tsx`
+- `/kyc` -> `app/kyc/page.tsx`
+- `/profile` -> `app/profile/page.tsx`
 
-## Shared Utilities
-- `hooks/useAuth.ts`: Authentication helper hook(s).
-- `hooks/useVietQRBanks.ts`: VietQR bank data hook.
-- `lib/utils.ts`: Generic utility helpers.
+### Admin Routes
+- `/admin` -> `app/admin/page.tsx`
+- `/admin` layout -> `app/admin/layout.tsx`
+- `/admin/campaign-requests` -> `app/admin/campaign-requests/page.tsx`
+- `/admin/campaign-requests/[id]` -> `app/admin/campaign-requests/[id]/page.tsx`
+- `/admin/campaigns` -> `app/admin/campaigns/page.tsx`
+- `/admin/campaigns/[id]` -> `app/admin/campaigns/[id]/page.tsx`
+- `/admin/reports` -> `app/admin/reports/page.tsx`
+- `/admin/transactions` -> `app/admin/transactions/page.tsx`
+- `/admin/withdraw-requests` -> `app/admin/withdraw-requests/page.tsx`
+- `/admin/withdraw-requests/[id]` -> `app/admin/withdraw-requests/[id]/page.tsx`
 
-## Notes for Future Updates
-- When adding a new route under `app/`, register it in the Route Index section.
-- When adding a new Redux feature, register it in the State and Data Layer section.
-- When adding shared components, register them in the relevant Component Index subsection.
-- Keep this file as a quick navigation map (not deep implementation docs).
+## Components Index
+
+### Layout and Providers
+- `components/layout/Navbar.tsx`
+- `components/layout/Footer.tsx`
+- `components/providers/AuthProvider.tsx`
+- `components/providers/GoogleProvider.tsx`
+- `components/providers/RouteGuard.tsx`
+- `components/providers/StoreProvider.tsx`
+- `components/providers/ToastProvider.tsx`
+
+### Auth
+- `components/auth/LoginForm.tsx`
+- `components/auth/RegisterForm.tsx`
+- `components/auth/GoogleLoginButton.tsx`
+
+### Home
+- `components/home/HeroSection.tsx`
+- `components/home/FeaturedCampaignsSection.tsx`
+- `components/home/FeaturesSection.tsx`
+- `components/home/HowItWorksSection.tsx`
+- `components/home/StatsSection.tsx`
+- `components/home/CTABanner.tsx`
+
+### Campaign (User)
+- `components/campaign/CampaignGrid.tsx`
+- `components/campaign/detail/CampaignHeader.tsx`
+- `components/campaign/detail/CampaignImageSlider.tsx`
+- `components/campaign/detail/CampaignMediaSection.tsx`
+- `components/campaign/detail/CampaignSidebar.tsx`
+- `components/campaign/detail/CampaignStory.tsx`
+- `components/campaign/detail/CampaignComments.tsx`
+- `components/campaign/detail/CampaignUpdates.tsx`
+
+### Campaign Create Flow
+- `components/campaign/create/CreateCampaignHeader.tsx`
+- `components/campaign/create/BasicInfoSection.tsx`
+- `components/campaign/create/StoryEditorSection.tsx`
+- `components/campaign/create/MediaUploadSection.tsx`
+- `components/campaign/create/ProofDocumentsSection.tsx`
+- `components/campaign/create/CreateCampaignActions.tsx`
+- `components/campaign/create/SubmitConfirmDialog.tsx`
+- `components/campaign/create/CreateCampaignFeedback.tsx`
+- `components/campaign/create/ValidationWarnings.tsx`
+- `components/campaign/create/schema.ts`
+- `components/campaign/create/types.ts`
+- `components/campaign/create/constants.ts`
+- `components/campaign/create/utils.ts`
+
+### Campaign Listing and Donation
+- `components/campaigns/CampaignCard.tsx`
+- `components/campaigns/ReportCampaignModal.tsx`
+- `components/donation/DonationHistory.tsx`
+
+### Admin Components
+- `components/admin/campaign-requests/*`
+- `components/admin/campaigns/*`
+- `components/admin/campaign-detail/*`
+- `components/admin/reports/*`
+- `components/admin/transactions/*`
+- `components/admin/withdraw-requests/*`
+
+### Shared UI and Skeletons
+- `components/ui/*` (buttons, dialogs, selects, animation utilities, tabs, tables)
+- `components/skeletons/GlobalPageSkeleton.tsx`
+
+## State and Data Layer (lib/store)
+
+### Store
+- `lib/store/store.ts` - store config and middleware registration
+- `lib/store/hooks.ts` - typed Redux hooks
+
+### Slices and APIs
+- `lib/store/features/auth/authSlice.ts`
+- `lib/store/features/auth/authApi.ts`
+- `lib/store/features/home/homeApi.ts`
+- `lib/store/features/campaign/campaignApi.ts`
+- `lib/store/features/donation/donationApi.ts`
+- `lib/store/features/report/reportApi.ts`
+- `lib/store/features/user/userApi.ts`
+- `lib/store/features/admin/adminApi.ts`
+
+## Shared Types (dtos)
+- `dtos/common.ts`
+- `dtos/enums.ts`
+- `dtos/auth.ts`
+- `dtos/campaign.ts`
+- `dtos/donation.ts`
+- `dtos/user.ts`
+- `dtos/withdraw.ts`
+- `dtos/admin.ts`
+- `dtos/index.ts`
+
+## Shared Hooks and Utilities
+- `hooks/useAuth.ts`
+- `hooks/useDebounce.ts`
+- `hooks/useVietQRBanks.ts`
+- `lib/utils.ts`
+- `lib/api-error.ts`
+
+## Static Assets
+- `public/assets/404 Error Page.webp`
+- `public/assets/login.png`
+- `public/assets/register.png`
+
+## Maintenance Notes
+- Update this file whenever new routes, Redux features, or major component groups are added.
+- Keep this document as a navigation map, not implementation-level documentation.

@@ -1,6 +1,7 @@
 "use client";
 import { X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface ModalProps {
@@ -14,6 +15,11 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, subtitle, children, className }: ModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -41,10 +47,10 @@ export function Modal({ open, onClose, title, subtitle, children, className }: M
     }
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[1200] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/20 backdrop-blur-[3px]"
@@ -67,9 +73,7 @@ export function Modal({ open, onClose, title, subtitle, children, className }: M
         <div className="flex items-center justify-between px-5 py-4 border-b border-black/5 flex-shrink-0">
           <div className="min-w-0 pr-3">
             <h3 className="text-sm font-bold text-black leading-tight truncate">{title}</h3>
-            {subtitle && (
-              <p className="text-xs text-black/40 mt-0.5 truncate">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-xs text-black/40 mt-0.5 truncate">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
@@ -81,16 +85,14 @@ export function Modal({ open, onClose, title, subtitle, children, className }: M
         </div>
 
         {/* ── Scrollable body ─────────────────────────────────────────────── */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto overscroll-contain px-5 py-5"
-        >
+        <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">
           {children}
         </div>
 
         {/* ── Drag handle (mobile only) ───────────────────────────────────── */}
         <div className="sm:hidden absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-black/15" />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
