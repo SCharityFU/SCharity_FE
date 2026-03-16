@@ -1,33 +1,21 @@
-import { AnimatePresence, motion } from "motion/react";
-import { Calendar, ChevronDown, CreditCard, DollarSign, FileText, Landmark, Search, Type, User } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CampaignCategory } from "@/dtos/enums";
-import type { VietQRBank } from "@/hooks/useVietQRBanks";
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Calendar, ChevronDown, CreditCard, DollarSign, FileText, Landmark, Search, Type, User } from 'lucide-react';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CampaignCategory } from '@/dtos/enums';
+import type { CreateCampaignFormValues } from '@/components/campaign/create/schema';
+import { formatVND, parseCurrencyInput, removeDiacritics } from '@/components/campaign/create/utils';
+import type { VietQRBank } from '@/hooks/useVietQRBanks';
 
 interface BasicInfoSectionProps {
-  title: string;
   titleMax: number;
-  onTitleChange: (value: string) => void;
-  goalRaw: string;
-  goalAmount: number;
   goalPresets: number[];
-  onGoalChange: (value: string) => void;
-  onGoalPreset: (value: number) => void;
   shortVND: (value: number) => string;
-  deadline: string;
   minDeadline: string;
-  onDeadlineChange: (value: string) => void;
   formatDateVN: (value: string) => string;
-  category: CampaignCategory | "";
-  onCategoryChange: (value: CampaignCategory | "") => void;
   categoryLabels: Record<CampaignCategory, string>;
-  onBankNameChange: (value: string) => void;
-  accountNumber: string;
-  onAccountNumberChange: (value: string) => void;
-  accountHolderName: string;
-  onAccountHolderNameChange: (value: string) => void;
-  normalizeAccountHolderName: (value: string) => string;
   bankSearch: string;
   onBankSearchChange: (value: string) => void;
   bankDropdownOpen: boolean;
@@ -39,28 +27,12 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({
-  title,
   titleMax,
-  onTitleChange,
-  goalRaw,
-  goalAmount,
   goalPresets,
-  onGoalChange,
-  onGoalPreset,
   shortVND,
-  deadline,
   minDeadline,
-  onDeadlineChange,
   formatDateVN,
-  category,
-  onCategoryChange,
   categoryLabels,
-  onBankNameChange,
-  accountNumber,
-  onAccountNumberChange,
-  accountHolderName,
-  onAccountHolderNameChange,
-  normalizeAccountHolderName,
   bankSearch,
   onBankSearchChange,
   bankDropdownOpen,
@@ -70,6 +42,19 @@ export function BasicInfoSection({
   filteredBanks,
   onSelectBank,
 }: BasicInfoSectionProps) {
+  const { register, control, setValue } = useFormContext<CreateCampaignFormValues>();
+  const title = useWatch({ control, name: 'title' }) ?? '';
+  const goalAmount = useWatch({ control, name: 'goalAmount' }) ?? 0;
+  const deadline = useWatch({ control, name: 'deadline' }) ?? '';
+  const category = (useWatch({ control, name: 'category' }) ?? '') as CampaignCategory | '';
+  const accountNumber = useWatch({ control, name: 'accountNumber' }) ?? '';
+  const accountHolderName = useWatch({ control, name: 'accountHolderName' }) ?? '';
+  const [goalRaw, setGoalRaw] = useState('');
+
+  useEffect(() => {
+    setGoalRaw(goalAmount > 0 ? formatVND(goalAmount) : '');
+  }, [goalAmount]);
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -82,8 +67,7 @@ export function BasicInfoSection({
             id="campaign-title"
             type="text"
             maxLength={titleMax}
-            value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
+            {...register('title')}
             placeholder="VD: Xây trường học cho trẻ em vùng cao"
             className="w-full px-4 py-3 rounded-xl glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm"
           />
@@ -104,7 +88,11 @@ export function BasicInfoSection({
             type="text"
             inputMode="numeric"
             value={goalRaw}
-            onChange={(e) => onGoalChange(e.target.value)}
+            onChange={(e) => {
+              const num = parseCurrencyInput(e.target.value);
+              setValue('goalAmount', num, { shouldValidate: true, shouldDirty: true });
+              setGoalRaw(num > 0 ? formatVND(num) : '');
+            }}
             placeholder="VD: 50.000.000"
             className="w-full px-4 py-3 pr-12 rounded-xl glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm"
           />
@@ -115,11 +103,14 @@ export function BasicInfoSection({
             <button
               key={preset}
               type="button"
-              onClick={() => onGoalPreset(preset)}
+              onClick={() => {
+                setValue('goalAmount', preset, { shouldValidate: true, shouldDirty: true });
+                setGoalRaw(formatVND(preset));
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                 goalAmount === preset
-                  ? "bg-rose-500 text-white shadow-sm"
-                  : "glass border border-black/10 text-black/50 hover:text-black hover:border-rose-500/30"
+                  ? 'bg-rose-500 text-white shadow-sm'
+                  : 'glass border border-black/10 text-black/50 hover:text-black hover:border-rose-500/30'
               }`}
             >
               {shortVND(preset)}
@@ -138,8 +129,7 @@ export function BasicInfoSection({
           id="campaign-deadline"
           type="date"
           min={minDeadline}
-          value={deadline}
-          onChange={(e) => onDeadlineChange(e.target.value)}
+          {...register('deadline')}
           className="w-full px-4 py-3 rounded-xl glass border border-black/10 text-black outline-none focus:border-rose-500/50 transition-colors text-sm"
         />
         {deadline && <p className="text-xs text-black/40">Ngày kết thúc: {formatDateVN(deadline)}</p>}
@@ -150,18 +140,28 @@ export function BasicInfoSection({
           <FileText className="w-4 h-4 text-blue-500" />
           Danh mục (tùy chọn)
         </Label>
-        <Select value={category} onValueChange={(val) => onCategoryChange(val as CampaignCategory | "")}> 
-          <SelectTrigger className="w-full h-11 px-4 rounded-xl bg-white border border-black/10 text-sm">
-            <SelectValue placeholder="Chọn danh mục" />
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-black/10 rounded-xl shadow-lg">
-            {Object.entries(categoryLabels).map(([key, label]) => (
-              <SelectItem key={key} value={key} className="rounded-lg text-black/70 focus:bg-black/[0.04] focus:text-black">
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <Select value={(field.value as CampaignCategory | '') ?? ''} onValueChange={(val) => field.onChange(val)}>
+              <SelectTrigger className="w-full h-11 px-4 rounded-xl bg-white border border-black/10 text-sm">
+                <SelectValue placeholder="Chọn danh mục" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-black/10 rounded-xl shadow-lg">
+                {Object.entries(categoryLabels).map(([key, label]) => (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    className="rounded-lg text-black/70 focus:bg-black/[0.04] focus:text-black"
+                  >
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
 
       <div className="space-y-4 p-4 rounded-xl bg-black/[0.02] border border-black/5">
@@ -181,7 +181,11 @@ export function BasicInfoSection({
               {selectedBank ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={selectedBank.logo} alt={selectedBank.shortName} className="w-6 h-6 object-contain rounded" />
+                  <img
+                    src={selectedBank.logo}
+                    alt={selectedBank.shortName}
+                    className="w-6 h-6 object-contain rounded"
+                  />
                   <span className="flex-1 truncate text-black">
                     {selectedBank.shortName} - {selectedBank.name}
                   </span>
@@ -189,7 +193,9 @@ export function BasicInfoSection({
               ) : (
                 <span className="flex-1 text-black/30">Chọn ngân hàng...</span>
               )}
-              <ChevronDown className={`w-4 h-4 text-black/30 transition-transform ${bankDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-black/30 transition-transform ${bankDropdownOpen ? 'rotate-180' : ''}`}
+              />
             </button>
 
             <AnimatePresence>
@@ -222,10 +228,10 @@ export function BasicInfoSection({
                         type="button"
                         onClick={() => {
                           onSelectBank(bank);
-                          onBankNameChange(bank.shortName);
+                          setValue('bankName', bank.shortName, { shouldValidate: true, shouldDirty: true });
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs hover:bg-black/[0.04] transition-colors ${
-                          selectedBank?.id === bank.id ? "bg-rose-50 text-rose-700" : "text-black/70"
+                          selectedBank?.id === bank.id ? 'bg-rose-50 text-rose-700' : 'text-black/70'
                         }`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -255,14 +261,20 @@ export function BasicInfoSection({
             <CreditCard className="w-3 h-3" />
             Số tài khoản
           </Label>
-          <input
-            id="account-number"
-            type="text"
-            inputMode="numeric"
-            value={accountNumber}
-            onChange={(e) => onAccountNumberChange(e.target.value.replace(/\D/g, ""))}
-            placeholder="VD: 0123456789"
-            className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm font-mono tracking-wider"
+          <Controller
+            name="accountNumber"
+            control={control}
+            render={({ field }) => (
+              <input
+                id="account-number"
+                type="text"
+                inputMode="numeric"
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(e.target.value.replace(/\D/g, ''))}
+                placeholder="VD: 0123456789"
+                className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm font-mono tracking-wider"
+              />
+            )}
           />
         </div>
 
@@ -271,17 +283,24 @@ export function BasicInfoSection({
             <User className="w-3 h-3" />
             Tên chủ tài khoản
           </Label>
-          <input
-            id="account-holder"
-            type="text"
-            value={accountHolderName}
-            onChange={(e) => onAccountHolderNameChange(normalizeAccountHolderName(e.target.value))}
-            placeholder="VD: NGUYEN VAN A"
-            className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm uppercase tracking-wide"
+          <Controller
+            name="accountHolderName"
+            control={control}
+            render={({ field }) => (
+              <input
+                id="account-holder"
+                type="text"
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(removeDiacritics(e.target.value))}
+                placeholder="VD: NGUYEN VAN A"
+                className="w-full px-4 py-2.5 rounded-lg glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm uppercase tracking-wide"
+              />
+            )}
           />
           <p className="text-[10px] text-black/30">Tự động viết hoa, không dấu (theo chuẩn ngân hàng)</p>
         </div>
 
+        <input type="hidden" {...register('bankName')} />
       </div>
     </div>
   );

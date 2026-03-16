@@ -45,7 +45,7 @@ export interface CampaignQueryRequestDto {
 export interface CreateCampaignUpdateRequestDto {
   title: string;
   content: string;
-  category?: UpdateCategory;
+  category: UpdateCategory;
   isDraft?: boolean;
   // Files handled via multipart/form-data
 }

@@ -18,6 +18,7 @@ import { CampaignDetailHeader } from '@/components/admin/campaign-detail/Campaig
 import { CampaignBasicTab } from '@/components/admin/campaign-detail/CampaignBasicTab';
 import { CampaignAnalyticsTab } from '@/components/admin/campaign-detail/CampaignAnalyticsTab';
 import { CampaignTransactionsTab } from '@/components/admin/campaign-detail/CampaignTransactionsTab';
+import { formatDateVN } from '@/components/admin/campaign-detail/campaignDetailUtils';
 import { useAnimatedToast } from '@/components/ui/animated-toast';
 import { SuspendCampaignModal } from '@/components/admin/campaigns/SuspendCampaignModal';
 import { UnsuspendConfirmDialog } from '@/components/admin/campaigns/UnsuspendConfirmDialog';
@@ -45,7 +46,9 @@ export default function AdminCampaignDetailPage() {
     const tab = searchParams.get('tab');
     return tab === 'analytics' || tab === 'transactions' ? tab : 'basic';
   });
-  const [days, setDays] = useState(() => parsePositiveInt(searchParams.get('days'), 30));
+  const [days, setDays] = useState(() => parsePositiveInt(searchParams.get('days'), 7));
+  const [analyticsStartDate, setAnalyticsStartDate] = useState(() => searchParams.get('analyticsStartDate') ?? '');
+  const [analyticsEndDate, setAnalyticsEndDate] = useState(() => searchParams.get('analyticsEndDate') ?? '');
 
   const [txPage, setTxPage] = useState(() => parsePositiveInt(searchParams.get('txPage'), 1));
   const [txLimit, setTxLimit] = useState(() => Math.min(parsePositiveInt(searchParams.get('txLimit'), 10), 100));
@@ -66,6 +69,15 @@ export default function AdminCampaignDetailPage() {
   const hasInvalidDateRange = Boolean(
     startDate && endDate && new Date(startDate).getTime() > new Date(endDate).getTime(),
   );
+  const hasInvalidAnalyticsDateRange = Boolean(
+    analyticsStartDate &&
+    analyticsEndDate &&
+    new Date(analyticsStartDate).getTime() > new Date(analyticsEndDate).getTime(),
+  );
+  const hasPartialAnalyticsDateRange = Boolean(
+    (analyticsStartDate && !analyticsEndDate) || (!analyticsStartDate && analyticsEndDate),
+  );
+  const hasAnalyticsCustomRange = Boolean(analyticsStartDate && analyticsEndDate && !hasInvalidAnalyticsDateRange);
 
   useEffect(() => {
     setTxPage(1);
@@ -75,6 +87,8 @@ export default function AdminCampaignDetailPage() {
     const url = new URLSearchParams();
     url.set('tab', activeTab);
     url.set('days', String(days));
+    if (analyticsStartDate) url.set('analyticsStartDate', analyticsStartDate);
+    if (analyticsEndDate) url.set('analyticsEndDate', analyticsEndDate);
     url.set('txPage', String(txPage));
     url.set('txLimit', String(txLimit));
     if (debouncedTxSearch.trim()) url.set('txSearch', debouncedTxSearch.trim());
@@ -83,12 +97,32 @@ export default function AdminCampaignDetailPage() {
     if (startDate) url.set('startDate', startDate);
     if (endDate) url.set('endDate', endDate);
     router.replace(`${pathname}?${url.toString()}`);
-  }, [activeTab, days, txPage, txLimit, debouncedTxSearch, txSortBy, txSortOrder, startDate, endDate, pathname]);
+  }, [
+    activeTab,
+    days,
+    analyticsStartDate,
+    analyticsEndDate,
+    txPage,
+    txLimit,
+    debouncedTxSearch,
+    txSortBy,
+    txSortOrder,
+    startDate,
+    endDate,
+    pathname,
+  ]);
 
   const detailQuery = useGetAdminCampaignDetailQuery(campaignId, { skip: !isAdmin });
   const analyticsQuery = useGetAdminCampaignAnalyticsQuery(
-    { campaignId, days },
-    { skip: !isAdmin || activeTab !== 'analytics' },
+    {
+      campaignId,
+      days,
+      startDate: hasAnalyticsCustomRange ? analyticsStartDate : undefined,
+      endDate: hasAnalyticsCustomRange ? analyticsEndDate : undefined,
+    },
+    {
+      skip: !isAdmin || activeTab !== 'analytics' || hasInvalidAnalyticsDateRange || hasPartialAnalyticsDateRange,
+    },
   );
   const transactionsQuery = useGetAdminCampaignTransactionsQuery(
     {
@@ -165,6 +199,11 @@ export default function AdminCampaignDetailPage() {
 
   const detailStatusCode = (detailQuery.error as { status?: number } | undefined)?.status;
   const detail = detailQuery.data?.data;
+  const analyticsPoints = analyticsQuery.data?.data?.chartData ?? [];
+  const analyticsRangeLabel =
+    analyticsPoints.length > 0
+      ? `${formatDateVN(analyticsPoints[0].date)} - ${formatDateVN(analyticsPoints[analyticsPoints.length - 1].date)}`
+      : null;
 
   // Suspend / Unsuspend modal state
   const [suspendOpen, setSuspendOpen] = useState(false);
@@ -248,8 +287,23 @@ export default function AdminCampaignDetailPage() {
       {activeTab === 'analytics' && (
         <CampaignAnalyticsTab
           days={days}
-          onDaysChange={(value) => setDays(parsePositiveInt(String(value), 30))}
-          chartData={analyticsQuery.data?.data?.chartData ?? []}
+          onDaysChange={(value) => {
+            setDays(parsePositiveInt(String(value), 30));
+            setAnalyticsStartDate('');
+            setAnalyticsEndDate('');
+          }}
+          rangeStartDate={analyticsStartDate}
+          rangeEndDate={analyticsEndDate}
+          onRangeStartDateChange={setAnalyticsStartDate}
+          onRangeEndDateChange={setAnalyticsEndDate}
+          onClearDateRange={() => {
+            setAnalyticsStartDate('');
+            setAnalyticsEndDate('');
+          }}
+          hasInvalidDateRange={hasInvalidAnalyticsDateRange}
+          hasPartialDateRange={hasPartialAnalyticsDateRange}
+          activeRangeLabel={analyticsRangeLabel}
+          chartData={analyticsPoints}
           isError={analyticsQuery.isError}
           onRetry={() => analyticsQuery.refetch()}
           selectedDate={analyticsSelectedDate}

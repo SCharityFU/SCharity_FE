@@ -1,20 +1,20 @@
-import { useMemo } from "react";
-import { AnimatedTable, ColumnDef, SortDirection } from "@/components/ui/animated-table";
-import type { AdminDonationItem } from "@/lib/store/features/admin/adminApi";
+import { useMemo } from 'react';
+import { AnimatedTable, ColumnDef, SortDirection } from '@/components/ui/animated-table';
+import type { AdminDonationItem } from '@/lib/store/features/admin/adminApi';
 import {
   formatDateTime,
   formatVND,
   statusClassName,
   statusLabel,
-} from "@/components/admin/transactions/transactionsUtils";
+} from '@/components/admin/transactions/transactionsUtils';
 
 interface TransactionsTableProps {
   rows: AdminDonationItem[];
   loading: boolean;
   search: string;
   onSearchChange: (value: string) => void;
-  sortOrder: "ASC" | "DESC";
-  onSortOrderChange: (order: "ASC" | "DESC") => void;
+  sortOrder: 'ASC' | 'DESC';
+  onSortOrderChange: (order: 'ASC' | 'DESC') => void;
   page: number;
   limit: number;
   totalItems: number;
@@ -38,29 +38,30 @@ export function TransactionsTable({
   const columns = useMemo<ColumnDef<AdminDonationItem>[]>(
     () => [
       {
-        id: "donorDisplayName",
-        header: "Nhà hảo tâm",
-        accessorKey: "donorDisplayName",
+        id: 'donorDisplayName',
+        header: 'Nhà hảo tâm',
+        accessorKey: 'donorDisplayName',
       },
       {
-        id: "createdAt",
-        header: "Thời gian",
+        id: 'campaignName',
+        header: 'Dự án',
+        cell: (row) => <span className="text-sm text-black/70 line-clamp-2">{row.campaignName || '-'}</span>,
+      },
+      {
+        id: 'createdAt',
+        header: 'Thời gian',
         sortable: true,
-        cell: (row) => (
-          <span className="text-sm text-black/70">{formatDateTime(row.createdAt)}</span>
-        ),
+        cell: (row) => <span className="text-sm text-black/70">{formatDateTime(row.createdAt)}</span>,
       },
       {
-        id: "message",
-        header: "Lời nhắn",
-        cell: (row) => (
-          <span className="text-sm text-black/70 line-clamp-2">{row.message || "-"}</span>
-        ),
+        id: 'message',
+        header: 'Lời nhắn',
+        cell: (row) => <span className="text-sm text-black/70 line-clamp-2">{row.message || '-'}</span>,
       },
       {
-        id: "amount",
-        header: "Số tiền",
-        align: "right",
+        id: 'amount',
+        header: 'Số tiền',
+        align: 'right',
         cell: (row) => <span className="font-semibold text-black">{formatVND(row.amount)}</span>,
       },
       // {
@@ -74,11 +75,11 @@ export function TransactionsTable({
       //   cell: (row) => <span className="font-mono text-xs text-black/70">{row.bankAccount || "-"}</span>,
       // },
       {
-        id: "status",
-        header: "Trạng thái",
+        id: 'status',
+        header: 'Trạng thái',
         cell: (row) => (
           <span
-            className={`inline-flex px-2 py-1 rounded-md text-xs font-semibold ${statusClassName(row.status)}`}
+            className={`inline-flex whitespace-nowrap px-2.5 py-1 rounded-md text-sm font-semibold ${statusClassName(row.status)}`}
           >
             {statusLabel(row.status)}
           </span>
@@ -88,7 +89,7 @@ export function TransactionsTable({
     [],
   );
 
-  const sortDirection: SortDirection = sortOrder === "ASC" ? "asc" : "desc";
+  const sortDirection: SortDirection = sortOrder === 'ASC' ? 'asc' : 'desc';
 
   return (
     <AnimatedTable
@@ -102,8 +103,8 @@ export function TransactionsTable({
       sortColumn="createdAt"
       sortDirection={sortDirection}
       onSort={(columnId, direction) => {
-        if (columnId !== "createdAt") return;
-        onSortOrderChange(direction === "asc" ? "ASC" : "DESC");
+        if (columnId !== 'createdAt') return;
+        onSortOrderChange(direction === 'asc' ? 'ASC' : 'DESC');
       }}
       pagination={{
         page,

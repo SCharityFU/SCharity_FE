@@ -1,20 +1,20 @@
-"use client";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { Search, SlidersHorizontal, ArrowRight } from "lucide-react";
-import { VercelTabs } from "@/components/ui/vercel-tabs";
-import { RainbowButton } from "@/components/ui/rainbow-button";
-import { Magnetic } from "@/components/ui/magnetic";
-import { HighlightText } from "@/components/ui/highlight-text";
-import { useGetCampaignsQuery } from "@/lib/store/features/home/homeApi";
-import { CampaignCategory } from "@/dtos/enums";
-import CampaignGrid from "@/components/campaign/CampaignGrid";
-import { useDebounce } from "@/hooks/useDebounce";
+'use client';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { Search, SlidersHorizontal, ArrowRight } from 'lucide-react';
+import { VercelTabs } from '@/components/ui/vercel-tabs';
+import { Magnetic } from '@/components/ui/magnetic';
+import { HighlightText } from '@/components/ui/highlight-text';
+import { useGetCampaignsQuery } from '@/lib/store/features/home/homeApi';
+import { CampaignCategory } from '@/dtos/enums';
+import CampaignGrid from '@/components/campaign/CampaignGrid';
+import { useDebounce } from '@/hooks/useDebounce';
+import { Button } from '@/components/ui/button';
 
-const categories = ["Tất Cả", "Nạn Nhân CĐDC", "Giáo Dục", "Y Tế", "Môi Trường", "Cứu Trợ", "Xã Hội"];
+const categories = ['Tất Cả', 'Nạn Nhân CĐDC', 'Giáo Dục', 'Y Tế', 'Môi Trường', 'Cứu Trợ', 'Xã Hội'];
 
 export default function CampaignsPage() {
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<string>("Tất Cả");
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>('Tất Cả');
   const [page, setPage] = useState(1);
   const [limit] = useState(9); // Default page size
   const deferredSearch = useDeferredValue(search);
@@ -27,19 +27,19 @@ export default function CampaignsPage() {
   // Helper mapping from UI display name to the actual enum
   const resolveCategoryEnum = (cat: string): CampaignCategory | undefined => {
     switch (cat) {
-      case "Tất Cả":
+      case 'Tất Cả':
         return undefined;
-      case "Nạn Nhân CĐDC":
+      case 'Nạn Nhân CĐDC':
         return CampaignCategory.DAVA;
-      case "Giáo Dục":
+      case 'Giáo Dục':
         return CampaignCategory.EDUCATION;
-      case "Y Tế":
+      case 'Y Tế':
         return CampaignCategory.MEDICAL;
-      case "Môi Trường":
+      case 'Môi Trường':
         return CampaignCategory.ENVIRONMENT;
-      case "Cứu Trợ":
+      case 'Cứu Trợ':
         return CampaignCategory.DISASTER;
-      case "Xã Hội":
+      case 'Xã Hội':
         return CampaignCategory.COMMUNITY;
       default:
         return CampaignCategory.OTHER;
@@ -56,8 +56,8 @@ export default function CampaignsPage() {
       page: 1,
       search: debouncedSearch.trim().length > 2 ? debouncedSearch.trim() : undefined,
       category: resolveCategoryEnum(activeCategory),
-      sortBy: "createdAt",
-      sortOrder: "DESC",
+      sortBy: 'createdAt',
+      sortOrder: 'DESC',
     },
     {
       // Helps avoid aggressive refetching while typing fast
@@ -81,7 +81,7 @@ export default function CampaignsPage() {
           </div>
         ),
       })),
-    [campaigns, isLoading, isFetching]
+    [campaigns, isLoading, isFetching],
   );
 
   return (
@@ -90,7 +90,7 @@ export default function CampaignsPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-6xl font-black mb-4">
-            Các Chiến Dịch{" "}
+            Các Chiến Dịch{' '}
             <HighlightText variant="underline" color="primary" className="gradient-text">
               Ý Nghĩa
             </HighlightText>
@@ -124,16 +124,10 @@ export default function CampaignsPage() {
         {campaigns && campaigns.length >= limit * page && (
           <div className="text-center mt-12">
             <Magnetic intensity={0.3} range={60}>
-              <div onClick={() => setPage(page + 1)}>
-                <RainbowButton
-                  colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
-                  duration={3}
-                  borderWidth={2}
-                >
-                  {isFetching ? "Đang tải..." : "Tải Thêm Chiến Dịch"}
-                  {!isFetching && <ArrowRight className="w-4 h-4" />}
-                </RainbowButton>
-              </div>
+              <Button variant={'outline'} onClick={() => setPage(page + 1)}>
+                {isFetching ? 'Đang tải...' : 'Tải Thêm Chiến Dịch'}
+                {!isFetching && <ArrowRight className="w-4 h-4" />}
+              </Button>
             </Magnetic>
           </div>
         )}

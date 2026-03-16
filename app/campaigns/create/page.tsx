@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, type DragEvent } from 'react';
 import { useRouter } from 'nextjs-toploader/app';
 import { motion } from 'motion/react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { CampaignCategory } from '@/dtos/enums';
@@ -27,14 +27,7 @@ import {
 } from '@/components/campaign/create/schema';
 import { CATEGORY_LABELS, DRAFT_STORAGE_KEY, GOAL_PRESETS, TITLE_MAX } from '@/components/campaign/create/constants';
 import type { CampaignDraft, FeedbackMessage, ProofPreview } from '@/components/campaign/create/types';
-import {
-  formatDateVN,
-  formatVND,
-  getTomorrowISO,
-  parseCurrencyInput,
-  removeDiacritics,
-  shortVND,
-} from '@/components/campaign/create/utils';
+import { formatDateVN, formatVND, getTomorrowISO, shortVND } from '@/components/campaign/create/utils';
 import { Button } from '@/components/ui/button';
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -48,30 +41,13 @@ export default function CreateCampaignPage() {
   const submitLockRef = useRef(false);
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
-  const {
-    watch,
-    setValue,
-    getValues,
-    trigger,
-    formState: { errors: formErrors },
-    handleSubmit: handleFormSubmit,
-  } = useForm<CreateCampaignFormValues>({
+  const formMethods = useForm<CreateCampaignFormValues>({
     resolver: zodResolver(createCampaignFormSchema),
-    mode: 'onChange',
+    mode: 'onBlur',
     defaultValues: createCampaignFormDefaultValues,
   });
 
-  // Form state
-  const [goalRaw, setGoalRaw] = useState('');
-
-  const title = watch('title');
-  const goalAmount = watch('goalAmount');
-  const deadline = watch('deadline');
-  const category = watch('category') || '';
-  const story = watch('story');
-  const bankName = watch('bankName');
-  const accountNumber = watch('accountNumber');
-  const accountHolderName = watch('accountHolderName');
+  const { reset, getValues, trigger, handleSubmit: handleFormSubmit } = formMethods;
 
   // Bank list from VietQR API
   const {
@@ -122,22 +98,22 @@ export default function CreateCampaignPage() {
       if (!raw) return;
       const draft: CampaignDraft = JSON.parse(raw);
 
-      setValue('title', draft.title || '', { shouldValidate: false });
-      setValue('goalAmount', draft.goalAmount || 0, { shouldValidate: false });
-      setGoalRaw(draft.goalRaw || '');
-      setValue('deadline', draft.deadline || '', { shouldValidate: false });
-      setValue('category', draft.category || '', { shouldValidate: false });
-      setValue('story', draft.storyHtml || '', { shouldValidate: false });
-      setValue('bankName', draft.bankName || '', { shouldValidate: false });
-      setValue('accountNumber', draft.accountNumber || '', { shouldValidate: false });
-      setValue('accountHolderName', draft.accountHolderName || '', { shouldValidate: false });
+      reset({
+        title: draft.title || '',
+        goalAmount: draft.goalAmount || 0,
+        deadline: draft.deadline || '',
+        category: draft.category || '',
+        story: draft.storyHtml || '',
+        bankName: draft.bankName || '',
+        accountNumber: draft.accountNumber || '',
+        accountHolderName: draft.accountHolderName || '',
+      });
       setMediaPreviews(draft.mediaPreviews || []);
       setCoverIndex(draft.coverIndex || 0);
     } catch {
       // Ignore corrupted draft
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setValue]);
+  }, [reset]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -157,17 +133,6 @@ export default function CreateCampaignPage() {
       window.clearTimeout(timer);
     };
   }, [redirectSeconds, router]);
-
-  const handleGoalChange = (raw: string) => {
-    const num = parseCurrencyInput(raw);
-    setValue('goalAmount', num, { shouldValidate: true, shouldDirty: true });
-    setGoalRaw(num > 0 ? formatVND(num) : '');
-  };
-
-  const handleGoalPreset = (preset: number) => {
-    setValue('goalAmount', preset, { shouldValidate: true, shouldDirty: true });
-    setGoalRaw(formatVND(preset));
-  };
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const newFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
@@ -269,17 +234,24 @@ export default function CreateCampaignPage() {
 
   // ── Validation ─────────────────────────────────────────────────────────────
 
-  const validationErrors = [
-    formErrors.title?.message,
-    formErrors.goalAmount?.message,
-    formErrors.deadline?.message,
-    formErrors.story?.message,
-    formErrors.bankName?.message,
-    formErrors.accountNumber?.message,
-    formErrors.accountHolderName?.message,
-  ].filter((msg): msg is string => Boolean(msg));
+  const getFirstValidationError = (): string | null => {
+    const fieldNames: Array<keyof CreateCampaignFormValues> = [
+      'title',
+      'goalAmount',
+      'deadline',
+      'story',
+      'bankName',
+      'accountNumber',
+      'accountHolderName',
+    ];
 
-  const isValid = validationErrors.length === 0;
+    for (const fieldName of fieldNames) {
+      const message = formMethods.getFieldState(fieldName).error?.message;
+      if (message) return message;
+    }
+
+    return null;
+  };
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
@@ -340,7 +312,7 @@ export default function CreateCampaignPage() {
     const draft: CampaignDraft = {
       title: values.title,
       goalAmount: values.goalAmount,
-      goalRaw,
+      goalRaw: values.goalAmount > 0 ? formatVND(values.goalAmount) : '',
       deadline: values.deadline,
       category: (values.category as CampaignCategory | '') || '',
       storyHtml: values.story,
@@ -393,160 +365,130 @@ export default function CreateCampaignPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* ── Header ────────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-10"
-        >
-          <CreateCampaignHeader />
-        </motion.div>
-
-        <CreateCampaignFeedback feedbackMsg={feedbackMsg} onClose={() => setFeedbackMsg(null)} />
-
-        {/* ── Form ──────────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className={`glass-card rounded-2xl p-6 md:p-8 ${
-            isLockedAfterSuccess ? 'pointer-events-none opacity-80' : ''
-          }`}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            <BasicInfoSection
-              title={title}
-              titleMax={TITLE_MAX}
-              onTitleChange={(value) => setValue('title', value, { shouldValidate: true, shouldDirty: true })}
-              goalRaw={goalRaw}
-              goalAmount={goalAmount}
-              goalPresets={GOAL_PRESETS}
-              onGoalChange={handleGoalChange}
-              onGoalPreset={handleGoalPreset}
-              shortVND={shortVND}
-              deadline={deadline}
-              minDeadline={getTomorrowISO()}
-              onDeadlineChange={(value) => setValue('deadline', value, { shouldValidate: true, shouldDirty: true })}
-              formatDateVN={formatDateVN}
-              category={category}
-              onCategoryChange={(value) => setValue('category', value, { shouldValidate: true, shouldDirty: true })}
-              categoryLabels={CATEGORY_LABELS}
-              onBankNameChange={(value) => setValue('bankName', value, { shouldValidate: true, shouldDirty: true })}
-              accountNumber={accountNumber}
-              onAccountNumberChange={(value) =>
-                setValue('accountNumber', value, { shouldValidate: true, shouldDirty: true })
-              }
-              accountHolderName={accountHolderName}
-              onAccountHolderNameChange={(value) =>
-                setValue('accountHolderName', value, { shouldValidate: true, shouldDirty: true })
-              }
-              normalizeAccountHolderName={removeDiacritics}
-              bankSearch={bankSearch}
-              onBankSearchChange={setBankSearch}
-              bankDropdownOpen={bankDropdownOpen}
-              onBankDropdownOpenChange={setBankDropdownOpen}
-              selectedBank={selectedBank}
-              bankDropdownRef={bankDropdownRef}
-              filteredBanks={filteredBanks}
-              onSelectBank={selectBank}
-            />
-
-            <div className="space-y-6">
-              <StoryEditorSection
-                story={story}
-                onStoryChange={(value) => setValue('story', value, { shouldValidate: true, shouldDirty: true })}
-                onUploadImage={handleUploadStoryImage}
-              />
-              <MediaUploadSection
-                isDragOver={isDragOver}
-                fileInputRef={fileInputRef}
-                mediaPreviews={mediaPreviews}
-                coverIndex={coverIndex}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onInputFiles={(files) => addFiles(files)}
-                onCoverChange={setCoverIndex}
-                onRemoveMedia={removeMedia}
-              />
-              <ProofDocumentsSection
-                proofDragOver={proofDragOver}
-                proofInputRef={proofInputRef}
-                proofPreviews={proofPreviews}
-                onDrop={handleProofDrop}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setProofDragOver(true);
-                }}
-                onDragLeave={() => setProofDragOver(false)}
-                onInputFiles={(files) => addProofFiles(files)}
-                onRemoveProof={removeProofFile}
-              />
-            </div>
-          </div>
-
-          <ValidationWarnings errors={validationErrors} visible={title.length > 0} />
-
-          <CreateCampaignActions
-            isValid={isValid}
-            isSubmitting={isLoading || isLockedAfterSuccess}
-            onCancel={() => router.push('/campaigns')}
-            onSaveDraft={handleSaveDraft}
-            onOpenConfirm={async () => {
-              if (isLoading || isLockedAfterSuccess) return;
-
-              const valid = await trigger();
-              if (valid) {
-                setShowConfirm(true);
-                return;
-              }
-
-              const firstError = validationErrors[0] || 'Biểu mẫu chưa hợp lệ.';
-              const message = `Biểu mẫu chưa hợp lệ: ${firstError}`;
-              setFeedbackMsg({ type: 'error', text: message });
-              toast.warning(message);
-            }}
-          />
-        </motion.div>
-
-        {redirectSeconds !== null && (
+      <FormProvider {...formMethods}>
+        <div className="max-w-4xl mx-auto">
+          {/* ── Header ────────────────────────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
+            transition={{ duration: 0.5 }}
+            className="mb-10"
           >
-            <p className="text-sm font-semibold text-emerald-700">
-              Đang chuyển đến trang Yêu Cầu Của Tôi sau {redirectSeconds} giây...
-            </p>
-            <div className="mt-2 h-2 w-full rounded-full bg-emerald-100 overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 transition-all duration-1000 ease-linear"
-                style={{ width: `${(redirectSeconds / REDIRECT_SECONDS) * 100}%` }}
-              />
-            </div>
+            <CreateCampaignHeader />
           </motion.div>
-        )}
-      </div>
 
-      <SubmitConfirmDialog
-        open={showConfirm}
-        setOpen={setShowConfirm}
-        isLoading={isLoading || isLockedAfterSuccess}
-        onSubmit={handleFormSubmit(onSubmitCampaign)}
-        title={title}
-        goalAmount={goalAmount}
-        deadline={deadline}
-        category={category}
-        categoryLabels={CATEGORY_LABELS}
-        selectedBank={selectedBank}
-        bankName={bankName}
-        accountNumber={accountNumber}
-        accountHolderName={accountHolderName}
-        formatDateVN={formatDateVN}
-        formatVND={formatVND}
-      />
+          <CreateCampaignFeedback feedbackMsg={feedbackMsg} onClose={() => setFeedbackMsg(null)} />
+
+          {/* ── Form ──────────────────────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className={`glass-card rounded-2xl p-6 md:p-8 ${
+              isLockedAfterSuccess ? 'pointer-events-none opacity-80' : ''
+            }`}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <BasicInfoSection
+                titleMax={TITLE_MAX}
+                goalPresets={GOAL_PRESETS}
+                shortVND={shortVND}
+                minDeadline={getTomorrowISO()}
+                formatDateVN={formatDateVN}
+                categoryLabels={CATEGORY_LABELS}
+                bankSearch={bankSearch}
+                onBankSearchChange={setBankSearch}
+                bankDropdownOpen={bankDropdownOpen}
+                onBankDropdownOpenChange={setBankDropdownOpen}
+                selectedBank={selectedBank}
+                bankDropdownRef={bankDropdownRef}
+                filteredBanks={filteredBanks}
+                onSelectBank={selectBank}
+              />
+
+              <div className="space-y-6">
+                <StoryEditorSection onUploadImage={handleUploadStoryImage} />
+                <MediaUploadSection
+                  isDragOver={isDragOver}
+                  fileInputRef={fileInputRef}
+                  mediaPreviews={mediaPreviews}
+                  coverIndex={coverIndex}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onInputFiles={(files) => addFiles(files)}
+                  onCoverChange={setCoverIndex}
+                  onRemoveMedia={removeMedia}
+                />
+                <ProofDocumentsSection
+                  proofDragOver={proofDragOver}
+                  proofInputRef={proofInputRef}
+                  proofPreviews={proofPreviews}
+                  onDrop={handleProofDrop}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setProofDragOver(true);
+                  }}
+                  onDragLeave={() => setProofDragOver(false)}
+                  onInputFiles={(files) => addProofFiles(files)}
+                  onRemoveProof={removeProofFile}
+                />
+              </div>
+            </div>
+
+            <ValidationWarnings />
+
+            <CreateCampaignActions
+              isSubmitting={isLoading || isLockedAfterSuccess}
+              onCancel={() => router.push('/campaigns')}
+              onSaveDraft={handleSaveDraft}
+              onOpenConfirm={async () => {
+                if (isLoading || isLockedAfterSuccess) return;
+
+                const valid = await trigger();
+                if (valid) {
+                  setShowConfirm(true);
+                  return;
+                }
+
+                const firstError = getFirstValidationError() || 'Biểu mẫu chưa hợp lệ.';
+                const message = `Biểu mẫu chưa hợp lệ: ${firstError}`;
+                setFeedbackMsg({ type: 'error', text: message });
+                toast.warning(message);
+              }}
+            />
+          </motion.div>
+
+          {redirectSeconds !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
+            >
+              <p className="text-sm font-semibold text-emerald-700">
+                Đang chuyển đến trang Yêu Cầu Của Tôi sau {redirectSeconds} giây...
+              </p>
+              <div className="mt-2 h-2 w-full rounded-full bg-emerald-100 overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-1000 ease-linear"
+                  style={{ width: `${(redirectSeconds / REDIRECT_SECONDS) * 100}%` }}
+                />
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        <SubmitConfirmDialog
+          open={showConfirm}
+          setOpen={setShowConfirm}
+          isLoading={isLoading || isLockedAfterSuccess}
+          onSubmit={handleFormSubmit(onSubmitCampaign)}
+          categoryLabels={CATEGORY_LABELS}
+          selectedBank={selectedBank}
+          formatDateVN={formatDateVN}
+          formatVND={formatVND}
+        />
+      </FormProvider>
     </div>
   );
 }

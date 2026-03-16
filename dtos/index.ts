@@ -9,3 +9,4 @@ export * from './donation';
 export * from './user';
 export * from './withdraw';
 export * from './admin';
+export * from './creator';

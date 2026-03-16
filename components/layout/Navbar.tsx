@@ -94,16 +94,16 @@ export function Navbar() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/dashboard')}>
-                    <LayoutDashboard className="w-4 h-4 text-gray-400" />
-                    Quản lý dự án
-                  </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => router.push('/admin')}>
                       <Lock className="w-4 h-4 text-gray-400" />
                       Quản trị Admin
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                    <LayoutDashboard className="w-4 h-4 text-gray-400" />
+                    Quản lý dự án
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/dashboard/my-requests')}>
                     <FileText className="w-4 h-4 text-gray-400" />
                     Yêu Cầu Của Tôi

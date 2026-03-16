@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, FileText, Loader2 } from 'lucide-react';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { Label } from '@/components/ui/label';
-import type { CreateCampaignFormValues } from '@/components/campaign/create/schema';
+import { useEffect, useRef, useState } from 'react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { useAppSelector } from '@/lib/store/hooks';
 
 type QuillInstance = {
   root: { innerHTML: string };
@@ -16,32 +14,62 @@ type QuillInstance = {
   setSelection: (index: number, length: number) => void;
 };
 
-interface StoryEditorSectionProps {
-  onUploadImage: (file: File) => Promise<string>;
+interface RichTextEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  minHeight?: number;
+  className?: string;
 }
 
-export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
-  const { control, setValue } = useFormContext<CreateCampaignFormValues>();
-  const story = useWatch({ control, name: 'story' }) ?? '';
+export function RichTextEditor({
+  value,
+  onChange,
+  placeholder,
+  minHeight = 180,
+  className = '',
+}: Readonly<RichTextEditorProps>) {
   const editorRootRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<QuillInstance | null>(null);
-  const setStoryRef = useRef(setValue);
-  const latestStoryRef = useRef(story);
+  const onChangeRef = useRef(onChange);
+  const latestValueRef = useRef(value);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+  const token = useAppSelector((state) => state.auth.token);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
-    setStoryRef.current = setValue;
-  }, [setValue]);
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
-  const storyLength = useMemo(() => {
-    if (!story) return 0;
-    if (typeof window === 'undefined') return 0;
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(story, 'text/html');
-    return (doc.body.textContent || '').trim().length;
-  }, [story]);
+  useEffect(() => {
+    latestValueRef.current = value;
+  }, [value]);
+
+  const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${apiBaseUrl}/campaigns/editor-image`, {
+      method: 'POST',
+      headers: token ? { authorization: `Bearer ${token}` } : undefined,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Upload image failed');
+    }
+
+    const result = await response.json();
+    const imageUrl = result?.data?.url;
+
+    if (!imageUrl) {
+      throw new Error('Image URL not found in upload response');
+    }
+
+    return imageUrl as string;
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -52,7 +80,7 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
 
       const quill = new Quill(editorRootRef.current, {
         theme: 'snow',
-        placeholder: 'Kể câu chuyện về chiến dịch của bạn... (ít nhất 50 ký tự)',
+        placeholder,
         modules: {
           toolbar: {
             container: [
@@ -71,15 +99,10 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
         },
       });
 
-      if (latestStoryRef.current) {
-        quill.clipboard.dangerouslyPasteHTML(latestStoryRef.current);
-      }
+      quill.clipboard.dangerouslyPasteHTML(latestValueRef.current || '');
 
       quill.on('text-change', () => {
-        setStoryRef.current('story', quill.root.innerHTML, {
-          shouldDirty: true,
-          shouldValidate: false,
-        });
+        onChangeRef.current(quill.root.innerHTML);
       });
 
       quillRef.current = quill as QuillInstance;
@@ -91,21 +114,21 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
       mounted = false;
       quillRef.current = null;
     };
-  }, []);
+  }, [placeholder]);
 
   useEffect(() => {
     const quill = quillRef.current;
     if (!quill) return;
 
     const currentHtml = quill.root.innerHTML;
-    if (story === currentHtml) return;
+    if (value === currentHtml) return;
 
     const selection = quill.getSelection();
-    quill.clipboard.dangerouslyPasteHTML(story || '');
+    quill.clipboard.dangerouslyPasteHTML(value || '');
     if (selection) {
       quill.setSelection(selection.index, selection.length);
     }
-  }, [story]);
+  }, [value]);
 
   const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -113,7 +136,7 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setUploadError('Chỉ hỗ trợ upload tệp ảnh cho nội dung bài viết.');
+      setUploadError('Chỉ hỗ trợ upload tệp ảnh.');
       return;
     }
 
@@ -129,7 +152,7 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
     setIsUploading(true);
 
     try {
-      const imageUrl = await onUploadImage(file);
+      const imageUrl = await uploadImage(file);
       const range = quill.getSelection(true) || { index: quill.getLength(), length: 0 };
       quill.insertEmbed(range.index, 'image', imageUrl, 'user');
       quill.setSelection(range.index + 1, 0);
@@ -142,20 +165,15 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
   };
 
   return (
-    <div className="space-y-2">
-      <Label className="text-black/70">
-        <FileText className="w-4 h-4 text-indigo-500" />
-        Câu chuyện chiến dịch
-      </Label>
-
+    <div className={`rich-text-editor ${className}`.trim()}>
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
 
       <div className="rounded-xl overflow-hidden border border-black/10 bg-white/60">
-        <div ref={editorRootRef} className="quill-editor min-h-[220px]" />
+        <div ref={editorRootRef} className="quill-editor" style={{ minHeight }} />
       </div>
 
       {(isUploading || uploadError) && (
-        <div className="text-xs flex items-center gap-2 text-black/60">
+        <div className="mt-2 text-xs flex items-center gap-2 text-black/60">
           {isUploading && (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -170,8 +188,6 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
           )}
         </div>
       )}
-
-      <p className="text-xs text-black/30 text-right">{storyLength} ký tự</p>
     </div>
   );
 }

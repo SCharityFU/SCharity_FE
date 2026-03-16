@@ -1,5 +1,5 @@
-"use client";
-import { useState } from "react";
+'use client';
+import { useState } from 'react';
 import {
   CalendarDays,
   TrendingUp,
@@ -10,12 +10,20 @@ import {
   MoreHorizontal,
   ChevronRight,
   CheckCircle2,
-} from "lucide-react";
-import type { PublicCampaignDetailResponseDto, CampaignUpdateResponseDto } from "@/dtos/campaign";
-import { UpdateCategory } from "@/dtos/enums";
-import { formatDateOnly } from "@/lib/utils";
-import { Modal } from "@/components/ui/modal";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import type { PublicCampaignDetailResponseDto, CampaignUpdateResponseDto } from '@/dtos/campaign';
+import { UpdateCategory } from '@/dtos/enums';
+import { formatDateOnly } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
+import { RichTextContent } from '@/components/ui/rich-text-content';
 
 // ── Category config ───────────────────────────────────────────────────────────
 
@@ -29,46 +37,46 @@ interface CatConfig {
 
 const CAT: Record<string, CatConfig> = {
   [UpdateCategory.PROGRESS]: {
-    label: "Tiến Độ",
+    label: 'Tiến Độ',
     Icon: TrendingUp,
-    pill: "bg-blue-500/10 text-blue-700 border-blue-500/20",
-    dot: "border-blue-300 bg-blue-50",
-    dotIcon: "text-blue-500",
+    pill: 'bg-blue-500/10 text-blue-700 border-blue-500/20',
+    dot: 'border-blue-300 bg-blue-50',
+    dotIcon: 'text-blue-500',
   },
   [UpdateCategory.FINANCIAL]: {
-    label: "Tài Chính",
+    label: 'Tài Chính',
     Icon: DollarSign,
-    pill: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-    dot: "border-emerald-300 bg-emerald-50",
-    dotIcon: "text-emerald-500",
+    pill: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
+    dot: 'border-emerald-300 bg-emerald-50',
+    dotIcon: 'text-emerald-500',
   },
   [UpdateCategory.THANK_YOU]: {
-    label: "Cảm Ơn",
+    label: 'Cảm Ơn',
     Icon: Heart,
-    pill: "bg-rose-500/10 text-rose-700 border-rose-500/20",
-    dot: "border-rose-300 bg-rose-50",
-    dotIcon: "text-rose-500",
+    pill: 'bg-rose-500/10 text-rose-700 border-rose-500/20',
+    dot: 'border-rose-300 bg-rose-50',
+    dotIcon: 'text-rose-500',
   },
   [UpdateCategory.COMPLETION]: {
-    label: "Hoàn Thành",
+    label: 'Hoàn Thành',
     Icon: Sparkles,
-    pill: "bg-violet-500/10 text-violet-700 border-violet-500/20",
-    dot: "border-violet-300 bg-violet-50",
-    dotIcon: "text-violet-500",
+    pill: 'bg-violet-500/10 text-violet-700 border-violet-500/20',
+    dot: 'border-violet-300 bg-violet-50',
+    dotIcon: 'text-violet-500',
   },
   [UpdateCategory.AFTER_CAMPAIGN]: {
-    label: "Sau Chiến Dịch",
+    label: 'Sau Chiến Dịch',
     Icon: RotateCcw,
-    pill: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-    dot: "border-amber-300 bg-amber-50",
-    dotIcon: "text-amber-500",
+    pill: 'bg-amber-500/10 text-amber-700 border-amber-500/20',
+    dot: 'border-amber-300 bg-amber-50',
+    dotIcon: 'text-amber-500',
   },
   [UpdateCategory.OTHER]: {
-    label: "Khác",
+    label: 'Khác',
     Icon: MoreHorizontal,
-    pill: "bg-black/5 text-black/55 border-black/10",
-    dot: "border-black/15 bg-white",
-    dotIcon: "text-black/35",
+    pill: 'bg-black/5 text-black/55 border-black/10',
+    dot: 'border-black/15 bg-white',
+    dotIcon: 'text-black/35',
   },
 };
 
@@ -78,7 +86,15 @@ function getCat(category: string): CatConfig {
 
 // ── Single update row (timeline item) ────────────────────────────────────────
 
-function UpdateRow({ update, isLast }: { update: CampaignUpdateResponseDto; isLast: boolean }) {
+function UpdateRow({
+  update,
+  isLast,
+  compact = false,
+}: {
+  update: CampaignUpdateResponseDto;
+  isLast: boolean;
+  compact?: boolean;
+}) {
   const cat = getCat(update.category);
   const CatIcon = cat.Icon;
   const hasMedia = !!update.mediaUrls && update.mediaUrls.length > 0;
@@ -88,9 +104,9 @@ function UpdateRow({ update, isLast }: { update: CampaignUpdateResponseDto; isLa
       {/* ── Timeline column ──────────────────────────────────────────────── */}
       <div className="flex flex-col items-center flex-shrink-0 pt-0.5">
         <div
-          className={cn("w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 z-10", cat.dot)}
+          className={cn('w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 z-10', cat.dot)}
         >
-          <CatIcon className={cn("w-3.5 h-3.5", cat.dotIcon)} />
+          <CatIcon className={cn('w-3.5 h-3.5', cat.dotIcon)} />
         </div>
         {!isLast && (
           <div className="w-px flex-1 mt-1.5 mb-0 min-h-[20px] bg-gradient-to-b from-black/10 to-transparent" />
@@ -98,12 +114,12 @@ function UpdateRow({ update, isLast }: { update: CampaignUpdateResponseDto; isLa
       </div>
 
       {/* ── Content ──────────────────────────────────────────────────────── */}
-      <div className={cn("flex-1 min-w-0", !isLast && "pb-7")}>
+      <div className={cn('flex-1 min-w-0', !isLast && 'pb-7')}>
         {/* Meta row */}
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
           <span
             className={cn(
-              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border",
+              'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border',
               cat.pill,
             )}
           >
@@ -118,14 +134,18 @@ function UpdateRow({ update, isLast }: { update: CampaignUpdateResponseDto; isLa
         </div>
 
         {/* Title */}
-        <h3 className="text-sm font-bold text-black leading-snug mb-1.5">{update.title}</h3>
+        <h3 className={cn('text-sm font-bold text-black leading-snug mb-1.5', compact && 'line-clamp-2')}>
+          {update.title}
+        </h3>
 
         {/* Body */}
-        <p className="text-sm text-black/60 leading-relaxed whitespace-pre-wrap">{update.content}</p>
+        <div className={cn('text-sm text-black/60 leading-relaxed', compact && 'line-clamp-5')}>
+          <RichTextContent content={update.content} />
+        </div>
 
         {/* Media thumbnails */}
-        {hasMedia && (
-          <div className={cn("flex gap-2 mt-3 flex-wrap")}>
+        {hasMedia && !compact && (
+          <div className={cn('flex gap-2 mt-3 flex-wrap')}>
             {update.mediaUrls!.slice(0, 4).map((url, i) => (
               <div key={i} className="relative overflow-hidden rounded-lg group w-20 h-20 flex-shrink-0">
                 <img
@@ -150,7 +170,7 @@ function UpdateRow({ update, isLast }: { update: CampaignUpdateResponseDto; isLa
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-const PREVIEW_COUNT = 5;
+const PREVIEW_COUNT = 3;
 
 export function CampaignUpdates({ campaign }: { campaign: PublicCampaignDetailResponseDto }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -181,37 +201,44 @@ export function CampaignUpdates({ campaign }: { campaign: PublicCampaignDetailRe
         </div>
 
         {/* ── Timeline list ───────────────────────────────────────────────── */}
-        <div className="px-6 pt-5 pb-4">
+        <div className="relative px-6 pt-5 pb-4 max-h-[520px] overflow-y-auto">
           {preview.map((update, i) => (
-            <UpdateRow key={update.id} update={update} isLast={i === preview.length - 1} />
+            <UpdateRow key={update.id} update={update} isLast={i === preview.length - 1} compact />
           ))}
+
+          {hasMore && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white via-white/90 to-transparent" />
+          )}
         </div>
 
         {/* ── View all button ─────────────────────────────────────────────── */}
-        {hasMore && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-3.5 border-t border-black/5 text-xs font-semibold text-black/50 hover:text-black/75 hover:bg-black/[0.02] transition-colors"
-          >
-            Xem tất cả {updates.length} cập nhật
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
+        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+          {hasMore && (
+            <DialogTrigger asChild>
+              <button className="w-full flex items-center justify-center gap-1.5 py-3.5 border-t border-black/5 text-xs font-semibold text-black/50 hover:text-black/75 hover:bg-black/[0.02] transition-colors">
+                Xem tất cả {updates.length} cập nhật
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </DialogTrigger>
+          )}
 
-      {/* ── Modal ───────────────────────────────────────────────────────────── */}
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Tất Cả Cập Nhật"
-        subtitle={`${updates.length} cập nhật · mới nhất trước`}
-      >
-        <div className="pt-1">
-          {updates.map((update, i) => (
-            <UpdateRow key={update.id} update={update} isLast={i === updates.length - 1} />
-          ))}
-        </div>
-      </Modal>
+          <DialogContent
+            className="max-w-[calc(100vw-1.5rem)] sm:max-w-4xl p-0 overflow-hidden"
+            showCloseButton={false}
+          >
+            <DialogHeader className="px-6 pt-5 pb-4 border-b border-black/10">
+              <DialogTitle>Tất Cả Cập Nhật</DialogTitle>
+              <DialogDescription>{`${updates.length} cập nhật · mới nhất trước`}</DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 py-5 max-h-[75vh] overflow-y-auto overscroll-contain">
+              {updates.map((update, i) => (
+                <UpdateRow key={update.id} update={update} isLast={i === updates.length - 1} />
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </>
   );
 }

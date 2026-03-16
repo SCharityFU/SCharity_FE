@@ -18,6 +18,27 @@ export function formatDateTimeVN(value?: string | null): string {
   });
 }
 
+export function formatDateVN(value?: string | null): string {
+  if (!value) return "-";
+
+  const trimmed = value.trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (match) {
+    const [, year, month, day] = match;
+    return `${day}/${month}/${year}`;
+  }
+
+  const d = new Date(trimmed);
+  if (Number.isNaN(d.getTime())) return value;
+
+  return d.toLocaleDateString("vi-VN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+}
+
 export function statusClassName(status: string): string {
   switch (status) {
     case CampaignStatus.PENDING:

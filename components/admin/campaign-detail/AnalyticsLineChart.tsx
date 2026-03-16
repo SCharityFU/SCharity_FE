@@ -1,6 +1,7 @@
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
+import { formatDateVN } from '@/components/admin/campaign-detail/campaignDetailUtils';
 
 interface AnalyticsPoint {
   date: string;
@@ -13,6 +14,8 @@ interface AnalyticsLineChartProps {
   valueFormatter?: (value: number) => string;
   yAxisLabel?: string;
   yAxisTickFormatter?: (value: number) => string;
+  getTooltipRows?: (payload: { date: string; value: number }) => Array<{ label: string; value: string }>;
+  yScaleMode?: 'linear' | 'auto-log';
   onPointSelect?: (payload: { date: string; value: number }) => void;
 }
 
@@ -46,14 +49,17 @@ function extractPointFromChartEvent(event: unknown): {
 } | null {
   if (!event || typeof event !== 'object') return null;
 
-  const activePayload = (event as { activePayload?: Array<{ payload?: { date?: string; value?: number } }> })
-    .activePayload;
+  const activePayload = (
+    event as {
+      activePayload?: Array<{ payload?: { date?: string; value?: number; rawValue?: number } }>;
+    }
+  ).activePayload;
   const payload = activePayload?.[0]?.payload;
   if (!payload?.date) return null;
 
   return {
     date: payload.date,
-    value: Number(payload.value ?? 0),
+    value: Number(payload.rawValue ?? payload.value ?? 0),
   };
 }
 
@@ -70,12 +76,28 @@ export function AnalyticsLineChart({
   valueFormatter = (v) => String(v),
   yAxisLabel,
   yAxisTickFormatter,
+  getTooltipRows,
+  yScaleMode = 'linear',
   onPointSelect,
 }: AnalyticsLineChartProps) {
-  const normalizedPoints = points.map((point) => ({
+  const safePoints = points.map((point) => ({
     date: toVNDayKey(point.date),
     dateLabel: formatShortDate(toVNDayKey(point.date)),
-    value: Number.isFinite(point.value) ? point.value : 0,
+    rawValue: Number.isFinite(point.value) ? Math.max(0, point.value) : 0,
+  }));
+
+  const maxValue = safePoints.reduce((max, point) => Math.max(max, point.rawValue), 0);
+  const nonZeroMin = safePoints.reduce((min, point) => {
+    if (point.rawValue <= 0) return min;
+    if (min === 0) return point.rawValue;
+    return Math.min(min, point.rawValue);
+  }, 0);
+  const valueGapRatio = nonZeroMin > 0 ? maxValue / nonZeroMin : 1;
+  const useLogScale = yScaleMode === 'auto-log' && valueGapRatio >= 100;
+
+  const normalizedPoints = safePoints.map((point) => ({
+    ...point,
+    value: useLogScale ? Math.max(1, point.rawValue) : point.rawValue,
   }));
 
   if (!normalizedPoints.length) {
@@ -88,7 +110,8 @@ export function AnalyticsLineChart({
   }
 
   const latestMeaningfulPoint =
-    [...normalizedPoints].reverse().find((point) => point.value > 0) ?? normalizedPoints[normalizedPoints.length - 1];
+    [...normalizedPoints].reverse().find((point) => point.rawValue > 0) ??
+    normalizedPoints[normalizedPoints.length - 1];
   const chartMinWidth = Math.max(640, normalizedPoints.length * 56);
   const tickFormatter = yAxisTickFormatter ?? valueFormatter;
 
@@ -96,7 +119,10 @@ export function AnalyticsLineChart({
     <div className="rounded-xl border border-black/10 bg-white p-4">
       <div className="mb-3 flex items-end justify-between gap-2">
         <p className="text-sm font-semibold text-black">{title}</p>
-        <p className="text-xs text-black/50">Hiện tại: {valueFormatter(latestMeaningfulPoint.value)}</p>
+        <p className="text-xs text-black/50">
+          Hiện tại: {valueFormatter(latestMeaningfulPoint.rawValue)}
+          {useLogScale ? ' • scale log' : ''}
+        </p>
       </div>
 
       <div className="w-full overflow-x-auto">
@@ -107,7 +133,7 @@ export function AnalyticsLineChart({
         >
           <AreaChart
             data={normalizedPoints}
-            margin={{ top: 8, right: 12, left: 4, bottom: 8 }}
+            margin={{ top: 8, right: 12, left: 20, bottom: 8 }}
             onClick={(event) => {
               if (!onPointSelect) return;
               const point = extractPointFromChartEvent(event);
@@ -120,9 +146,11 @@ export function AnalyticsLineChart({
             <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} tickMargin={8} minTickGap={24} />
 
             <YAxis
+              scale={useLogScale ? 'log' : 'auto'}
+              domain={useLogScale ? [1, 'auto'] : ['auto', 'auto']}
               tickLine={false}
               axisLine={false}
-              width={70}
+              width={84}
               allowDecimals={false}
               tickFormatter={(value) => tickFormatter(Number(value))}
               label={
@@ -131,7 +159,7 @@ export function AnalyticsLineChart({
                       value: yAxisLabel,
                       angle: -90,
                       position: 'insideLeft',
-                      offset: -2,
+                      offset: 10,
                       style: { textAnchor: 'middle', fill: 'rgba(0,0,0,0.55)', fontSize: 11 },
                     }
                   : undefined
@@ -142,19 +170,30 @@ export function AnalyticsLineChart({
 
             <ChartTooltip
               cursor={false}
-              content={
-                <ChartTooltipContent
-                  className="pointer-events-none"
-                  indicator="line"
-                  labelFormatter={(_, payload) => {
-                    const dateValue = payload?.[0]?.payload?.date as string | undefined;
-                    return dateValue ? `Ngày ${formatShortDate(dateValue)}` : '';
-                  }}
-                  formatter={(value) => (
-                    <span className="font-medium text-foreground">{valueFormatter(Number(value))}</span>
-                  )}
-                />
-              }
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+
+                const point = payload[0]?.payload as { date?: string; rawValue?: number } | undefined;
+                if (!point?.date) return null;
+
+                const baseRows = getTooltipRows
+                  ? getTooltipRows({ date: point.date, value: Number(point.rawValue ?? 0) })
+                  : [{ label: 'Giá trị', value: valueFormatter(Number(point.rawValue ?? 0)) }];
+
+                return (
+                  <div className="pointer-events-none min-w-[220px] rounded-lg border border-black/10 bg-white px-3 py-2 shadow-xl">
+                    <p className="text-xs font-semibold text-black/80 mb-2">Ngày {formatDateVN(point.date)}</p>
+                    <div className="space-y-1.5">
+                      {baseRows.map((row) => (
+                        <div key={row.label} className="flex items-center justify-between gap-3 text-xs">
+                          <span className="text-black/60">{row.label}</span>
+                          <span className="font-semibold text-black">{row.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }}
             />
 
             <Area
@@ -166,9 +205,10 @@ export function AnalyticsLineChart({
               strokeWidth={2}
               activeDot={{ r: 6, style: { cursor: onPointSelect ? 'pointer' : 'default' } }}
               dot={(props) => {
-                const point = props.payload as { date?: string; value?: number };
+                const point = props.payload as { date?: string; value?: number; rawValue?: number };
                 const date = point?.date;
                 const value = Number(point?.value ?? 0);
+                const rawValue = Number((props.payload as { rawValue?: number })?.rawValue ?? value);
 
                 return (
                   <g>
@@ -187,7 +227,7 @@ export function AnalyticsLineChart({
                       style={{ cursor: onPointSelect ? 'pointer' : 'default' }}
                       onClick={() => {
                         if (!onPointSelect || !date) return;
-                        onPointSelect({ date, value });
+                        onPointSelect({ date, value: rawValue });
                       }}
                     />
                   </g>

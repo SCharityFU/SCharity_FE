@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AnalyticsLineChart } from '@/components/admin/campaign-detail/AnalyticsLineChart';
 import {
+  formatDateVN,
   formatDateTimeVN,
   formatVND,
   txStatusClass,
@@ -21,6 +22,14 @@ function compactMoneyTick(value: number): string {
 interface CampaignAnalyticsTabProps {
   days: number;
   onDaysChange: (days: number) => void;
+  rangeStartDate: string;
+  rangeEndDate: string;
+  onRangeStartDateChange: (value: string) => void;
+  onRangeEndDateChange: (value: string) => void;
+  onClearDateRange: () => void;
+  hasInvalidDateRange: boolean;
+  hasPartialDateRange: boolean;
+  activeRangeLabel: string | null;
   chartData: AdminCampaignAnalyticsPointDto[];
   isError: boolean;
   onRetry: () => void;
@@ -33,15 +42,17 @@ interface CampaignAnalyticsTabProps {
   onRetrySelectedDateDonations: () => void;
 }
 
-function formatDateLabel(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
 export function CampaignAnalyticsTab({
   days,
   onDaysChange,
+  rangeStartDate,
+  rangeEndDate,
+  onRangeStartDateChange,
+  onRangeEndDateChange,
+  onClearDateRange,
+  hasInvalidDateRange,
+  hasPartialDateRange,
+  activeRangeLabel,
   chartData,
   isError,
   onRetry,
@@ -55,20 +66,56 @@ export function CampaignAnalyticsTab({
 }: CampaignAnalyticsTabProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-black/60">Khoảng thời gian:</span>
-        <Select value={String(days)} onValueChange={(v) => onDaysChange(Number(v) || 30)}>
-          <SelectTrigger className="h-8 w-[130px] border-black/10 bg-white">
-            <SelectValue placeholder="Số ngày" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">7 ngày</SelectItem>
-            <SelectItem value="30">30 ngày</SelectItem>
-            <SelectItem value="90">90 ngày</SelectItem>
-            <SelectItem value="180">180 ngày</SelectItem>
-            <SelectItem value="365">365 ngày</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="rounded-xl border border-black/10 bg-white p-3 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-black/60">Chọn nhanh:</span>
+          <Select value={String(days)} onValueChange={(v) => onDaysChange(Number(v) || 30)}>
+            <SelectTrigger className="h-8 w-[130px] border-black/10 bg-white">
+              <SelectValue placeholder="Số ngày" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">7 ngày</SelectItem>
+              <SelectItem value="30">30 ngày</SelectItem>
+              <SelectItem value="90">90 ngày</SelectItem>
+              <SelectItem value="180">180 ngày</SelectItem>
+              <SelectItem value="365">365 ngày</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <span className="text-sm text-black/60 ml-2">Hoặc chọn range:</span>
+          <input
+            type="date"
+            value={rangeStartDate}
+            onChange={(e) => onRangeStartDateChange(e.target.value)}
+            className="h-8 rounded-md border border-black/10 px-2 text-sm"
+          />
+          <span className="text-black/50">-</span>
+          <input
+            type="date"
+            value={rangeEndDate}
+            onChange={(e) => onRangeEndDateChange(e.target.value)}
+            className="h-8 rounded-md border border-black/10 px-2 text-sm"
+          />
+          {(rangeStartDate || rangeEndDate) && (
+            <Button variant="outline" size="sm" onClick={onClearDateRange}>
+              Xóa range
+            </Button>
+          )}
+        </div>
+
+        <p className="text-xs text-black/55">
+          Đang hiển thị: <span className="font-medium text-black">{activeRangeLabel ?? 'Chưa có dữ liệu'}</span>
+        </p>
+
+        {hasInvalidDateRange && (
+          <p className="text-xs text-red-600">Khoảng ngày không hợp lệ: ngày bắt đầu đang lớn hơn ngày kết thúc.</p>
+        )}
+
+        {hasPartialDateRange && !hasInvalidDateRange && (
+          <p className="text-xs text-amber-700">
+            Vui lòng chọn đủ cả ngày bắt đầu và ngày kết thúc để tải dữ liệu theo range.
+          </p>
+        )}
       </div>
 
       {isError && (
@@ -88,6 +135,14 @@ export function CampaignAnalyticsTab({
           valueFormatter={formatVND}
           yAxisLabel="Số tiền (VND)"
           yAxisTickFormatter={compactMoneyTick}
+          yScaleMode="auto-log"
+          getTooltipRows={(payload) => {
+            const point = chartData.find((p) => p.date === payload.date);
+            return [
+              { label: 'Tổng số donate', value: formatVND(point?.amount ?? payload.value) },
+              { label: 'Nhà hảo tâm', value: `${point?.count ?? 0} người` },
+            ];
+          }}
           onPointSelect={(payload) => onSelectDateFromChart(payload.date)}
         />
         <AnalyticsLineChart
@@ -96,6 +151,13 @@ export function CampaignAnalyticsTab({
           valueFormatter={(v) => `${v} người`}
           yAxisLabel="Số nhà hảo tâm"
           yAxisTickFormatter={(v) => String(v)}
+          getTooltipRows={(payload) => {
+            const point = chartData.find((p) => p.date === payload.date);
+            return [
+              { label: 'Tổng số donate', value: formatVND(point?.amount ?? 0) },
+              { label: 'Nhà hảo tâm', value: `${point?.count ?? payload.value} người` },
+            ];
+          }}
           onPointSelect={(payload) => onSelectDateFromChart(payload.date)}
         />
       </div>
@@ -106,7 +168,7 @@ export function CampaignAnalyticsTab({
             <p className="text-sm font-semibold text-black">Danh sách donate theo ngày</p>
             <p className="text-xs text-black/50">
               {selectedDate
-                ? `Đang xem ngày ${formatDateLabel(selectedDate)}. Bấm điểm khác trên biểu đồ để đổi ngày.`
+                ? `Đang xem ngày ${formatDateVN(selectedDate)}. Bấm điểm khác trên biểu đồ để đổi ngày.`
                 : 'Bấm vào một điểm trên biểu đồ để xem các lượt donate trong ngày đó.'}
             </p>
           </div>

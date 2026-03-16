@@ -12,11 +12,13 @@ import type {
   AdminReportsQueryDto,
   AdminCampaignRequestsQueryDto,
   AdminTransactionsQueryDto,
-  DashboardStatsResponseDto,
   AdminWithdrawRequestItemDto,
   AdminWithdrawRequestsQueryDto,
   ProcessWithdrawRequestDto,
   SuspendCampaignRequestDto,
+  DashboardStatsResponseDto,
+  DonationChartDataPointDto,
+  DashboardChartQueryDto,
   ReviewCampaignRequestDto,
 } from "@/dtos/admin";
 
@@ -25,6 +27,7 @@ export type AdminDonationStatus = "pending" | "success" | "failed" | "refunded";
 export interface AdminDonationItem {
   id: string;
   donorDisplayName: string;
+  campaignName: string;
   createdAt: string;
   message: string | null;
   amount: number;
@@ -55,8 +58,27 @@ export const adminApi = createApi({
     "AdminCampaignRequestDetail",
     "AdminWithdrawRequests",
     "AdminWithdrawRequestDetail",
+    "AdminDashboard"
   ],
   endpoints: (builder) => ({
+    getAdminDashboard: builder.query<
+      ApiResponseDto<DashboardStatsResponseDto>,
+      void
+    >({
+      query: () => "/admin/dashboard",
+      providesTags: ["AdminDashboard"],
+    }),
+
+    getAdminDashboardChart: builder.query<
+      ApiResponseDto<DonationChartDataPointDto[]>,
+      DashboardChartQueryDto
+    >({
+      query: ({ interval = "day", days = 30 } = {}) => ({
+        url: "/admin/dashboard/chart",
+        params: { interval, days },
+      }),
+      providesTags: ["AdminDashboard"],
+    }),
     getAdminWithdrawRequests: builder.query<
       PaginatedResponseDto<AdminWithdrawRequestItemDto>,
       AdminWithdrawRequestsQueryDto
@@ -184,11 +206,13 @@ export const adminApi = createApi({
 
     getAdminCampaignAnalytics: builder.query<
       ApiResponseDto<AdminCampaignAnalyticsDto>,
-      { campaignId: string; days?: number }
+      { campaignId: string; days?: number; startDate?: string; endDate?: string }
     >({
-      query: ({ campaignId, days = 30 }) => ({
+      query: ({ campaignId, days = 30, startDate, endDate }) => ({
         url: `/admin/campaigns/${campaignId}/analytics`,
-        params: { days },
+        params: {
+          ...(startDate && endDate ? { startDate, endDate } : { days }),
+        },
       }),
       providesTags: ["AdminCampaignAnalytics"],
     }),
@@ -278,6 +302,8 @@ export const adminApi = createApi({
 });
 
 export const {
+  useGetAdminDashboardQuery,
+  useGetAdminDashboardChartQuery,
   useGetAdminWithdrawRequestsQuery,
   useGetAdminWithdrawRequestDetailQuery,
   useProcessAdminWithdrawRequestMutation,

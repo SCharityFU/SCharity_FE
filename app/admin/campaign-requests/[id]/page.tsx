@@ -74,6 +74,7 @@ export default function AdminCampaignRequestDetailPage() {
         message: payload.action === 'approve' ? 'Đã duyệt yêu cầu tạo campaign.' : 'Đã từ chối yêu cầu tạo campaign.',
       });
       await refetch();
+      return true;
     } catch (err) {
       const requestError = err as {
         status?: number;
@@ -88,7 +89,7 @@ export default function AdminCampaignRequestDetailPage() {
           message: 'Request đã được xử lý bởi admin khác. Đang tải dữ liệu mới nhất...',
         });
         await refetch();
-        return;
+        return false;
       }
 
       if (errorStatus === 400 && requestError.data?.errors?.length) {
@@ -98,7 +99,7 @@ export default function AdminCampaignRequestDetailPage() {
           title: 'Dữ liệu chưa hợp lệ',
           message: first?.message || 'Dữ liệu gửi lên chưa hợp lệ.',
         });
-        return;
+        return false;
       }
 
       addToast({
@@ -106,6 +107,7 @@ export default function AdminCampaignRequestDetailPage() {
         title: 'Xử lý thất bại',
         message: requestError.data?.message || 'Không thể xử lý yêu cầu. Vui lòng thử lại.',
       });
+      return false;
     }
   };
 

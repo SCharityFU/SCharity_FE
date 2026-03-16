@@ -1,23 +1,28 @@
-import { AlertTriangle, CheckCircle2, Landmark, Send } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { CampaignCategory } from "@/dtos/enums";
-import type { VietQRBank } from "@/hooks/useVietQRBanks";
+import { AlertTriangle, CheckCircle2, Landmark, Send } from 'lucide-react';
+import type { Dispatch, SetStateAction } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { CampaignCategory } from '@/dtos/enums';
+import type { CreateCampaignFormValues } from '@/components/campaign/create/schema';
+import type { VietQRBank } from '@/hooks/useVietQRBanks';
 
 interface SubmitConfirmDialogProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   isLoading: boolean;
   onSubmit: () => void;
-  title: string;
-  goalAmount: number;
-  deadline: string;
-  category: CampaignCategory | "";
   categoryLabels: Record<CampaignCategory, string>;
   selectedBank: VietQRBank | null;
-  bankName: string;
-  accountNumber: string;
-  accountHolderName: string;
   formatDateVN: (value: string) => string;
   formatVND: (value: number) => string;
 }
@@ -27,18 +32,20 @@ export function SubmitConfirmDialog({
   setOpen,
   isLoading,
   onSubmit,
-  title,
-  goalAmount,
-  deadline,
-  category,
   categoryLabels,
   selectedBank,
-  bankName,
-  accountNumber,
-  accountHolderName,
   formatDateVN,
   formatVND,
 }: SubmitConfirmDialogProps) {
+  const { control } = useFormContext<CreateCampaignFormValues>();
+  const title = useWatch({ control, name: 'title' }) ?? '';
+  const goalAmount = useWatch({ control, name: 'goalAmount' }) ?? 0;
+  const deadline = useWatch({ control, name: 'deadline' }) ?? '';
+  const category = (useWatch({ control, name: 'category' }) ?? '') as CampaignCategory | '';
+  const bankName = useWatch({ control, name: 'bankName' }) ?? '';
+  const accountNumber = useWatch({ control, name: 'accountNumber' }) ?? '';
+  const accountHolderName = useWatch({ control, name: 'accountHolderName' }) ?? '';
+
   return (
     <AlertDialog
       open={open}
@@ -93,16 +100,16 @@ export function SubmitConfirmDialog({
                 />
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-black/80 truncate">{bankName || "Chưa chọn"}</p>
+                <p className="font-semibold text-black/80 truncate">{bankName || 'Chưa chọn'}</p>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-black/50 text-xs">Số tài khoản:</span>
-              <span className="font-mono font-semibold tracking-wider text-black/80">{accountNumber || "-"}</span>
+              <span className="font-mono font-semibold tracking-wider text-black/80">{accountNumber || '-'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-black/50 text-xs">Chủ tài khoản:</span>
-              <span className="font-semibold uppercase text-black/80">{accountHolderName || "-"}</span>
+              <span className="font-semibold uppercase text-black/80">{accountHolderName || '-'}</span>
             </div>
           </div>
           <p className="text-[10px] text-amber-600 flex items-center gap-1">

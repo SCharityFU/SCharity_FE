@@ -265,6 +265,11 @@ export interface DashboardStatsResponseDto {
   totalUsers: number;
 }
 
+export interface DashboardChartQueryDto {
+  interval?: 'day' | 'week' | 'month';
+  days?: number;
+}
+
 // Re-export chart DTO for convenience
 export type { DonationChartDataPointDto } from './campaign';
 

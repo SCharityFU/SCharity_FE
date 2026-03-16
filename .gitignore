@@ -40,3 +40,6 @@ next-env.d.ts
 
 # Private stuff
 /private/
+
+# Package-lock
+package-lock.json
