@@ -3,10 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, TrendingUp, Users, Heart, Calendar, Download } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Users, Heart, Calendar, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useGetMyCampaignsQuery } from '@/lib/store/features/campaign/campaignApi';
+import {
+  useGetMyCampaignsQuery,
+  useGetCreatorCampaignAnalyticsQuery,
+  useGetCampaignDonationsQuery,
+} from '@/lib/store/features/campaign/campaignApi';
 import type { CampaignDto } from '@/dtos/campaign';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 function formatVND(value: number): string {
   return value.toLocaleString('vi-VN') + ' ₫';
@@ -31,7 +43,17 @@ export default function AnalyticsPage() {
   });
 
   const campaign = campaignsData?.data?.find((c) => c.id === campaignId) as CampaignDto | undefined;
-  console.log('Loaded campaign for analytics:', campaign);
+
+  const { data: analyticsData, isLoading: isAnalyticsLoading } = useGetCreatorCampaignAnalyticsQuery(
+    { campaignId },
+    { skip: !campaignId }
+  );
+
+  const [page, setPage] = useState(1);
+  const { data: donationsData, isLoading: isDonationsLoading } = useGetCampaignDonationsQuery(
+    { campaignId, page, limit: 10 },
+    { skip: !campaignId }
+  );
 
   if (isLoading) {
     return (
@@ -67,11 +89,7 @@ export default function AnalyticsPage() {
   const daysRemaining = Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const daysElapsed = Math.ceil((Date.now() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24));
 
-  // Mock data for chart
-  const dailyData = Array.from({ length: 30 }, (_, i) => ({
-    day: i + 1,
-    amount: Math.floor(Math.random() * campaign.raisedAmount * 0.1),
-  }));
+  const chartData = analyticsData?.data?.chartData || [];
 
   const stats = [
     {
@@ -238,21 +256,115 @@ export default function AnalyticsPage() {
         {/* Chart Section */}
         <div className="mt-6 glass-card rounded-2xl p-6">
           <h3 className="font-bold text-black text-lg mb-6">Quyên góp 30 ngày gần đây</h3>
-          <div className="h-64 flex items-end justify-between gap-1">
-            {dailyData.map((data, idx) => (
-              <div key={idx} className="flex-1">
-                <div
-                  className="w-full bg-gradient-to-t from-rose-400 to-violet-500 rounded-t opacity-60 hover:opacity-100 transition-opacity relative group"
-                  style={{ height: `${(data.amount / Math.max(...dailyData.map((d) => d.amount))) * 100}%` || '4px' }}
-                >
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                    {formatVND(data.amount)}
-                  </div>
-                </div>
-                <p className="text-xs text-black/40 text-center mt-2">{data.day}</p>
-              </div>
-            ))}
+          <div className="h-72">
+            {isAnalyticsLoading ? (
+              <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">Đang tải biểu đồ...</div>
+            ) : chartData.length === 0 ? (
+               <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">Chưa có dữ liệu</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis 
+                    dataKey="date" 
+                    tickFormatter={(val) => formatDate(val).substring(0, 5)} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }} 
+                    dy={10} 
+                  />
+                  <YAxis 
+                    tickFormatter={(val) => val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : `${val / 1000}k`} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }} 
+                  />
+                  <Tooltip 
+                    formatter={(value: any) => [formatVND(Number(value) || 0), 'Số tiền']}
+                    labelFormatter={(label) => formatDate(label as string)}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                  />
+                  <Area type="monotone" dataKey="amount" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
+        </div>
+
+        {/* Donor List */}
+        <div className="mt-8 glass-card rounded-2xl p-6">
+          <h3 className="font-bold text-black text-lg mb-6">Danh sách quyên góp</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="border-b border-black/10">
+                  <th className="py-3 px-4 text-xs font-semibold text-black/50 uppercase">Nhà hảo tâm</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-black/50 uppercase">Số tiền</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-black/50 uppercase">Lời nhắn</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-black/50 uppercase">Thời gian</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isDonationsLoading ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">Đang tải...</td>
+                  </tr>
+                ) : donationsData?.data?.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">Chưa có giao dịch nào</td>
+                  </tr>
+                ) : (
+                  donationsData?.data?.map((d) => (
+                    <tr key={d.id} className="border-b border-black/5 last:border-0 hover:bg-black/[0.02]">
+                      <td className="py-3 px-4 text-sm font-medium text-black">
+                        {d.isAnonymous ? 'Nhà hảo tâm ẩn danh' : (d.donor?.fullName || 'Người dùng')}
+                      </td>
+                      <td className="py-3 px-4 text-sm font-bold text-emerald-600">
+                        {formatVND(d.amount)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-black/60 max-w-xs truncate">
+                        {d.message || '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">
+                        {formatDate(d.createdAt)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {donationsData?.pagination && donationsData.pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-sm text-black/40">
+                Trang {page} / {donationsData.pagination.totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(donationsData.pagination.totalPages, p + 1))}
+                  disabled={page === donationsData.pagination.totalPages}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

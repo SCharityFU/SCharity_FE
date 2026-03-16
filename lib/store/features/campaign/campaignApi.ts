@@ -8,7 +8,9 @@ import type {
     BankInfoDto,
     CreateCampaignUpdateRequestDto,
     CampaignUpdateResponseDto,
+    CreatorCampaignAnalyticsResponseDto,
 } from '@/dtos/campaign';
+import type { DonationResponseDto } from '@/dtos/donation';
 import type { CreatorDashboardQueryDto, CreatorDashboardResponseDto } from '@/dtos/creator';
 import type { CreateWithdrawRequestDto, WithdrawRequestResponseDto } from '@/dtos/withdraw';
 import type { BankAccountResponseDto } from '@/dtos/user';
@@ -33,7 +35,7 @@ export const campaignApi = createApi({
             return headers;
         },
     }),
-    tagTypes: ['CampaignRequest', 'MyCampaign', 'BankAccount', 'Withdrawal', 'CampaignUpdate', 'CreatorDashboard'],
+    tagTypes: ['CampaignRequest', 'MyCampaign', 'BankAccount', 'Withdrawal', 'CampaignUpdate', 'CreatorDashboard', 'CampaignDonation'],
     endpoints: (builder) => ({
         getCreatorDashboard: builder.query<
             ApiResponseDto<CreatorDashboardResponseDto>,
@@ -104,7 +106,7 @@ export const campaignApi = createApi({
             { page?: number; limit?: number; status?: string }
         >({
             query: ({ page = 1, limit = 10, status } = {}) => {
-                const params: Record<string, any> = { page, limit };
+                const params: Record<string, string | number> = { page, limit };
                 if (status) params.status = status;
                 return {
                     url: '/campaigns/requests/mine',
@@ -279,7 +281,19 @@ export const campaignApi = createApi({
             string
         >({
             query: (bankAccountId) => `/users/me/bank-account-change-requests/${bankAccountId}`,
-            transformResponse: (response: ApiResponseDto<any>) => response.data,
+            transformResponse: (response: ApiResponseDto<{
+                isBankInfoApproved: boolean;
+                latestRequest: {
+                    id: string;
+                    status: string;
+                    newBankName: string;
+                    newAccountNumber: string;
+                    newAccountHolderName: string;
+                    rejectReason: string | null;
+                    createdAt: string;
+                    processedAt: string | null;
+                } | null;
+            }>) => response.data!,
             providesTags: ['BankAccount'], // re-fetch when bank account changes
         }),
         // GET /campaigns/:id/updates — get campaign updates with optional status filter
@@ -288,7 +302,7 @@ export const campaignApi = createApi({
             { campaignId: string; page?: number; limit?: number; status?: string }
         >({
             query: ({ campaignId = '', page = 1, limit = 10, status }) => {
-                const params: Record<string, any> = { page, limit };
+                const params: Record<string, string | number> = { page, limit };
                 if (status && ['all', 'draft', 'published'].includes(status)) {
                     params.status = status;
                 }
@@ -369,6 +383,34 @@ export const campaignApi = createApi({
             },
             invalidatesTags: ['MyCampaign'],
         }),
+
+        // GET /campaigns/:id/creator-analytics
+        getCreatorCampaignAnalytics: builder.query<
+            ApiResponseDto<CreatorCampaignAnalyticsResponseDto>,
+            { campaignId: string; days?: number }
+        >({
+            query: ({ campaignId, days = 30 }) => ({
+                url: `/campaigns/${campaignId}/creator-analytics`,
+                params: { days },
+            }),
+            providesTags: ['MyCampaign'],
+        }),
+
+        // GET /campaigns/:id/donations
+        getCampaignDonations: builder.query<
+            PaginatedResponseDto<DonationResponseDto>,
+            { campaignId: string; page?: number; limit?: number; search?: string }
+        >({
+            query: ({ campaignId, page = 1, limit = 10, search }) => {
+                const params: Record<string, string | number> = { page, limit };
+                if (search) params.search = search;
+                return {
+                    url: `/campaigns/${campaignId}/donations`,
+                    params,
+                };
+            },
+            providesTags: ['CampaignDonation'],
+        }),
     }),
 });
 
@@ -392,4 +434,6 @@ export const {
     useUpdateCampaignUpdateMutation,
     useDeleteCampaignUpdateMutation,
     useUpdateCampaignMutation,
+    useGetCreatorCampaignAnalyticsQuery,
+    useGetCampaignDonationsQuery,
 } = campaignApi;

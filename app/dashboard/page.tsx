@@ -241,11 +241,10 @@ export default function DashboardPage() {
 
         <div className="mb-10">
           <div
-            className={`rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between border shadow-lg ${
-              (dashboard?.kyc.isKycVerified ?? user?.isKycVerified)
+            className={`rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between border shadow-lg ${(dashboard?.kyc.isKycVerified ?? user?.isKycVerified)
                 ? 'bg-emerald-50/50 border-emerald-100'
                 : 'bg-rose-50/50 border-rose-100'
-            }`}
+              }`}
           >
             <div className="flex items-start gap-4 mb-4 sm:mb-0">
               {(dashboard?.kyc.isKycVerified ?? user?.isKycVerified) ? (
@@ -288,7 +287,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-bold text-black">Quyên Góp Gần Đây</h2>
               <Link
-                href="/dashboard/my-campaigns"
+                href="/dashboard/mydonation"
                 className="text-xs text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1"
               >
                 Xem tất cả <ArrowUpRight className="w-3 h-3" />
