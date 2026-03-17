@@ -25,9 +25,21 @@ import {
   createCampaignFormSchema,
   type CreateCampaignFormValues,
 } from '@/components/campaign/create/schema';
-import { CATEGORY_LABELS, DRAFT_STORAGE_KEY, GOAL_PRESETS, TITLE_MAX } from '@/components/campaign/create/constants';
+import {
+  CATEGORY_LABELS,
+  DRAFT_STORAGE_KEY,
+  GOAL_PRESETS,
+  MAX_CAMPAIGN_DEADLINE_DAYS,
+  TITLE_MAX,
+} from '@/components/campaign/create/constants';
 import type { CampaignDraft, FeedbackMessage, ProofPreview } from '@/components/campaign/create/types';
-import { formatDateVN, formatVND, getTomorrowISO, shortVND } from '@/components/campaign/create/utils';
+import {
+  formatDateVN,
+  formatVND,
+  getDateAfterDaysISO,
+  getTomorrowISO,
+  shortVND,
+} from '@/components/campaign/create/utils';
 import { Button } from '@/components/ui/button';
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -394,6 +406,7 @@ export default function CreateCampaignPage() {
                 goalPresets={GOAL_PRESETS}
                 shortVND={shortVND}
                 minDeadline={getTomorrowISO()}
+                maxDeadline={getDateAfterDaysISO(MAX_CAMPAIGN_DEADLINE_DAYS)}
                 formatDateVN={formatDateVN}
                 categoryLabels={CATEGORY_LABELS}
                 bankSearch={bankSearch}

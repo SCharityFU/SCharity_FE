@@ -42,7 +42,7 @@ export function LoginForm() {
       }).unwrap();
 
       if (response.success) {
-        const redirectTo = searchParams.get('redirect') || '/dashboard';
+        const redirectTo = searchParams.get('redirect') || '/campaigns';
         toast.success('Đăng nhập thành công');
         router.push(redirectTo);
       }

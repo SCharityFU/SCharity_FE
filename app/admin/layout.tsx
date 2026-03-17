@@ -9,10 +9,10 @@ const adminMenu = [
   { label: 'Yêu cầu tạo chiến dịch', href: '/admin/campaign-requests', icon: ClipboardCheck },
   { label: 'Yêu cầu rút tiền', href: '/admin/withdraw-requests', icon: HandCoins },
   { label: 'Quản lý chiến dịch', href: '/admin/campaigns', icon: FolderKanban },
-  { label: 'Quản lý giao dịch', href: '/admin/transactions', icon: WalletMinimal },
-  { label: 'Quản lý người dùng', href: '/admin/users', icon: Users },
+  { label: 'Lịch sử giao dịch', href: '/admin/transactions', icon: WalletMinimal },
+  // { label: 'Quản lý người dùng', href: '/admin/users', icon: Users },
   { label: 'Báo cáo', href: '/admin/reports', icon: Flag },
-  { label: 'Cài đặt', href: '/admin/settings', icon: Settings },
+  // { label: 'Cài đặt', href: '/admin/settings', icon: Settings },
 ];
 
 function isActivePath(pathname: string, href: string): boolean {

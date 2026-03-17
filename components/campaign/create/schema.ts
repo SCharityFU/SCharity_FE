@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { CampaignCategory } from "@/dtos/enums";
+import { MAX_CAMPAIGN_DEADLINE_DAYS } from "@/components/campaign/create/constants";
 
 const stripHtmlToText = (value: string) =>
   value
@@ -32,6 +33,22 @@ export const createCampaignFormSchema = z.object({
         return endOfSelectedDay > new Date();
       },
       { message: "Thời hạn kết thúc phải nằm trong tương lai" },
+    )
+    .refine(
+      (d) => {
+        const selectedDate = new Date(d);
+        if (Number.isNaN(selectedDate.getTime())) return false;
+
+        const maxDeadline = new Date();
+        maxDeadline.setDate(maxDeadline.getDate() + MAX_CAMPAIGN_DEADLINE_DAYS);
+        maxDeadline.setHours(23, 59, 59, 999);
+
+        selectedDate.setHours(23, 59, 59, 999);
+        return selectedDate <= maxDeadline;
+      },
+      {
+        message: `Thời hạn kết thúc không được vượt quá ${MAX_CAMPAIGN_DEADLINE_DAYS} ngày kể từ hôm nay`,
+      },
     ),
   category: z.union([z.enum(CampaignCategory), z.literal("")]).optional(),
   bankName: z.string().min(1, "Tên ngân hàng là bắt buộc"),

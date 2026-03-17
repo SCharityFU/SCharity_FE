@@ -12,6 +12,12 @@ export function getTomorrowISO(): string {
   return d.toISOString().split("T")[0];
 }
 
+export function getDateAfterDaysISO(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + Math.max(0, days));
+  return d.toISOString().split("T")[0];
+}
+
 export function formatDateVN(iso: string): string {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");

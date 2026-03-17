@@ -64,7 +64,7 @@ export interface DonationResponseDto {
   campaignId: string;
   campaign?: CampaignDto;
   donorId: string | null;
-  donor?: UserPublicDto;
+  donor?: UserPublicDto | null;
   paymentMetadata: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
@@ -76,8 +76,8 @@ export interface CommentResponseDto {
   emoji: string | null;
   isAnonymous: boolean;
   campaignId: string;
-  donorId: string;
-  donor?: UserPublicDto;
+  donorId: string | null;
+  donor?: UserPublicDto | null;
   donationId: string | null;
   donation?: DonationResponseDto;
   isEdited: boolean;
