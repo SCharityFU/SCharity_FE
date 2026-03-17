@@ -11,6 +11,7 @@ import { Geist } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -41,22 +42,24 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased shadcn-theme">
         <NextTopLoader color="#f43f5e" height={3} showSpinner={false} crawl={true} speed={200} />
-        <GoogleProvider>
-          <StoreProvider>
-            <ToastProvider>
-              <AuthProvider>
-                <RouteGuard>
-                  <Navbar />
-                  <main>{children}</main>
-                  <Footer />
-                </RouteGuard>
-                <Toaster position="top-center" richColors closeButton />
-              </AuthProvider>
-            </ToastProvider>
-          </StoreProvider>
-        </GoogleProvider>
+        <TooltipProvider>
+          <GoogleProvider>
+            <StoreProvider>
+              <ToastProvider>
+                <AuthProvider>
+                  <RouteGuard>
+                    <Navbar />
+                    <main>{children}</main>
+                    <Footer />
+                  </RouteGuard>
+                  <Toaster position="top-center" richColors closeButton />
+                </AuthProvider>
+              </ToastProvider>
+            </StoreProvider>
+          </GoogleProvider>
+        </TooltipProvider>
       </body>
     </html>
   );

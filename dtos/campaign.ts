@@ -88,6 +88,17 @@ export interface CampaignDto {
   creator?: UserPublicDto;
   createdAt: string;
   updatedAt: string;
+  comments: CampaignCommentResponseDto[] | null;
+}
+
+export interface CampaignCommentResponseDto {
+  id: string;
+  content: string;
+  emoji: string | null;
+  isAnonymous: boolean;
+  donor?: UserPublicDto | null;
+  donation?: Pick<DonationResponseDto, 'amount'> | null;
+  createdAt: string;
 }
 
 export interface CampaignRequestResponseDto {
