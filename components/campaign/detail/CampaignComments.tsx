@@ -1,26 +1,26 @@
-"use client";
-import { useState } from "react";
-import { Heart, MessageCircle, ChevronRight } from "lucide-react";
-import type { PublicCampaignDetailResponseDto } from "@/dtos/campaign";
-import type { CommentResponseDto } from "@/dtos/donation";
-import { formatDateOnly, formatVND } from "@/lib/utils";
-import { Modal } from "@/components/ui/modal";
-import { cn } from "@/lib/utils";
+'use client';
+import { useState } from 'react';
+import { Heart, MessageCircle, ChevronRight } from 'lucide-react';
+import type { PublicCampaignDetailResponseDto } from '@/dtos/campaign';
+import type { CommentResponseDto } from '@/dtos/donation';
+import { formatDateOnly, formatVND } from '@/lib/utils';
+import { Modal } from '@/components/ui/modal';
+import { cn } from '@/lib/utils';
 
 // ── Avatar gradients ──────────────────────────────────────────────────────────
 
 const GRADIENTS = [
-  "from-rose-500 to-pink-500",
-  "from-violet-500 to-purple-500",
-  "from-blue-500 to-indigo-500",
-  "from-emerald-500 to-teal-500",
-  "from-amber-500 to-orange-400",
-  "from-cyan-500 to-sky-500",
-  "from-fuchsia-500 to-pink-400",
+  'from-rose-500 to-pink-500',
+  'from-violet-500 to-purple-500',
+  'from-blue-500 to-indigo-500',
+  'from-emerald-500 to-teal-500',
+  'from-amber-500 to-orange-400',
+  'from-cyan-500 to-sky-500',
+  'from-fuchsia-500 to-pink-400',
 ];
 
 function getGradient(seed: string) {
-  const sum = seed.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const sum = seed.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return GRADIENTS[sum % GRADIENTS.length];
 }
 
@@ -32,7 +32,7 @@ function relativeTime(dateStr: string): string {
   const hours = Math.floor(diff / 3_600_000);
   const days = Math.floor(diff / 86_400_000);
 
-  if (minutes < 1) return "Vừa xong";
+  if (minutes < 1) return 'Vừa xong';
   if (minutes < 60) return `${minutes} phút trước`;
   if (hours < 24) return `${hours} giờ trước`;
   if (days < 7) return `${days} ngày trước`;
@@ -58,13 +58,12 @@ function EmptyState() {
 // ── Comment card ──────────────────────────────────────────────────────────────
 
 function CommentCard({ comment }: { comment: CommentResponseDto }) {
-  const displayName = comment.isAnonymous
-    ? "Nhà hảo tâm ẩn danh"
-    : (comment.donor?.fullName ?? "Khách");
+  const hasDonorProfile = Boolean(comment.donor?.fullName);
+  const displayName = comment.isAnonymous ? 'Nhà hảo tâm ẩn danh' : (comment.donor?.fullName ?? 'Khách vãng lai');
 
   const gradient = getGradient(displayName);
   const initial = displayName.charAt(0).toUpperCase();
-  const avatarUrl = !comment.isAnonymous ? (comment.donor?.avatarUrl ?? undefined) : undefined;
+  const avatarUrl = !comment.isAnonymous && hasDonorProfile ? (comment.donor?.avatarUrl ?? undefined) : undefined;
 
   return (
     <div className="flex gap-3 group">
@@ -79,8 +78,8 @@ function CommentCard({ comment }: { comment: CommentResponseDto }) {
         ) : (
           <div
             className={cn(
-              "w-9 h-9 rounded-full bg-gradient-to-br flex items-center justify-center",
-              "text-white shadow-sm flex-shrink-0",
+              'w-9 h-9 rounded-full bg-gradient-to-br flex items-center justify-center',
+              'text-white shadow-sm flex-shrink-0',
               gradient,
             )}
           >
@@ -99,15 +98,13 @@ function CommentCard({ comment }: { comment: CommentResponseDto }) {
       <div className="flex-1 min-w-0">
         <div
           className={cn(
-            "glass border border-black/5 rounded-2xl rounded-tl-sm px-3.5 py-2.5",
-            "transition-all duration-200 group-hover:border-black/10",
+            'glass border border-black/5 rounded-2xl rounded-tl-sm px-3.5 py-2.5',
+            'transition-all duration-200 group-hover:border-black/10',
           )}
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-1">
-            <span className="text-xs font-bold text-black leading-tight truncate">
-              {displayName}
-            </span>
+            <span className="text-xs font-bold text-black leading-tight truncate">{displayName}</span>
             <span className="text-[11px] text-black whitespace-nowrap flex-shrink-0 mt-px">
               {relativeTime(comment.createdAt)}
             </span>
@@ -151,9 +148,7 @@ export function CampaignComments({ campaign }: { campaign: PublicCampaignDetailR
               <MessageCircle className="w-3.5 h-3.5 text-rose-500" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-black leading-tight">
-                Lời Chúc &amp; Động Viên
-              </h2>
+              <h2 className="text-sm font-bold text-black leading-tight">Lời Chúc &amp; Động Viên</h2>
               {donorCommentCount > 0 && (
                 <p className="text-[11px] text-black mt-px">
                   {donorCommentCount} trong số {comments.length} người đã quyên góp
