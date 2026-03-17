@@ -281,12 +281,6 @@ export default function AdminDashboardPage() {
           </AreaChart>
         </ResponsiveContainer>
       )}
-
-      {useLogScale && (
-        <p className="mt-2 text-xs text-black/45">
-          Đang dùng thang log để hiển thị rõ các khoản donate chênh lệch lớn.
-        </p>
-      )}
     </div>
   );
 
