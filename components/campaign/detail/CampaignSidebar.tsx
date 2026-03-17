@@ -17,13 +17,14 @@ import {
   Loader2,
   CheckCircle2,
   AlertTriangle,
+  Flag,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import type { PublicCampaignDetailResponseDto } from '@/dtos/campaign';
 import type { DonationResponseDto } from '@/dtos/donation';
 import { formatVND, formatDateOnly, formatCampaignProgressPercent, resolveCampaignProgressPercent } from '@/lib/utils';
 import { Modal } from '@/components/ui/modal';
-import { CloseCampaignModal } from '@/components/campaign/detail/CloseCampaignModal';
 import { WithdrawRequestModal } from '@/components/campaign/detail/WithdrawRequestModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useGetCampaignWithdrawalsQuery } from '@/lib/store/features/campaign/campaignApi';
@@ -31,10 +32,13 @@ import { cn } from '@/lib/utils';
 import { useCreateDonationMutation } from '@/lib/store/features/donation/donationApi';
 import { toast } from 'sonner';
 import { getSafeApiErrorMessage } from '@/lib/api-error';
+import ReportCampaignModal from '@/components/campaigns/ReportCampaignModal';
+import { Button } from '@/components/ui/button';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DONOR_PREVIEW = 5;
+const DONOR_PREVIEW = 3;
+const SUCCESS_DONATION_STATUSES = new Set(['success', 'completed', 'paid']);
 
 const DONOR_GRADIENTS = [
   'from-rose-500 to-pink-500',
@@ -279,8 +283,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [donorModalOpen, setDonorModalOpen] = useState(false);
-  const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   // ── Donate modal state ────────────────────────────────────────────────────
   const [donateModalOpen, setDonateModalOpen] = useState(false);
@@ -288,6 +292,12 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
   const [donateMessage, setDonateMessage] = useState('');
   const [donateAnonymous, setDonateAnonymous] = useState(false);
   const [createDonation, { isLoading: isDonating }] = useCreateDonationMutation();
+
+  useEffect(() => {
+    if (donateModalOpen && !user) {
+      setDonateAnonymous(true);
+    }
+  }, [donateModalOpen, user]);
 
   const handleDonateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -297,7 +307,7 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
         campaignId: campaign.id,
         amount: Number(donateAmount),
         message: donateMessage || undefined,
-        isAnonymous: donateAnonymous,
+        isAnonymous: user ? donateAnonymous : true,
       }).unwrap();
       if (res.data?.checkoutUrl) {
         window.location.href = res.data.checkoutUrl;
@@ -327,18 +337,17 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
   const isClosed = campaign.status === 'closed';
   const isSuspended = campaign.status === 'suspended';
 
-  const successDonations = (campaign.donations ?? []).filter((d) => d.status === 'success');
+  const successDonations = (campaign.donations ?? []).filter((d) => {
+    // Campaign detail payload may omit donation status; in that case, keep item visible.
+    if (d.status == null) return true;
+    const normalizedStatus = String(d.status).trim().toLowerCase();
+    return SUCCESS_DONATION_STATUSES.has(normalizedStatus);
+  });
   const previewDonors = successDonations.slice(0, DONOR_PREVIEW);
   const hasMoreDonors = successDonations.length > DONOR_PREVIEW;
 
   // ── Owner logic ────────────────────────────────────────────────────────────
   const isOwner = user?.id === campaign.creatorId;
-  const deadlineReached = campaign.deadline ? new Date(campaign.deadline) <= new Date() : false;
-  const canClose = isOwner && isActive && (progress >= 50 || deadlineReached);
-  const cannotCloseReason =
-    isOwner && isActive && !canClose
-      ? 'Bạn chỉ có thể đóng chiến dịch khi đạt tối thiểu 50% mục tiêu hoặc khi hết thời hạn.'
-      : null;
 
   // ── Share handler ──────────────────────────────────────────────────────────
   const handleShare = async () => {
@@ -450,52 +459,39 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           </button>
 
           {/* ── Share button ───────────────────────────────────────────────── */}
-          <button
-            onClick={handleShare}
-            className={cn(
-              'w-full mt-2.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200',
-              copied
-                ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700'
-                : 'glass border-black/8 text-black/70 hover:text-black hover:bg-white hover:border-black/12',
-            )}
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                Đã sao chép liên kết
-              </>
-            ) : (
-              <>
-                <Share2 className="w-3.5 h-3.5" />
-                Chia sẻ chiến dịch
-              </>
-            )}
-          </button>
-
-          {/* ── Owner: Close campaign button ──────────────────────────────── */}
-          {isOwner && isActive && (
-            <div className="relative group mt-2.5">
-              <button
-                onClick={() => canClose && setCloseModalOpen(true)}
-                disabled={!canClose}
-                className={cn(
-                  'w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 border',
-                  canClose
-                    ? 'border-red-500/30 bg-red-500/8 text-red-600 hover:bg-red-500/15 hover:border-red-500/40'
-                    : 'border-black/8 bg-black/[0.03] text-black/25 cursor-not-allowed',
-                )}
-              >
-                <XCircle className="w-4 h-4" />
-                Kết thúc gây quỹ
-              </button>
-              {/* Tooltip for disabled state */}
-              {cannotCloseReason && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-black/80 text-white text-[11px] leading-relaxed max-w-[260px] text-center opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20">
-                  {cannotCloseReason}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/80" />
-                </div>
+          <div className="mt-2.5 flex items-center gap-2">
+            <Button onClick={handleShare} variant={'outline'} className="flex-1 w-full">
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  Đã sao chép liên kết
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5" />
+                  Chia sẻ chiến dịch
+                </>
               )}
-            </div>
+            </Button>
+
+            <button
+              type="button"
+              aria-label="Báo cáo chiến dịch"
+              title="Báo cáo chiến dịch"
+              onClick={() => setReportModalOpen(true)}
+              className="w-10 h-10 rounded-xl border border-red-500/25 bg-red-500/8 text-red-600 hover:bg-red-500/15 hover:border-red-500/35 transition-colors flex items-center justify-center"
+            >
+              <Flag className="w-4 h-4" />
+            </button>
+          </div>
+
+          {isOwner && (
+            <Link href={`/dashboard/my-campaigns/${campaign.id}`} className="block mt-2.5">
+              <Button variant="outline" className="w-full">
+                <Wallet className="w-4 h-4" />
+                Quản lý rút tiền
+              </Button>
+            </Link>
           )}
 
           {/* ── Owner: Withdraw request button (after close) ──────────────── */}
@@ -577,9 +573,9 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
         </div>
       </Modal>
 
-      <CloseCampaignModal open={closeModalOpen} onClose={() => setCloseModalOpen(false)} campaign={campaign} />
-
       <WithdrawRequestModal open={withdrawModalOpen} onClose={() => setWithdrawModalOpen(false)} campaign={campaign} />
+
+      <ReportCampaignModal campaignId={campaign.id} open={reportModalOpen} onOpenChange={setReportModalOpen} />
 
       {/* ── Donate modal ──────────────────────────────────────────────────────── */}
       <Modal
@@ -647,10 +643,14 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             <input
               type="checkbox"
               checked={donateAnonymous}
-              onChange={(e) => setDonateAnonymous(e.target.checked)}
+              onChange={(e) => {
+                if (!user) return;
+                setDonateAnonymous(e.target.checked);
+              }}
+              disabled={!user}
               className="w-4 h-4 rounded border-black/20 text-rose-500 focus:ring-rose-500"
             />
-            <span className="text-sm text-black/60">Ủng hộ ẩn danh</span>
+            <span className="text-sm text-black/60">Ủng hộ ẩn danh{!user ? ' (bắt buộc khi chưa đăng nhập)' : ''}</span>
           </label>
 
           {/* Submit */}

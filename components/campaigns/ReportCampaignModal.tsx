@@ -1,44 +1,35 @@
-"use client";
+'use client';
 
-import { useState, useRef } from "react";
-import { Flag, Upload, X, ImageIcon } from "lucide-react";
-import { ReportReason } from "@/dtos/enums";
-import { useReportCampaignMutation } from "@/lib/store/features/report/reportApi";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { useState, useRef } from 'react';
+import { Flag, Upload, X, ImageIcon, Loader2 } from 'lucide-react';
+import { ReportReason } from '@/dtos/enums';
+import { useReportCampaignMutation } from '@/lib/store/features/report/reportApi';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { getSafeApiErrorMessage } from '@/lib/api-error';
 
 const REASON_LABELS: Record<ReportReason, string> = {
-  [ReportReason.FALSE_INFORMATION]: "Thông tin sai sự thật",
-  [ReportReason.FAKE_IMAGE]: "Hình ảnh giả mạo",
-  [ReportReason.NO_UPDATE]: "Creator không cập nhật tiến độ",
-  [ReportReason.FRAUD]: "Lừa đảo",
-  [ReportReason.OTHER]: "Khác",
+  [ReportReason.FALSE_INFORMATION]: 'Thông tin sai sự thật',
+  [ReportReason.FAKE_IMAGE]: 'Hình ảnh giả mạo',
+  [ReportReason.NO_UPDATE]: 'Creator không cập nhật tiến độ',
+  [ReportReason.FRAUD]: 'Lừa đảo',
+  [ReportReason.OTHER]: 'Khác',
 };
+
+const REPORT_OVERLAY_CLASS = 'bg-black/50 supports-backdrop-filter:backdrop-blur-sm';
+
+function getReportErrorMessage(error: unknown): string {
+  const apiError = error as { data?: { code?: string; message?: string } } | undefined;
+
+  if (apiError?.data?.code === 'CONFLICT') {
+    return apiError.data.message || 'Bạn đã báo cáo chiến dịch này rồi.';
+  }
+
+  return getSafeApiErrorMessage(error, 'Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại.');
+}
 
 interface ReportCampaignModalProps {
   campaignId: string;
@@ -46,27 +37,22 @@ interface ReportCampaignModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function ReportCampaignModal({
-  campaignId,
-  open,
-  onOpenChange,
-}: ReportCampaignModalProps) {
-  const [reason, setReason] = useState<ReportReason | "">("");
-  const [description, setDescription] = useState("");
+export default function ReportCampaignModal({ campaignId, open, onOpenChange }: ReportCampaignModalProps) {
+  const [reason, setReason] = useState<ReportReason | ''>('');
+  const [description, setDescription] = useState('');
   const [files, setFiles] = useState<File[]>([]);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [reportCampaign, { isLoading }] = useReportCampaignMutation();
 
   const resetForm = () => {
-    setReason("");
-    setDescription("");
+    setReason('');
+    setDescription('');
     setFiles([]);
     setSubmitError(null);
-    setSubmitSuccess(false);
+    setIsSubmitting(false);
   };
 
   const handleOpenChange = (value: boolean) => {
@@ -79,20 +65,16 @@ export default function ReportCampaignModal({
       setFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
     }
     // Reset input so the same file can be re-selected
-    e.target.value = "";
+    e.target.value = '';
   };
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmitClick = () => {
+  const handleSubmit = async () => {
     setSubmitError(null);
-    setShowConfirm(true);
-  };
-
-  const handleConfirmSubmit = async () => {
-    setShowConfirm(false);
+    setIsSubmitting(true);
     try {
       await reportCampaign({
         campaignId,
@@ -100,50 +82,26 @@ export default function ReportCampaignModal({
         description: description || undefined,
         files: files.length > 0 ? files : undefined,
       }).unwrap();
-      setSubmitSuccess(true);
-    } catch {
-      setSubmitError("Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại.");
+      handleOpenChange(false);
+    } catch (error: unknown) {
+      setSubmitError(getReportErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const isValid = reason !== "";
-
-  if (submitSuccess) {
-    return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-[440px]" showCloseButton={false}>
-          <div className="flex flex-col items-center gap-4 py-6 text-center">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
-              <Flag className="w-6 h-6 text-emerald-600" />
-            </div>
-            <h3 className="text-lg font-bold text-black">
-              Báo cáo đã được gửi
-            </h3>
-            <p className="text-sm text-black/60">
-              Cảm ơn bạn đã gửi báo cáo. Admin sẽ xem xét trong vòng 24h.
-            </p>
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Đóng
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  const isValid = reason !== '';
 
   return (
     <>
-      <Dialog open={open && !showConfirm} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
+      <Dialog open={open && !isSubmitting} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-[480px]" showCloseButton={false} overlayClassName={REPORT_OVERLAY_CLASS}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Flag className="w-5 h-5 text-red-500" />
               Báo cáo chiến dịch
             </DialogTitle>
-            <DialogDescription>
-              Vui lòng chọn lý do và cung cấp thông tin chi tiết để Admin xem
-              xét.
-            </DialogDescription>
+            <DialogDescription>Vui lòng chọn lý do và cung cấp thông tin chi tiết để Admin xem xét.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 pt-2">
@@ -152,10 +110,7 @@ export default function ReportCampaignModal({
               <Label htmlFor="report-reason">
                 Lý do báo cáo <span className="text-red-500">*</span>
               </Label>
-              <Select
-                value={reason}
-                onValueChange={(v) => setReason(v as ReportReason)}
-              >
+              <Select value={reason} onValueChange={(v) => setReason(v as ReportReason)}>
                 <SelectTrigger id="report-reason" className="w-full">
                   <SelectValue placeholder="Chọn lý do báo cáo" />
                 </SelectTrigger>
@@ -209,12 +164,8 @@ export default function ReportCampaignModal({
                       key={index}
                       className="relative group w-16 h-16 rounded-lg border border-black/10 overflow-hidden bg-gray-50"
                     >
-                      {file.type.startsWith("image/") ? (
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={file.name}
-                          className="w-full h-full object-cover"
-                        />
+                      {file.type.startsWith('image/') ? (
+                        <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <ImageIcon className="w-6 h-6 text-black/30" />
@@ -234,23 +185,14 @@ export default function ReportCampaignModal({
             </div>
 
             {/* Error */}
-            {submitError && (
-              <p className="text-sm text-red-500">{submitError}</p>
-            )}
+            {submitError && <p className="text-sm text-red-500">{submitError}</p>}
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-              >
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>
                 Hủy
               </Button>
-              <Button
-                variant="destructive"
-                disabled={!isValid || isLoading}
-                onClick={handleSubmitClick}
-              >
+              <Button variant="destructive" disabled={!isValid || isLoading || isSubmitting} onClick={handleSubmit}>
                 Gửi báo cáo
               </Button>
             </div>
@@ -258,27 +200,15 @@ export default function ReportCampaignModal({
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation AlertDialog */}
-      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận gửi báo cáo</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn gửi báo cáo này? Admin sẽ xem xét trong
-              vòng 24h.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? "Đang gửi..." : "Xác nhận"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={open && isSubmitting} onOpenChange={() => undefined}>
+        <DialogContent className="sm:max-w-[420px]" showCloseButton={false} overlayClassName={REPORT_OVERLAY_CLASS}>
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <Loader2 className="w-6 h-6 animate-spin text-red-500" />
+            <h3 className="text-base font-semibold text-black">Đang gửi báo cáo...</h3>
+            <p className="text-sm text-black/55">Vui lòng chờ trong giây lát.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

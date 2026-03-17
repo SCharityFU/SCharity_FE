@@ -8,7 +8,6 @@ import type { CampaignDto } from './campaign';
 
 export interface CreateWithdrawRequestDto {
   campaignId: string;
-  amount: number;
   bankAccountId: string;
 }
 

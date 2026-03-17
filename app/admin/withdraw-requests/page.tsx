@@ -15,7 +15,6 @@ function parsePositiveInt(value: string | null, fallback: number): number {
 }
 
 function parseStatus(value: string | null): WithdrawStatus {
-  if (value === WithdrawStatus.APPROVED) return WithdrawStatus.APPROVED;
   if (value === WithdrawStatus.REJECTED) return WithdrawStatus.REJECTED;
   if (value === WithdrawStatus.COMPLETED) return WithdrawStatus.COMPLETED;
   return WithdrawStatus.PENDING;
@@ -23,7 +22,6 @@ function parseStatus(value: string | null): WithdrawStatus {
 
 const statusTabs: { value: WithdrawStatus; label: string }[] = [
   { value: WithdrawStatus.PENDING, label: 'Đang chờ' },
-  { value: WithdrawStatus.APPROVED, label: 'Đã duyệt' },
   { value: WithdrawStatus.REJECTED, label: 'Đã từ chối' },
   { value: WithdrawStatus.COMPLETED, label: 'Hoàn tất' },
 ];

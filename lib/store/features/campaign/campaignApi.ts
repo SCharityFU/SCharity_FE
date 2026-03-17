@@ -241,7 +241,9 @@ export const campaignApi = createApi({
         >({
             query: (campaignId) => `/withdrawals/campaign/${campaignId}`,
             transformResponse: (response: ApiResponseDto<WithdrawRequestResponseDto[]>) =>
-                response.data ?? [],
+                [...(response.data ?? [])].sort(
+                    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+                ),
             providesTags: ['Withdrawal'],
         }),
 

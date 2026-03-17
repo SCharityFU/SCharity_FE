@@ -14,6 +14,7 @@ interface BasicInfoSectionProps {
   goalPresets: number[];
   shortVND: (value: number) => string;
   minDeadline: string;
+  maxDeadline: string;
   formatDateVN: (value: string) => string;
   categoryLabels: Record<CampaignCategory, string>;
   bankSearch: string;
@@ -31,6 +32,7 @@ export function BasicInfoSection({
   goalPresets,
   shortVND,
   minDeadline,
+  maxDeadline,
   formatDateVN,
   categoryLabels,
   bankSearch,
@@ -129,6 +131,7 @@ export function BasicInfoSection({
           id="campaign-deadline"
           type="date"
           min={minDeadline}
+          max={maxDeadline}
           {...register('deadline')}
           className="w-full px-4 py-3 rounded-xl glass border border-black/10 text-black outline-none focus:border-rose-500/50 transition-colors text-sm"
         />

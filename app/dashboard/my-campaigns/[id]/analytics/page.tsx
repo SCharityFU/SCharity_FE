@@ -115,6 +115,8 @@ export default function AnalyticsPage() {
     limit: 100,
   });
 
+  console.log('My campaigns data:', campaignsData);
+
   const campaign = campaignsData?.data?.find((c) => c.id === campaignId) as CampaignDto | undefined;
 
   const [timeRange, setTimeRange] = useState<number>(30);
@@ -337,9 +339,13 @@ export default function AnalyticsPage() {
           <h3 className="font-bold text-black text-lg mb-6">Biểu đồ đóng góp theo thời gian</h3>
           <div className="h-72">
             {isAnalyticsLoading ? (
-              <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">Đang tải biểu đồ...</div>
+              <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">
+                Đang tải biểu đồ...
+              </div>
             ) : chartData.length === 0 ? (
-               <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">Chưa có dữ liệu</div>
+              <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">
+                Chưa có dữ liệu
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -371,7 +377,14 @@ export default function AnalyticsPage() {
                     }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                   />
-                  <Area type="monotone" dataKey="amount" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#f43f5e"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorAmount)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -394,11 +407,15 @@ export default function AnalyticsPage() {
               <tbody>
                 {isDonationsLoading ? (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">Đang tải...</td>
+                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">
+                      Đang tải...
+                    </td>
                   </tr>
                 ) : donationsData?.data?.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">Chưa có giao dịch nào</td>
+                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">
+                      Chưa có giao dịch nào
+                    </td>
                   </tr>
                 ) : (
                   donationsData?.data?.map((d) => (
@@ -421,13 +438,16 @@ export default function AnalyticsPage() {
                       <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">
                         <span title={formatDateVN(d.createdAt)}>{formatRelativeTime(d.createdAt)}</span>
                       </td>
+                      <td className="py-3 px-4 text-sm font-bold text-emerald-600">{formatVND(d.amount)}</td>
+                      <td className="py-3 px-4 text-sm text-black/60 max-w-xs truncate">{d.message || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">{formatDate(d.createdAt)}</td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
-          
+
           {donationsData?.pagination && donationsData.pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-6">
               <p className="text-sm text-black/40">
@@ -437,7 +457,7 @@ export default function AnalyticsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -445,7 +465,7 @@ export default function AnalyticsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.min(donationsData.pagination.totalPages, p + 1))}
+                  onClick={() => setPage((p) => Math.min(donationsData.pagination.totalPages, p + 1))}
                   disabled={page === donationsData.pagination.totalPages}
                 >
                   <ChevronRight className="w-4 h-4" />
