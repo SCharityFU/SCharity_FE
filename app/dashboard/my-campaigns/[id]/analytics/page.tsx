@@ -11,14 +11,7 @@ import {
   useGetCampaignDonationsQuery,
 } from '@/lib/store/features/campaign/campaignApi';
 import type { CampaignDto } from '@/dtos/campaign';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 function formatVND(value: number): string {
   return value.toLocaleString('vi-VN') + ' ₫';
@@ -35,24 +28,27 @@ function formatDate(iso: string): string {
 export default function AnalyticsPage() {
   const router = useRouter();
   const params = useParams();
-  const campaignId = params.campaignId as string;
+  const campaignId = params.id as string;
+  console.log('Campaign ID from params:', campaignId);
 
   const { data: campaignsData, isLoading } = useGetMyCampaignsQuery({
     page: 1,
     limit: 100,
   });
 
+  console.log('My campaigns data:', campaignsData);
+
   const campaign = campaignsData?.data?.find((c) => c.id === campaignId) as CampaignDto | undefined;
 
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useGetCreatorCampaignAnalyticsQuery(
     { campaignId },
-    { skip: !campaignId }
+    { skip: !campaignId },
   );
 
   const [page, setPage] = useState(1);
   const { data: donationsData, isLoading: isDonationsLoading } = useGetCampaignDonationsQuery(
     { campaignId, page, limit: 10 },
-    { skip: !campaignId }
+    { skip: !campaignId },
   );
 
   if (isLoading) {
@@ -258,9 +254,13 @@ export default function AnalyticsPage() {
           <h3 className="font-bold text-black text-lg mb-6">Quyên góp 30 ngày gần đây</h3>
           <div className="h-72">
             {isAnalyticsLoading ? (
-              <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">Đang tải biểu đồ...</div>
+              <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">
+                Đang tải biểu đồ...
+              </div>
             ) : chartData.length === 0 ? (
-               <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">Chưa có dữ liệu</div>
+              <div className="w-full h-full flex items-center justify-center text-black/40 text-sm">
+                Chưa có dữ liệu
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -270,26 +270,33 @@ export default function AnalyticsPage() {
                       <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(val) => formatDate(val).substring(0, 5)} 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }} 
-                    dy={10} 
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(val) => formatDate(val).substring(0, 5)}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }}
+                    dy={10}
                   />
-                  <YAxis 
-                    tickFormatter={(val) => val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : `${val / 1000}k`} 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }} 
+                  <YAxis
+                    tickFormatter={(val) => (val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : `${val / 1000}k`)}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value: any) => [formatVND(Number(value) || 0), 'Số tiền']}
                     labelFormatter={(label) => formatDate(label as string)}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                   />
-                  <Area type="monotone" dataKey="amount" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#f43f5e"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorAmount)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -312,34 +319,32 @@ export default function AnalyticsPage() {
               <tbody>
                 {isDonationsLoading ? (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">Đang tải...</td>
+                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">
+                      Đang tải...
+                    </td>
                   </tr>
                 ) : donationsData?.data?.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">Chưa có giao dịch nào</td>
+                    <td colSpan={4} className="py-8 text-center text-sm text-black/40">
+                      Chưa có giao dịch nào
+                    </td>
                   </tr>
                 ) : (
                   donationsData?.data?.map((d) => (
                     <tr key={d.id} className="border-b border-black/5 last:border-0 hover:bg-black/[0.02]">
                       <td className="py-3 px-4 text-sm font-medium text-black">
-                        {d.isAnonymous ? 'Nhà hảo tâm ẩn danh' : (d.donor?.fullName || 'Người dùng')}
+                        {d.isAnonymous ? 'Nhà hảo tâm ẩn danh' : d.donor?.fullName || 'Người dùng'}
                       </td>
-                      <td className="py-3 px-4 text-sm font-bold text-emerald-600">
-                        {formatVND(d.amount)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-black/60 max-w-xs truncate">
-                        {d.message || '-'}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">
-                        {formatDate(d.createdAt)}
-                      </td>
+                      <td className="py-3 px-4 text-sm font-bold text-emerald-600">{formatVND(d.amount)}</td>
+                      <td className="py-3 px-4 text-sm text-black/60 max-w-xs truncate">{d.message || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">{formatDate(d.createdAt)}</td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
-          
+
           {donationsData?.pagination && donationsData.pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-6">
               <p className="text-sm text-black/40">
@@ -349,7 +354,7 @@ export default function AnalyticsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -357,7 +362,7 @@ export default function AnalyticsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.min(donationsData.pagination.totalPages, p + 1))}
+                  onClick={() => setPage((p) => Math.min(donationsData.pagination.totalPages, p + 1))}
                   disabled={page === donationsData.pagination.totalPages}
                 >
                   <ChevronRight className="w-4 h-4" />
