@@ -436,4 +436,5 @@ export const {
     useUpdateCampaignMutation,
     useGetCreatorCampaignAnalyticsQuery,
     useGetCampaignDonationsQuery,
+    useLazyGetCampaignDonationsQuery,
 } = campaignApi;
