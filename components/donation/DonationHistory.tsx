@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
-import Link from "next/link";
+import { useState, useCallback } from 'react';
+import Link from 'next/link';
 import {
   Heart,
   Search,
@@ -15,31 +15,31 @@ import {
   ExternalLink,
   Loader2,
   ArrowUpDown,
-} from "lucide-react";
-import { useGetMyDonationHistoryQuery } from "@/lib/store/features/donation/donationApi";
-import type { DonationResponseDto } from "@/dtos/donation";
-import { formatVND, formatDateOnly } from "@/lib/utils";
-import { Modal } from "@/components/ui/modal";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { useGetMyDonationHistoryQuery } from '@/lib/store/features/donation/donationApi';
+import type { DonationResponseDto } from '@/dtos/donation';
+import { formatVND, formatDateOnly } from '@/lib/utils';
+import { Modal } from '@/components/ui/modal';
+import { cn } from '@/lib/utils';
 
 // ── Status badge config ───────────────────────────────────────────────────────
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   success: {
-    label: "Thành công",
-    className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+    label: 'Thành công',
+    className: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
   },
   pending: {
-    label: "Đang xử lý",
-    className: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+    label: 'Đang xử lý',
+    className: 'bg-amber-500/10 text-amber-700 border-amber-500/20',
   },
   failed: {
-    label: "Thất bại",
-    className: "bg-rose-500/10 text-rose-700 border-rose-500/20",
+    label: 'Thất bại',
+    className: 'bg-rose-500/10 text-rose-700 border-rose-500/20',
   },
   refunded: {
-    label: "Đã hoàn tiền",
-    className: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+    label: 'Đã hoàn tiền',
+    className: 'bg-blue-500/10 text-blue-700 border-blue-500/20',
   },
 };
 
@@ -48,7 +48,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border",
+        'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border',
         config.className,
       )}
     >
@@ -93,12 +93,12 @@ function DetailModal({
   if (!donation) return null;
 
   const rows = [
-    { label: "Mã giao dịch", value: donation.transactionRef || "—" },
-    { label: "Số tiền", value: formatVND(donation.amount) },
-    { label: "Ngày giao dịch", value: formatDateOnly(donation.createdAt) },
-    { label: "Trạng thái", value: null, badge: donation.status },
-    { label: "Hình thức", value: donation.isAnonymous ? "Ẩn danh" : "Công khai" },
-    { label: "Lời nhắn", value: donation.message || "—" },
+    { label: 'Mã giao dịch', value: donation.transactionRef || '—' },
+    { label: 'Số tiền', value: formatVND(donation.amount) },
+    { label: 'Ngày giao dịch', value: formatDateOnly(donation.createdAt) },
+    { label: 'Trạng thái', value: null, badge: donation.status },
+    { label: 'Hình thức', value: donation.isAnonymous ? 'Ẩn danh' : 'Công khai' },
+    { label: 'Lời nhắn', value: donation.message || '—' },
   ];
 
   return (
@@ -133,10 +133,10 @@ function DetailModal({
 // ── PDF Receipt ───────────────────────────────────────────────────────────────
 
 function downloadReceipt(donation: DonationResponseDto) {
-  const campaignTitle = donation.campaign?.title ?? "Chiến dịch";
+  const campaignTitle = donation.campaign?.title ?? 'Chiến dịch';
   const date = formatDateOnly(donation.createdAt);
   const amount = formatVND(donation.amount);
-  const ref = donation.transactionRef ?? "N/A";
+  const ref = donation.transactionRef ?? 'N/A';
 
   // Simple HTML → PDF via print
   const html = `
@@ -165,7 +165,7 @@ function downloadReceipt(donation: DonationResponseDto) {
     </head>
     <body>
       <div class="header">
-        <h1>❤️ SCharity</h1>
+        <h1>❤️ FCam</h1>
         <p>Biên Lai Xác Nhận Quyên Góp</p>
       </div>
       <hr class="divider" />
@@ -174,18 +174,18 @@ function downloadReceipt(donation: DonationResponseDto) {
       <div class="row"><span class="label">Ngày giao dịch</span><span class="value">${date}</span></div>
       <div class="row"><span class="label">Số tiền</span><span class="value amount">${amount}</span></div>
       <div class="row"><span class="label">Trạng thái</span><span class="value"><span class="badge badge-${donation.status}">${STATUS_MAP[donation.status]?.label ?? donation.status}</span></span></div>
-      <div class="row"><span class="label">Hình thức</span><span class="value">${donation.isAnonymous ? "Ẩn danh" : "Công khai"}</span></div>
-      ${donation.message ? `<div class="row"><span class="label">Lời nhắn</span><span class="value">${donation.message}</span></div>` : ""}
+      <div class="row"><span class="label">Hình thức</span><span class="value">${donation.isAnonymous ? 'Ẩn danh' : 'Công khai'}</span></div>
+      ${donation.message ? `<div class="row"><span class="label">Lời nhắn</span><span class="value">${donation.message}</span></div>` : ''}
       <hr class="divider" />
       <div class="footer">
         <p>Cảm ơn bạn đã đóng góp cho cộng đồng! 💛</p>
-        <p style="margin-top: 4px;">SCharity — Nền tảng quyên góp từ thiện</p>
+        <p style="margin-top: 4px;">FCam — Nền tảng quyên góp từ thiện</p>
       </div>
     </body>
     </html>
   `;
 
-  const win = window.open("", "_blank", "width=600,height=800");
+  const win = window.open('', '_blank', 'width=600,height=800');
   if (!win) return;
   win.document.write(html);
   win.document.close();
@@ -207,12 +207,12 @@ function Pagination({
 }) {
   if (totalPages <= 1) return null;
 
-  const pages: (number | "...")[] = [];
+  const pages: (number | '...')[] = [];
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
       pages.push(i);
-    } else if (pages[pages.length - 1] !== "...") {
-      pages.push("...");
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...');
     }
   }
 
@@ -226,7 +226,7 @@ function Pagination({
         <ChevronLeft className="w-4 h-4" />
       </button>
       {pages.map((p, i) =>
-        p === "..." ? (
+        p === '...' ? (
           <span key={`dot-${i}`} className="px-2 text-black/30 text-sm">
             …
           </span>
@@ -235,10 +235,8 @@ function Pagination({
             key={p}
             onClick={() => onPageChange(p as number)}
             className={cn(
-              "w-9 h-9 rounded-lg text-sm font-semibold transition-all",
-              p === page
-                ? "bg-rose-500 text-white shadow-sm shadow-rose-500/25"
-                : "text-black/50 hover:bg-black/5",
+              'w-9 h-9 rounded-lg text-sm font-semibold transition-all',
+              p === page ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/25' : 'text-black/50 hover:bg-black/5',
             )}
           >
             {p}
@@ -281,12 +279,8 @@ function DonationRow({
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-black truncate">
-            {donation.campaign?.title ?? "Chiến dịch"}
-          </p>
-          <p className="text-[11px] text-black/35 mt-0.5">
-            {donation.isAnonymous ? "Ẩn danh" : "Công khai"}
-          </p>
+          <p className="text-sm font-semibold text-black truncate">{donation.campaign?.title ?? 'Chiến dịch'}</p>
+          <p className="text-[11px] text-black/35 mt-0.5">{donation.isAnonymous ? 'Ẩn danh' : 'Công khai'}</p>
         </div>
       </div>
 
@@ -314,7 +308,7 @@ function DonationRow({
         >
           <Eye className="w-4 h-4" />
         </button>
-        {donation.status === "success" ? (
+        {donation.status === 'success' ? (
           <button
             onClick={() => downloadReceipt(donation)}
             className="p-2 rounded-lg text-black/30 hover:text-rose-500 hover:bg-rose-500/5 transition-colors"
@@ -337,9 +331,9 @@ const ITEMS_PER_PAGE = 10;
 export default function DonationHistory() {
   // Filters
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   //Detail modal
   const [selectedDonation, setSelectedDonation] = useState<DonationResponseDto | null>(null);
@@ -363,9 +357,9 @@ export default function DonationHistory() {
 
   const hasFilters = !!statusFilter || !!startDate || !!endDate;
   const clearFilters = () => {
-    setStatusFilter("");
-    setStartDate("");
-    setEndDate("");
+    setStatusFilter('');
+    setStartDate('');
+    setEndDate('');
     setPage(1);
   };
 
@@ -442,11 +436,7 @@ export default function DonationHistory() {
 
           {/* Result count */}
           <div className="ml-auto text-xs text-black/35 font-medium">
-            {isFetching ? (
-              <Loader2 className="w-4 h-4 animate-spin text-rose-500" />
-            ) : (
-              `${total} kết quả`
-            )}
+            {isFetching ? <Loader2 className="w-4 h-4 animate-spin text-rose-500" /> : `${total} kết quả`}
           </div>
         </div>
       </div>
@@ -455,9 +445,7 @@ export default function DonationHistory() {
       <div className="glass-card rounded-2xl overflow-hidden">
         {/* Table header */}
         <div className="flex items-center gap-4 px-5 py-3 border-b border-black/8 bg-black/[0.02]">
-          <div className="flex-1 text-[11px] font-semibold text-black/40 uppercase tracking-wider">
-            Chiến dịch
-          </div>
+          <div className="flex-1 text-[11px] font-semibold text-black/40 uppercase tracking-wider">Chiến dịch</div>
           <div className="hidden sm:block w-28 text-center text-[11px] font-semibold text-black/40 uppercase tracking-wider">
             Ngày
           </div>
@@ -481,11 +469,7 @@ export default function DonationHistory() {
         ) : (
           <div>
             {donations.map((donation: DonationResponseDto) => (
-              <DonationRow
-                key={donation.id}
-                donation={donation}
-                onViewDetail={(d) => setSelectedDonation(d)}
-              />
+              <DonationRow key={donation.id} donation={donation} onViewDetail={(d) => setSelectedDonation(d)} />
             ))}
           </div>
         )}
@@ -495,11 +479,7 @@ export default function DonationHistory() {
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       {/* ── Detail Modal ─────────────────────────────────────────── */}
-      <DetailModal
-        donation={selectedDonation}
-        open={!!selectedDonation}
-        onClose={() => setSelectedDonation(null)}
-      />
+      <DetailModal donation={selectedDonation} open={!!selectedDonation} onClose={() => setSelectedDonation(null)} />
     </div>
   );
 }

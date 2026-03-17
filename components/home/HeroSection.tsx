@@ -1,14 +1,14 @@
-"use client";
-import { useMemo } from "react";
-import Link from "next/link";
-import { ArrowRight, Heart } from "lucide-react";
-import { RainbowButton } from "@/components/ui/rainbow-button";
-import { MorphingText } from "@/components/ui/text-morphing";
-import { Magnetic } from "@/components/ui/magnetic";
-import { HighlightText } from "@/components/ui/highlight-text";
-import { useGetActiveUserCountQuery } from "@/lib/store/features/home/homeApi";
-import { NumberCounter } from "@/components/ui/number-counter";
-import { Button } from "../ui/button";
+'use client';
+import { useMemo } from 'react';
+import Link from 'next/link';
+import { ArrowRight, Heart } from 'lucide-react';
+import { RainbowButton } from '@/components/ui/rainbow-button';
+import { MorphingText } from '@/components/ui/text-morphing';
+import { Magnetic } from '@/components/ui/magnetic';
+import { HighlightText } from '@/components/ui/highlight-text';
+import { useGetActiveUserCountQuery } from '@/lib/store/features/home/homeApi';
+import { NumberCounter } from '@/components/ui/number-counter';
+import { Button } from '../ui/button';
 
 export function HeroSection() {
   const { data: userCount = 50000, isLoading } = useGetActiveUserCountQuery();
@@ -34,21 +34,19 @@ export function HeroSection() {
           <span className="block text-black mb-3">Cùng nhau</span>
           <span className="block gradient-text">
             <MorphingText
-              words={["Thay Đổi", "Yêu Thương", "Hy Vọng", "Trao Tặng", "Kết Nối"]}
+              words={['Thay Đổi', 'Yêu Thương', 'Hy Vọng', 'Trao Tặng', 'Kết Nối']}
               interval={2500}
               className="gradient-text morphingTextLineHeight"
             />
           </span>
-          <span className="block text-black/80 text-4xl md:text-5xl lg:text-6xl mt-3">
-            cuộc sống
-          </span>
+          <span className="block text-black/80 text-4xl md:text-5xl lg:text-6xl mt-3">cuộc sống</span>
         </h1>
 
         <p className="text-lg md:text-xl text-black/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-          SCharity là nền tảng gây quỹ từ thiện{" "}
+          FCam là nền tảng gây quỹ từ thiện{' '}
           <HighlightText variant="marker" color="accent" className="text-black/80">
             minh bạch & uy tín
-          </HighlightText>{" "}
+          </HighlightText>{' '}
           tại Việt Nam. Kết nối tấm lòng hảo tâm với những hoàn cảnh cần giúp đỡ.
         </p>
 
@@ -56,7 +54,7 @@ export function HeroSection() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Magnetic intensity={0.4} range={80}>
             <Link href="/campaigns">
-              <Button className="text-base px-2" variant={"default"}>
+              <Button className="text-base px-2" variant={'default'}>
                 Khám Phá Chiến Dịch
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Button>
@@ -64,7 +62,7 @@ export function HeroSection() {
           </Magnetic>
           <Magnetic intensity={0.3} range={60}>
             <Link href="/campaigns/create">
-              <Button className="text-base px-2" variant={"outline"}>
+              <Button className="text-base px-2" variant={'outline'}>
                 <Heart className="w-5 h-5 text-rose-400" />
                 Tạo Chiến Dịch
               </Button>
@@ -76,7 +74,7 @@ export function HeroSection() {
         <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-sm text-black/40">
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {["🧑", "👩", "👨", "🧕"].map((e, i) => (
+              {['🧑', '👩', '👨', '🧕'].map((e, i) => (
                 <div
                   key={i}
                   className="w-8 h-8 rounded-full glass border border-black/20 flex items-center justify-center text-sm"

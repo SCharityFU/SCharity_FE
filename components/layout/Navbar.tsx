@@ -56,7 +56,7 @@ export function Navbar() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-violet-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <Heart className="w-4 h-4 text-black fill-white" />
             </div>
-            <span className="font-bold text-lg gradient-text">SCharity</span>
+            <span className="font-bold text-lg gradient-text">FCam</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -95,7 +95,7 @@ export function Navbar() {
                   <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {isAdmin && (
-                    <DropdownMenuItem onClick={() => router.push('/admin')}>
+                    <DropdownMenuItem onClick={() => router.push('/admin')} className="text-blue-600">
                       <Lock className="w-4 h-4 text-black" />
                       Quản trị Admin
                     </DropdownMenuItem>

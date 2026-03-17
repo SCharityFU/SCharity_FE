@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { Heart } from "lucide-react";
-import { RainbowButton } from "@/components/ui/rainbow-button";
-import { Magnetic } from "@/components/ui/magnetic";
-import { HighlightText } from "@/components/ui/highlight-text";
+import Link from 'next/link';
+import { Heart } from 'lucide-react';
+import { RainbowButton } from '@/components/ui/rainbow-button';
+import { Magnetic } from '@/components/ui/magnetic';
+import { HighlightText } from '@/components/ui/highlight-text';
 
 export function CTABanner() {
   return (
@@ -15,21 +15,20 @@ export function CTABanner() {
           <div className="relative z-10">
             <div className="text-5xl mb-6">❤️</div>
             <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
-              Bắt đầu hành trình{" "}
+              Bắt đầu hành trình{' '}
               <HighlightText variant="marker" color="primary" className="text-black">
                 thiện nguyện
-              </HighlightText>{" "}
+              </HighlightText>{' '}
               ngay hôm nay
             </h2>
             <p className="text-black/60 mb-8 max-w-xl mx-auto">
-              Dù bạn muốn quyên góp hay tạo chiến dịch gây quỹ, SCharity sẵn sàng đồng hành cùng
-              bạn.
+              Dù bạn muốn quyên góp hay tạo chiến dịch gây quỹ, FCam sẵn sàng đồng hành cùng bạn.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Magnetic intensity={0.4} range={80}>
                 <Link href="/campaigns">
                   <RainbowButton
-                    colors={["#f43f5e", "#8b5cf6", "#3b82f6", "#f43f5e"]}
+                    colors={['#f43f5e', '#8b5cf6', '#3b82f6', '#f43f5e']}
                     duration={2}
                     borderWidth={2}
                     className="text-base"

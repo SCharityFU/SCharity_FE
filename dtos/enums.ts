@@ -21,6 +21,7 @@ export enum CampaignStatus {
 }
 
 export enum CampaignCategory {
+  ALL = '',
   DAVA = 'dava',
   EDUCATION = 'education',
   MEDICAL = 'medical',

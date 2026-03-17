@@ -1,7 +1,7 @@
-"use client";
-import { useRef } from "react";
-import { AnimatedBeam, BeamContainer, BeamNode } from "@/components/ui/animated-beam";
-import { HighlightText } from "@/components/ui/highlight-text";
+'use client';
+import { useRef } from 'react';
+import { AnimatedBeam, BeamContainer, BeamNode } from '@/components/ui/animated-beam';
+import { HighlightText } from '@/components/ui/highlight-text';
 
 export function HowItWorksSection() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -11,10 +11,10 @@ export function HowItWorksSection() {
   const impactRef = useRef<HTMLDivElement>(null);
 
   const steps = [
-    { icon: "👤", label: "Nhà Hảo Tâm", sub: "Bạn quyên góp" },
-    { icon: "💻", label: "SCharity", sub: "Xử lý & xác thực" },
-    { icon: "📋", label: "Chiến Dịch", sub: "Nhận quỹ" },
-    { icon: "🌟", label: "Tác Động", sub: "Thay đổi cuộc sống" },
+    { icon: '👤', label: 'Nhà Hảo Tâm', sub: 'Bạn quyên góp' },
+    { icon: '💻', label: 'FCam', sub: 'Xử lý & xác thực' },
+    { icon: '📋', label: 'Chiến Dịch', sub: 'Nhận quỹ' },
+    { icon: '🌟', label: 'Tác Động', sub: 'Thay đổi cuộc sống' },
   ];
   const refs = [donorRef, platformRef, campaignRef, impactRef];
 
@@ -23,7 +23,7 @@ export function HowItWorksSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Cách{" "}
+            Cách{' '}
             <HighlightText variant="circle" color="secondary" className="text-black">
               Hoạt Động
             </HighlightText>
@@ -39,10 +39,7 @@ export function HowItWorksSection() {
         >
           {steps.map((step, i) => (
             <div key={i} className="flex flex-col items-center gap-3">
-              <BeamNode
-                ref={refs[i]}
-                className="w-20 h-20 rounded-2xl glass-card border-black/20 flex-col gap-1"
-              >
+              <BeamNode ref={refs[i]} className="w-20 h-20 rounded-2xl glass-card border-black/20 flex-col gap-1">
                 <span className="text-3xl">{step.icon}</span>
               </BeamNode>
               <div className="text-center">
@@ -85,24 +82,24 @@ export function HowItWorksSection() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
           {[
             {
-              n: "01",
-              title: "Chọn Chiến Dịch",
-              desc: "Duyệt hàng trăm chiến dịch ý nghĩa theo danh mục bạn quan tâm.",
+              n: '01',
+              title: 'Chọn Chiến Dịch',
+              desc: 'Duyệt hàng trăm chiến dịch ý nghĩa theo danh mục bạn quan tâm.',
             },
             {
-              n: "02",
-              title: "Quyên Góp",
-              desc: "Thanh toán an toàn với mọi phương thức phổ biến tại Việt Nam.",
+              n: '02',
+              title: 'Quyên Góp',
+              desc: 'Thanh toán an toàn với mọi phương thức phổ biến tại Việt Nam.',
             },
             {
-              n: "03",
-              title: "Theo Dõi",
-              desc: "Nhận cập nhật thường xuyên về tiến độ chiến dịch bạn hỗ trợ.",
+              n: '03',
+              title: 'Theo Dõi',
+              desc: 'Nhận cập nhật thường xuyên về tiến độ chiến dịch bạn hỗ trợ.',
             },
             {
-              n: "04",
-              title: "Tạo Tác Động",
-              desc: "Chứng kiến cuộc sống thay đổi nhờ sự đóng góp của bạn.",
+              n: '04',
+              title: 'Tạo Tác Động',
+              desc: 'Chứng kiến cuộc sống thay đổi nhờ sự đóng góp của bạn.',
             },
           ].map((s) => (
             <div key={s.n} className="glass-card rounded-xl p-5">
