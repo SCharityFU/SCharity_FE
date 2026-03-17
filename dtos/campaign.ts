@@ -145,5 +145,24 @@ export interface CampaignAnalyticsResponseDto {
 export interface PublicCampaignDetailResponseDto extends CampaignDto {
   donations: import('./donation').DonationResponseDto[];
   updates: CampaignUpdateResponseDto[];
-  comments: import('./donation').CommentResponseDto[];
+}
+
+export interface CreatorCampaignDailyDonorDto {
+  donorId: string;
+  donorName: string;
+  totalAmount: number;
+  donationCount: number;
+}
+
+export interface CreatorCampaignDailyChartSeriesDto {
+  date: string; // YYYY-MM-DD
+  amount: number;
+  count: number;
+  donors: CreatorCampaignDailyDonorDto[];
+}
+
+export interface CreatorCampaignAnalyticsResponseDto {
+  campaignId: string;
+  days: number;
+  chartData: CreatorCampaignDailyChartSeriesDto[];
 }
