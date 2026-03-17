@@ -114,21 +114,22 @@ export default function DashboardPage() {
     setIsLoadingMoreDonations(true);
     try {
       const response = await fetchDashboardMore({ ...DASHBOARD_QUERY, donationCursor: nextCursor }).unwrap();
-      if (!response.data) return;
+      const responseData = response.data;
+      if (!responseData) return;
 
       setDashboard((prev) => {
-        if (!prev) return response.data;
+        if (!prev) return responseData;
         return {
           ...prev,
-          summary: response.data.summary,
-          quickNav: response.data.quickNav,
-          alerts: response.data.alerts,
-          updatedAt: response.data.updatedAt,
+          summary: responseData.summary,
+          quickNav: responseData.quickNav,
+          alerts: responseData.alerts,
+          updatedAt: responseData.updatedAt,
           recentDonationsToMyCampaigns: mergeUniqueById(
             prev.recentDonationsToMyCampaigns,
-            response.data.recentDonationsToMyCampaigns,
+            responseData.recentDonationsToMyCampaigns,
           ),
-          recentDonationsPagination: response.data.recentDonationsPagination,
+          recentDonationsPagination: responseData.recentDonationsPagination,
         };
       });
     } finally {
@@ -143,18 +144,19 @@ export default function DashboardPage() {
     setIsLoadingMoreCampaigns(true);
     try {
       const response = await fetchDashboardMore({ ...DASHBOARD_QUERY, campaignCursor: nextCursor }).unwrap();
-      if (!response.data) return;
+      const responseData = response.data;
+      if (!responseData) return;
 
       setDashboard((prev) => {
-        if (!prev) return response.data;
+        if (!prev) return responseData;
         return {
           ...prev,
-          summary: response.data.summary,
-          quickNav: response.data.quickNav,
-          alerts: response.data.alerts,
-          updatedAt: response.data.updatedAt,
-          myCampaignsPreview: mergeUniqueById(prev.myCampaignsPreview, response.data.myCampaignsPreview),
-          myCampaignsPreviewPagination: response.data.myCampaignsPreviewPagination,
+          summary: responseData.summary,
+          quickNav: responseData.quickNav,
+          alerts: responseData.alerts,
+          updatedAt: responseData.updatedAt,
+          myCampaignsPreview: mergeUniqueById(prev.myCampaignsPreview, responseData.myCampaignsPreview),
+          myCampaignsPreviewPagination: responseData.myCampaignsPreviewPagination,
         };
       });
     } finally {

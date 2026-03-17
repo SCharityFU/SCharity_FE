@@ -88,7 +88,7 @@ export function Navbar() {
                       className="w-8 h-8 rounded-full border border-black/10 object-cover"
                     />
                     <span className="text-sm font-medium text-gray-700">{user?.fullName}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                    <ChevronDown className="w-3.5 h-3.5 text-black" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -96,28 +96,28 @@ export function Navbar() {
                   <DropdownMenuSeparator />
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => router.push('/admin')}>
-                      <Lock className="w-4 h-4 text-gray-400" />
+                      <Lock className="w-4 h-4 text-black" />
                       Quản trị Admin
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => router.push('/dashboard')}>
-                    <LayoutDashboard className="w-4 h-4 text-gray-400" />
-                    Quản lý dự án
+                    <LayoutDashboard className="w-4 h-4 text-black" />
+                    Quản lý chiến dịch
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/dashboard/my-requests')}>
-                    <FileText className="w-4 h-4 text-gray-400" />
+                    <FileText className="w-4 h-4 text-black" />
                     Yêu Cầu Của Tôi
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/dashboard/my-campaigns')}>
-                    <Megaphone className="w-4 h-4 text-gray-400" />
+                    <Megaphone className="w-4 h-4 text-black" />
                     Chiến Dịch Của Tôi
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/dashboard/mydonation')}>
-                    <History className="w-4 h-4 text-gray-400" />
+                    <History className="w-4 h-4 text-black" />
                     Lịch Sử Quyên Góp
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
-                    <User className="w-4 h-4 text-gray-400" />
+                    <User className="w-4 h-4 text-black" />
                     Xem Hồ Sơ
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
