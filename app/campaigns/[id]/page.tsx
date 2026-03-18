@@ -37,17 +37,16 @@ export async function generateMetadata(
     };
   }
 
-  const images = [campaign.thumbnailUrl, ...(campaign.mediaUrls ?? [])].filter(
+  const images = [...(campaign.mediaUrls ?? []), campaign.thumbnailUrl].filter(
     (u): u is string => !!u,
   );
-  const imageUrl = images.length > 0 ? images[0] : '/assets/share-default.png';
   
   // Truncate and strip HTML from story for description
   const cleanDescription = (campaign.story || '')
     .replace(/<[^>]*>?/gm, '') // Strip HTML
+    .replace(/\s+/g, ' ')      // Collapse multiple spaces/newlines
     .trim()
-    .slice(0, 160)             // Truncate to 160 chars
-    .concat('...');
+    .slice(0, 150);
 
   return {
     title: `${campaign.title} - FCam`,
@@ -58,7 +57,7 @@ export async function generateMetadata(
       siteName: 'FCam',
       locale: 'vi_VN',
       images: images,
-      type: 'article',
+      type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
