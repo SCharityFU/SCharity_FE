@@ -222,6 +222,8 @@ function Pagination({
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
         className="p-2 rounded-lg border border-black/8 text-black/40 hover:text-black/70 hover:border-black/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        title="Trang trước"
+        aria-label="Trang trước"
       >
         <ChevronLeft className="w-4 h-4" />
       </button>
@@ -238,6 +240,8 @@ function Pagination({
               'w-9 h-9 rounded-lg text-sm font-semibold transition-all',
               p === page ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/25' : 'text-black/50 hover:bg-black/5',
             )}
+            title={`Trang ${p}`}
+            aria-label={`Trang ${p}`}
           >
             {p}
           </button>
@@ -247,6 +251,8 @@ function Pagination({
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
         className="p-2 rounded-lg border border-black/8 text-black/40 hover:text-black/70 hover:border-black/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        title="Trang sau"
+        aria-label="Trang sau"
       >
         <ChevronRight className="w-4 h-4" />
       </button>
@@ -377,7 +383,10 @@ export default function DonationHistory() {
           {/* Status filter */}
           <div className="relative">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 pointer-events-none" />
+            <label htmlFor="statusFilter" className="sr-only">Lọc trạng thái</label>
             <select
+              id="statusFilter"
+              title="Lọc trạng thái"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -397,7 +406,9 @@ export default function DonationHistory() {
           <div className="flex items-center gap-2">
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 pointer-events-none" />
+              <label htmlFor="startDate" className="sr-only">Từ ngày</label>
               <input
+                id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => {
@@ -406,12 +417,15 @@ export default function DonationHistory() {
                 }}
                 className="pl-9 pr-3 py-2.5 rounded-xl border border-black/10 text-sm bg-white outline-none hover:border-black/20 focus:border-rose-500 transition-colors"
                 placeholder="Từ ngày"
+                title="Từ ngày"
               />
             </div>
             <span className="text-black/20 text-sm">→</span>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 pointer-events-none" />
+              <label htmlFor="endDate" className="sr-only">Đến ngày</label>
               <input
+                id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => {
@@ -419,6 +433,8 @@ export default function DonationHistory() {
                   setPage(1);
                 }}
                 className="pl-9 pr-3 py-2.5 rounded-xl border border-black/10 text-sm bg-white outline-none hover:border-black/20 focus:border-rose-500 transition-colors"
+                placeholder="Đến ngày"
+                title="Đến ngày"
               />
             </div>
           </div>
