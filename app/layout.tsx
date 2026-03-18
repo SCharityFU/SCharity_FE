@@ -16,6 +16,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_CLIENT_URL || 'https://s-charity-fe.vercel.app'),
   title: 'FCam – Nền Tảng Gây Quỹ Từ Thiện',
   description:
     'Cùng nhau tạo nên sự thay đổi. Hỗ trợ các chiến dịch từ thiện ý nghĩa – giáo dục, y tế, môi trường và cứu trợ thiên tai.',

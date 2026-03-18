@@ -351,7 +351,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
   // ── Share handler ──────────────────────────────────────────────────────────
   const handleShare = async () => {
     const shareUrl = window.location.href;
-    const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    const shareQuote = `Hãy cùng tôi chung tay ủng hộ chiến dịch "${campaign.title}" trên FCam!`;
+    const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareQuote)}`;
 
     // Open Facebook share dialog
     window.open(facebookShareUrl, '_blank', 'width=600,height=400');

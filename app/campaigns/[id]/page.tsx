@@ -39,20 +39,26 @@ export async function generateMetadata(
 
   const previousImages = (await parent).openGraph?.images || [];
   const imageUrl = campaign.thumbnailUrl || (previousImages.length > 0 ? previousImages[0] : '/assets/share-default.png');
+  
+  // Truncate and strip HTML from story for description
+  const cleanDescription = (campaign.story || '')
+    .replace(/<[^>]*>?/gm, '') // Strip HTML
+    .slice(0, 160)             // Truncate to 160 chars
+    .concat('...');
 
   return {
     title: `${campaign.title} - FCam`,
-    description: `Cùng chung tay đóng góp cho chiến dịch: ${campaign.title}`,
+    description: cleanDescription,
     openGraph: {
       title: campaign.title,
-      description: `Cùng chung tay đóng góp cho chiến dịch: ${campaign.title}`,
+      description: cleanDescription,
       images: [imageUrl],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: campaign.title,
-      description: `Cùng chung tay đóng góp cho chiến dịch: ${campaign.title}`,
+      description: cleanDescription,
       images: [imageUrl],
     },
   };
