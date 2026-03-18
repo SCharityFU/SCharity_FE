@@ -351,18 +351,33 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
   // ── Share handler ──────────────────────────────────────────────────────────
   const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+
+    // Open Facebook share dialog
+    window.open(facebookShareUrl, '_blank', 'width=600,height=400');
+
+    // Also copy to clipboard for convenience
     try {
-      await navigator.clipboard.writeText(window.location.href);
-    } catch {
-      const el = document.createElement('input');
-      el.value = window.location.href;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
   };
 
   return (

@@ -58,7 +58,6 @@ function VerifyEmailContent() {
     };
 
     verify();
-
     return () => {
       if (redirectTimeout) {
         clearTimeout(redirectTimeout);
