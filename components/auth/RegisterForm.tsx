@@ -16,7 +16,8 @@ const registerSchema = z.object({
   password: z
     .string()
     .min(8, 'Mật khẩu phải chứa ít nhất 8 ký tự')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường, và một số'),
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường, và một số')
+    .max(16, 'Mật khẩu không được vượt quá 16 ký tự'),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -105,6 +106,7 @@ export function RegisterForm() {
               type="password"
               className="w-full bg-transparent border-b-2 border-zinc-300 py-2 text-lg text-zinc-900 focus:outline-none focus:border-rose-600 transition-colors placeholder:text-zinc-400"
               placeholder="••••••••"
+              maxLength={16}
             />
             {errors.password && <p className="text-rose-500 text-xs mt-1">{errors.password.message}</p>}
           </div>

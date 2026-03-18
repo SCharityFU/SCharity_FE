@@ -4,9 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-zinc-50 font-google-sans selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden w-full flex flex-col lg:flex-row bg-zinc-50 font-google-sans selection:bg-rose-500 selection:text-white">
       {/* Left Action Zone (35%) - Form Area */}
-      <div className="w-full lg:w-[35%] flex flex-col justify-between p-8 lg:p-12 border-r-2 border-zinc-900/5 bg-white relative z-10 shadow-[20px_0_40px_rgba(0,0,0,0.02)]">
+      <div className="w-full lg:w-[35%] lg:overflow-y-auto flex flex-col justify-between p-8 lg:p-12 border-r-2 border-zinc-900/5 bg-white relative z-10 shadow-[20px_0_40px_rgba(0,0,0,0.02)]">
         <div>
           <Link
             href="/"

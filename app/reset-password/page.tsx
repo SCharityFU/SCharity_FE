@@ -17,8 +17,9 @@ const resetPasswordSchema = z
     password: z
       .string()
       .min(8, 'Mật khẩu phải chứa ít nhất 8 ký tự')
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Chứa ít nhất một chữ hoa, một thường và một số'),
-    confirmPassword: z.string(),
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Chứa ít nhất một chữ hoa, một thường và một số')
+      .max(32, 'Mật khẩu không được vượt quá 32 ký tự'),
+    confirmPassword: z.string().max(32, 'Mật khẩu không được vượt quá 32 ký tự'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Mật khẩu xác nhận không khớp',
@@ -83,9 +84,9 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row-reverse bg-zinc-50 font-google-sans selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden w-full flex flex-col lg:flex-row-reverse bg-zinc-50 font-google-sans selection:bg-rose-500 selection:text-white">
       {/* Right Action Zone (35%) - Form Area */}
-      <div className="w-full lg:w-[35%] flex flex-col justify-between p-8 lg:p-12 border-l-2 border-zinc-900/5 bg-white relative z-10 shadow-[-20px_0_40px_rgba(0,0,0,0.02)]">
+      <div className="w-full lg:w-[35%] lg:overflow-y-auto flex flex-col justify-between p-8 lg:p-12 border-l-2 border-zinc-900/5 bg-white relative z-10 shadow-[-20px_0_40px_rgba(0,0,0,0.02)]">
         <div>
           <Link
             href="/login"
@@ -134,6 +135,7 @@ function ResetPasswordContent() {
                   type="password"
                   className="w-full bg-transparent border-b-2 border-zinc-300 py-2 text-lg text-zinc-900 focus:outline-none focus:border-rose-600 transition-colors placeholder:text-zinc-400"
                   placeholder="••••••••"
+                  maxLength={32}
                 />
                 {errors.password && <p className="text-rose-500 text-xs mt-1">{errors.password.message}</p>}
               </div>
@@ -147,6 +149,7 @@ function ResetPasswordContent() {
                   type="password"
                   className="w-full bg-transparent border-b-2 border-zinc-300 py-2 text-lg text-zinc-900 focus:outline-none focus:border-rose-600 transition-colors placeholder:text-zinc-400"
                   placeholder="••••••••"
+                  maxLength={32}
                 />
                 {errors.confirmPassword && (
                   <p className="text-rose-500 text-xs mt-1">{errors.confirmPassword.message}</p>

@@ -5,9 +5,9 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row-reverse bg-zinc-50 font-google-sans selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden w-full flex flex-col lg:flex-row-reverse bg-zinc-50 font-google-sans selection:bg-rose-500 selection:text-white">
       {/* Right Action Zone (35%) - Form Area */}
-      <div className="w-full lg:w-[35%] flex flex-col justify-between p-8 lg:p-12 border-l-2 border-zinc-900/5 bg-white relative z-10 shadow-[-20px_0_40px_rgba(0,0,0,0.02)]">
+      <div className="w-full lg:w-[35%] lg:overflow-hidden flex flex-col justify-between p-8 lg:p-10 border-l-2 border-zinc-900/5 bg-white relative z-10 shadow-[-20px_0_40px_rgba(0,0,0,0.02)]">
         <div>
           <Link
             href="/"
@@ -18,13 +18,13 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <div className="mt-16 mb-auto animate-fade-in text-center lg:text-left">
+        <div className="mt-8 mb-auto animate-fade-in text-center lg:text-left">
           <h1 className="text-3xl lg:text-4xl font-google-sans-bold tracking-tighter text-zinc-900 mb-2">
             Đăng nhập
             <br />
             <span className="gradient-text-warm">Tài Khoản.</span>
           </h1>
-          <p className="text-zinc-500 mt-4 mb-10 text-base leading-relaxed max-w-sm mx-auto lg:mx-0">
+          <p className="text-zinc-500 mt-2 mb-6 text-sm lg:text-base leading-relaxed max-w-sm mx-auto lg:mx-0">
             Chào mừng bạn trở lại với nền tảng FCam. Cùng nhau tạo nên những thay đổi tích cực!
           </p>
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
             <GoogleLoginButton fullWidth={true} />
           </div>
 
-          <div className="mt-10 text-sm text-zinc-500 text-center lg:text-left">
+          <div className="mt-6 text-sm text-zinc-500 text-center lg:text-left">
             Chưa có tài khoản?{' '}
             <Link
               href="/register"
@@ -54,7 +54,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="text-xs text-zinc-400 font-google-sans-medium tracking-wide mt-8 text-center lg:text-left">
+        <div className="text-xs text-zinc-400 font-google-sans-medium tracking-wide mt-4 text-center lg:text-left">
           FCam Platform © 2026
         </div>
       </div>
