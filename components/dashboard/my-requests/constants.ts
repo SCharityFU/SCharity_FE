@@ -5,6 +5,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { CampaignCategory, CampaignRequestStatus } from "@/dtos/enums";
+import { formatVND } from '@/lib/money';
 
 export const STATUS_CONFIG: Record<
   CampaignRequestStatus,
@@ -46,5 +47,5 @@ export function fmtDate(iso: string): string {
 }
 
 export function fmtVND(v: number): string {
-  return `${v.toLocaleString("vi-VN")} ₫`;
+  return formatVND(v);
 }

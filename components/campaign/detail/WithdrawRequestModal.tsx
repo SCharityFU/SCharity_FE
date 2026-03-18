@@ -29,8 +29,8 @@ import { useGetMeQuery } from '@/lib/store/features/user/userApi';
 import type { CampaignDto } from '@/dtos/campaign';
 import type { BankAccountResponseDto } from '@/dtos/user';
 import { CampaignStatus, WithdrawStatus } from '@/dtos/enums';
-import { formatVND } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { formatVND } from '@/lib/money';
 import Link from 'next/link';
 
 interface WithdrawRequestModalProps {

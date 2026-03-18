@@ -1,7 +1,7 @@
-import { FileCheck, X } from "lucide-react";
-import type { DragEvent } from "react";
-import { Label } from "@/components/ui/label";
-import type { ProofPreview } from "@/components/campaign/create/types";
+import { FileCheck, X } from 'lucide-react';
+import type { DragEvent } from 'react';
+import { Label } from '@/components/ui/label';
+import type { ProofPreview } from '@/components/campaign/create/types';
 
 interface ProofDocumentsSectionProps {
   proofDragOver: boolean;
@@ -30,7 +30,9 @@ export function ProofDocumentsSection({
         <FileCheck className="w-4 h-4 text-emerald-500" />
         Tài liệu chứng minh
       </Label>
-      <p className="text-xs text-black/40">Tải lên giấy tờ xác minh chiến dịch (ảnh hoặc PDF, tối đa 10MB)</p>
+      <p className="text-xs text-black/40">
+        Tải lên giấy tờ xác minh chiến dịch (ảnh, PDF, DOC, DOCX - tối đa 10MB/tệp)
+      </p>
 
       <div
         onDrop={onDrop}
@@ -39,19 +41,19 @@ export function ProofDocumentsSection({
         onClick={() => proofInputRef.current?.click()}
         className={`relative rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-all duration-300 ${
           proofDragOver
-            ? "border-emerald-400 bg-emerald-50/50"
-            : "border-black/10 hover:border-emerald-300 hover:bg-emerald-50/20"
+            ? 'border-emerald-400 bg-emerald-50/50'
+            : 'border-black/10 hover:border-emerald-300 hover:bg-emerald-50/20'
         }`}
       >
         <input
           ref={proofInputRef}
           type="file"
           multiple
-          accept="image/*,.pdf"
+          accept="image/*,.pdf,.doc,.docx"
           className="hidden"
           onChange={(e) => {
             if (e.target.files) onInputFiles(e.target.files);
-            e.target.value = "";
+            e.target.value = '';
           }}
         />
         <div className="flex flex-col items-center gap-2">
@@ -61,7 +63,7 @@ export function ProofDocumentsSection({
           <p className="text-sm text-black/50">
             <span className="font-semibold text-emerald-600">Nhấn để chọn</span> hoặc kéo thả tài liệu
           </p>
-          <p className="text-xs text-black/30">PNG, JPG, WEBP, PDF</p>
+          <p className="text-xs text-black/30">PNG, JPG, WEBP, PDF, DOC, DOCX</p>
         </div>
       </div>
 
@@ -69,11 +71,15 @@ export function ProofDocumentsSection({
         <div className="space-y-2 mt-3">
           {proofPreviews.map((proof, idx) => (
             <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border border-black/10 bg-white/30 group">
-              {proof.type === "image" && proof.url ? (
-                <img src={proof.url} alt={proof.name} className="w-10 h-10 rounded-md object-cover border border-black/10 flex-shrink-0" />
+              {proof.type === 'image' && proof.url ? (
+                <img
+                  src={proof.url}
+                  alt={proof.name}
+                  className="w-10 h-10 rounded-md object-cover border border-black/10 flex-shrink-0"
+                />
               ) : (
                 <div className="w-10 h-10 rounded-md bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[10px] font-bold text-red-500">PDF</span>
+                  <span className="text-[10px] font-bold text-red-500">{proof.type === 'doc' ? 'DOC' : 'PDF'}</span>
                 </div>
               )}
               <span className="text-xs text-black/60 truncate flex-1">{proof.name}</span>

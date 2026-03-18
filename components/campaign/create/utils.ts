@@ -1,10 +1,9 @@
-export function formatVND(value: number): string {
-  return value.toLocaleString("vi-VN");
-}
+import { formatVNDInput, parseVNDInputToNumber } from '@/lib/money';
+import { formatVNDShort } from '@/lib/utils';
 
-export function parseCurrencyInput(raw: string): number {
-  return Number(raw.replace(/\./g, "").replace(/\D/g, "")) || 0;
-}
+export const formatVND = formatVNDInput;
+
+export const parseCurrencyInput = parseVNDInputToNumber;
 
 export function getTomorrowISO(): string {
   const d = new Date();
@@ -25,9 +24,7 @@ export function formatDateVN(iso: string): string {
 }
 
 export function shortVND(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(0)} tỷ`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} tr`;
-  return formatVND(n);
+  return formatVNDShort(n);
 }
 
 export function removeDiacritics(str: string): string {

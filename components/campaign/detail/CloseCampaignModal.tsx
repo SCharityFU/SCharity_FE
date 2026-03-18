@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { AlertTriangle, X, Loader2, Lock } from "lucide-react";
-import { useCloseCampaignMutation } from "@/lib/store/features/campaign/campaignApi";
-import { homeApi } from "@/lib/store/features/home/homeApi";
-import { useAppDispatch } from "@/lib/store/hooks";
-import type { PublicCampaignDetailResponseDto } from "@/dtos/campaign";
-import { formatVND } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { AlertTriangle, X, Loader2, Lock } from 'lucide-react';
+import { useCloseCampaignMutation } from '@/lib/store/features/campaign/campaignApi';
+import { homeApi } from '@/lib/store/features/home/homeApi';
+import { useAppDispatch } from '@/lib/store/hooks';
+import type { PublicCampaignDetailResponseDto } from '@/dtos/campaign';
+import { cn } from '@/lib/utils';
+import { formatVND } from '@/lib/money';
 
 interface CloseCampaignModalProps {
   open: boolean;
@@ -33,20 +33,20 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
   // Lock body scroll when open
   useEffect(() => {
     if (open) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     }
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = '';
     };
   }, [open]);
 
   // Dismiss on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isLoading) onClose();
+      if (e.key === 'Escape' && !isLoading) onClose();
     };
-    if (open) window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    if (open) window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [open, onClose, isLoading]);
 
   const raised = campaign.raisedAmount ?? 0;
@@ -67,7 +67,7 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
       // Auto-close modal after brief success message
       setTimeout(() => onClose(), 1200);
     } catch (err: any) {
-      setError(err?.data?.message || "Không thể đóng chiến dịch. Vui lòng thử lại.");
+      setError(err?.data?.message || 'Không thể đóng chiến dịch. Vui lòng thử lại.');
     }
   };
 
@@ -85,10 +85,10 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
       {/* Panel */}
       <div
         className={cn(
-          "relative z-10 w-full sm:max-w-md",
-          "bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-black/10",
-          "flex flex-col overflow-hidden",
-          "animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-2 fade-in duration-300",
+          'relative z-10 w-full sm:max-w-md',
+          'bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-black/10',
+          'flex flex-col overflow-hidden',
+          'animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-2 fade-in duration-300',
         )}
       >
         {/* Header */}
@@ -113,7 +113,13 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
           {success ? (
             <div className="text-center py-4">
               <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
-                <svg className="w-7 h-7 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg
+                  className="w-7 h-7 text-emerald-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -124,27 +130,23 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
             <>
               <div className="space-y-2.5">
                 <p className="text-sm text-black/70">
-                  Bạn có chắc chắn muốn đóng chiến dịch{" "}
+                  Bạn có chắc chắn muốn đóng chiến dịch{' '}
                   <span className="font-bold text-black">&ldquo;{campaign.title}&rdquo;</span> không?
                 </p>
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
                   <Lock className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
                   <p className="text-[11px] text-amber-700 leading-relaxed">
-                    Hành động này <span className="font-bold">không thể hoàn tác</span>. Người dùng
-                    sẽ không thể quyên góp thêm cho chiến dịch này.
+                    Hành động này <span className="font-bold">không thể hoàn tác</span>. Người dùng sẽ không thể quyên
+                    góp thêm cho chiến dịch này.
                   </p>
                 </div>
               </div>
 
               {/* Summary card */}
               <div className="bg-gray-50 rounded-xl p-4 border border-black/5">
-                <p className="text-[11px] text-black/40 font-medium uppercase tracking-wider mb-2">
-                  Thống kê hiện tại
-                </p>
+                <p className="text-[11px] text-black/40 font-medium uppercase tracking-wider mb-2">Thống kê hiện tại</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-black text-black tabular-nums">
-                    {formatVND(raised)}
-                  </span>
+                  <span className="text-lg font-black text-black tabular-nums">{formatVND(raised)}</span>
                   <span className="text-xs text-black/40">/ {formatVND(goal)}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
@@ -154,9 +156,7 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
                       style={{ width: `${Math.min(progress, 100)}%` }}
                     />
                   </div>
-                  <span className="text-xs font-bold text-rose-500 tabular-nums">
-                    {progress.toFixed(1)}%
-                  </span>
+                  <span className="text-xs font-bold text-rose-500 tabular-nums">{progress.toFixed(1)}%</span>
                 </div>
               </div>
 
@@ -191,7 +191,7 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
                   Đang xử lý...
                 </>
               ) : (
-                "Đồng ý đóng"
+                'Đồng ý đóng'
               )}
             </button>
           </div>
@@ -204,4 +204,3 @@ export function CloseCampaignModal({ open, onClose, campaign }: CloseCampaignMod
     document.body,
   );
 }
-

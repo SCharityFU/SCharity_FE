@@ -72,7 +72,7 @@ export function GoogleLoginButton({ fullWidth = false }: { fullWidth?: boolean }
         />
         <path d="M1 1h22v22H1z" fill="none" />
       </svg>
-      {isLoading ? 'Đang xử lý...' : 'Login with Google'}
+      {isLoading ? 'Đang xử lý...' : 'Đăng nhập với Google'}
     </button>
   );
 }

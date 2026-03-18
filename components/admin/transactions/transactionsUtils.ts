@@ -1,8 +1,5 @@
 import type { AdminDonationItem } from "@/lib/store/features/admin/adminApi";
-
-export function formatVND(value: number): string {
-  return `${value.toLocaleString("vi-VN")}₫`;
-}
+import { formatVND } from '@/lib/money';
 
 export function formatDateTime(value: string): string {
   const date = new Date(value);

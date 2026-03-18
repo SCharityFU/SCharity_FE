@@ -13,23 +13,9 @@ import {
 } from '@/lib/store/features/campaign/campaignApi';
 import type { CampaignDto } from '@/dtos/campaign';
 import { CampaignStatus } from '@/dtos/enums';
-import { cn, formatVND, resolveCampaignProgressPercent } from '@/lib/utils';
-import {
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-
-function formatDateVN(iso: string): string {
-  return new Date(iso).toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
+import { cn, formatDateVN, resolveCampaignProgressPercent } from '@/lib/utils';
+import { formatVND } from '@/lib/money';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 function formatRelativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -132,12 +118,12 @@ export default function AnalyticsPage() {
 
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useGetCreatorCampaignAnalyticsQuery(
     { campaignId, days: queryDays },
-    { skip: !campaignId, pollingInterval: 15000 }
+    { skip: !campaignId, pollingInterval: 15000 },
   );
 
   const { data: donationsData, isLoading: isDonationsLoading } = useGetCampaignDonationsQuery(
     { campaignId, page, limit: 10 },
-    { skip: !campaignId, pollingInterval: 15000 }
+    { skip: !campaignId, pollingInterval: 15000 },
   );
 
   const [fetchDonations] = useLazyGetCampaignDonationsQuery();
@@ -267,7 +253,7 @@ export default function AnalyticsPage() {
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 0.5rem center',
-                  backgroundSize: '1em'
+                  backgroundSize: '1em',
                 }}
               >
                 <option value={7}>7 ngày qua</option>
@@ -306,7 +292,12 @@ export default function AnalyticsPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-[260px] flex-1">
               <p className="text-sm text-black/50">Trạng thái chiến dịch</p>
-              <span className={cn('inline-flex mt-1 px-3 py-1 rounded-full text-xs font-bold', statusClass(campaign.status))}>
+              <span
+                className={cn(
+                  'inline-flex mt-1 px-3 py-1 rounded-full text-xs font-bold',
+                  statusClass(campaign.status),
+                )}
+              >
                 {statusLabel(campaign.status)}
               </span>
 
@@ -355,21 +346,21 @@ export default function AnalyticsPage() {
                       <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     tickFormatter={(val) => formatDateVN(val).slice(0, 5)}
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }} 
-                    dy={10} 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }}
+                    dy={10}
                   />
-                  <YAxis 
+                  <YAxis
                     tickFormatter={(val) => compactMoneyTick(Number(val) || 0)}
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }} 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'currentColor', opacity: 0.5, fontSize: 12 }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value) => [formatVND(Number(value) || 0), 'Số tiền']}
                     labelFormatter={(label, payload) => {
                       const count = payload?.[0]?.payload?.count ?? 0;
@@ -422,25 +413,18 @@ export default function AnalyticsPage() {
                     <tr key={d.id} className="border-b border-black/5 last:border-0 hover:bg-black/[0.02]">
                       <td className="py-3 px-4 text-sm text-black">
                         <div className="flex items-center gap-3">
-                          <DonorAvatar
-                            name={d.donorDisplayName || 'Nhà hảo tâm ẩn danh'}
-                            anonymous={d.isAnonymous}
-                          />
+                          <DonorAvatar name={d.donorDisplayName || 'Nhà hảo tâm ẩn danh'} anonymous={d.isAnonymous} />
                           <span className="font-medium">{d.donorDisplayName || 'Nhà hảo tâm ẩn danh'}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-sm font-bold text-emerald-600">
-                        {formatVND(d.amount)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-black/60 max-w-xs truncate">
-                        {d.message || '-'}
-                      </td>
+                      <td className="py-3 px-4 text-sm font-bold text-emerald-600">{formatVND(d.amount)}</td>
+                      <td className="py-3 px-4 text-sm text-black/60 max-w-xs truncate">{d.message || '-'}</td>
                       <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">
                         <span title={formatDateVN(d.createdAt)}>{formatRelativeTime(d.createdAt)}</span>
                       </td>
                       <td className="py-3 px-4 text-sm font-bold text-emerald-600">{formatVND(d.amount)}</td>
                       <td className="py-3 px-4 text-sm text-black/60 max-w-xs truncate">{d.message || '-'}</td>
-                      <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">{formatDate(d.createdAt)}</td>
+                      <td className="py-3 px-4 text-sm text-black/40 whitespace-nowrap">{formatDateVN(d.createdAt)}</td>
                     </tr>
                   ))
                 )}
@@ -478,4 +462,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
