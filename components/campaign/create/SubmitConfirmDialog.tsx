@@ -70,7 +70,7 @@ export function SubmitConfirmDialog({
           </div>
           <div className="flex justify-between">
             <span className="text-black/50">Mục tiêu:</span>
-            <span className="font-semibold text-rose-600">{formatVND(goalAmount)}₫</span>
+            <span className="font-semibold text-rose-600">{formatVND(goalAmount)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-black/50">Hạn chót:</span>

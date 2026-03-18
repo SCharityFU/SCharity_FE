@@ -1,8 +1,5 @@
 import { CampaignRequestStatus } from "@/dtos";
-
-export function formatVND(value: number): string {
-  return `${value.toLocaleString("vi-VN")}₫`;
-}
+import { formatVND } from '@/lib/money';
 
 export function formatDateTimeVN(value?: string | null): string {
   if (!value) return "-";

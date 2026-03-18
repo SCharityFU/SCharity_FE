@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Magnetic } from '@/components/ui/magnetic';
 import { useGetMyCampaignsQuery } from '@/lib/store/features/campaign/campaignApi';
 import { formatCampaignProgressPercent, resolveCampaignProgressPercent } from '@/lib/utils';
+import { formatVND } from '@/lib/money';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   [CampaignStatus.PENDING]: { label: 'Chờ duyệt', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
@@ -31,10 +32,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   [CampaignCategory.ENVIRONMENT]: 'Môi trường',
   [CampaignCategory.OTHER]: 'Khác',
 };
-
-function formatVND(value: number): string {
-  return value.toLocaleString('vi-VN') + ' ₫';
-}
 
 function daysLeft(deadline: string): number {
   const diff = new Date(deadline).getTime() - Date.now();

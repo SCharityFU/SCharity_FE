@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import { useGetMyDonationHistoryQuery } from '@/lib/store/features/donation/donationApi';
 import type { DonationResponseDto } from '@/dtos/donation';
-import { formatVND, formatDateOnly } from '@/lib/utils';
+import { formatDateOnly } from '@/lib/utils';
+import { formatVND } from '@/lib/money';
 import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
 

@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { CampaignCategory } from "@/dtos/enums";
-import { MAX_CAMPAIGN_DEADLINE_DAYS } from "@/components/campaign/create/constants";
+import { MAX_CAMPAIGN_DEADLINE_DAYS, MAXIMUM_CAMPAIGN_GOAL, MINIMUM_CAMPAIGN_GOAL } from "@/components/campaign/create/constants";
 
 const stripHtmlToText = (value: string) =>
   value
@@ -20,7 +20,8 @@ export const createCampaignFormSchema = z.object({
   goalAmount: z
     .number({ error: "Số tiền mục tiêu không hợp lệ" })
     .positive("Số tiền mục tiêu phải lớn hơn 0")
-    .min(30_000, "Số tiền quyên góp tối thiểu là 30.000 VND"),
+    .min(MINIMUM_CAMPAIGN_GOAL, "Số tiền quyên góp tối thiểu là 30.000 VND")
+    .max(MAXIMUM_CAMPAIGN_GOAL, "Số tiền quyên góp tối đa là 20 tỷ VND"),
   deadline: z
     .string()
     .min(1, "Thời hạn kết thúc là bắt buộc")

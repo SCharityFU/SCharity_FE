@@ -22,6 +22,6 @@ export type FeedbackMessage = {
 
 export interface ProofPreview {
   name: string;
-  type: "image" | "pdf";
+  type: "image" | "pdf" | "doc";
   url: string;
 }

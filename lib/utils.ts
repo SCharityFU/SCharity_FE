@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { CampaignCategory } from "@/dtos/enums"
+import { formatVND as formatVNDCurrency } from "@/lib/money"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -19,18 +20,16 @@ export function formatVNDShort(amount: number): string {
     const val = amount / 1_000_000;
     return (Number.isInteger(val) ? val.toString() : val.toFixed(1).replace(".", ",")) + " tr";
   }
-  return amount.toLocaleString("vi-VN") + " ₫";
+  return formatVNDCurrency(amount);
 }
 
 /**
  * Format a date string as dd/mm/yyyy.
  */
-export function formatDateVN(dateStr: string): string {
-  const d = new Date(dateStr);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
+export function formatDateVN(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('vi-VN');
 }
 
 
@@ -52,9 +51,6 @@ export const mapCategoryToVietnamese = (category: string) => {
       return "Khác";
   }
 };
-
-export const formatVND = (amount: number) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 
 export const formatDate = (dateStr: string) =>
   new Intl.DateTimeFormat("vi-VN", { dateStyle: "long", timeStyle: "short" }).format(
