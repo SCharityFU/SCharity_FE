@@ -281,7 +281,6 @@ function WithdrawButtonSection({
 
 export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailResponseDto }) {
   const { user } = useAuth();
-  const [copied, setCopied] = useState(false);
   const [donorModalOpen, setDonorModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -356,28 +355,6 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
     // Open Facebook share dialog
     window.open(facebookShareUrl, '_blank', 'width=600,height=400');
-
-    // Also copy to clipboard for convenience
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(shareUrl);
-      } else {
-        const textArea = document.createElement('textarea');
-        textArea.value = shareUrl;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand('copy');
-        textArea.remove();
-      }
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
   };
 
   return (
@@ -476,17 +453,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           {/* ── Share button ───────────────────────────────────────────────── */}
           <div className="mt-2.5 flex items-center gap-2">
             <Button onClick={handleShare} variant={'outline'} className="flex-1 w-full">
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  Đã sao chép liên kết
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-3.5 h-3.5" />
-                  Chia sẻ chiến dịch
-                </>
-              )}
+              <Share2 className="w-3.5 h-3.5" />
+              Chia sẻ chiến dịch
             </Button>
 
             <button
