@@ -7,6 +7,8 @@ import { formatDateOnly } from '@/lib/utils';
 import { formatVND } from '@/lib/money';
 import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
+import { useGetCommentReactionsQuery, useReactToCommentMutation } from '@/lib/store/features/commentreaction/commentReactionApi';
+import { toast } from 'sonner';
 
 // ── Avatar gradients ──────────────────────────────────────────────────────────
 
@@ -59,6 +61,27 @@ function EmptyState() {
 // ── Comment card ──────────────────────────────────────────────────────────────
 
 function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
+  const { data: reactionData } = useGetCommentReactionsQuery(comment.id);
+  const [reactToComment, { isLoading: isReacting }] = useReactToCommentMutation();
+
+  const reactions = reactionData?.reactions ?? [];
+  const counts: Record<string, number> = {};
+  for (const r of reactions) {
+    counts[r.type] = (counts[r.type] || 0) + 1;
+  }
+
+  const handleReact = async (type: string) => {
+    try {
+      await reactToComment({ commentId: comment.id, type }).unwrap();
+    } catch (err: any) {
+      if (err.status === 401) {
+        toast.error('Vui lòng đăng nhập để thả cảm xúc');
+      } else {
+        toast.error('Không thể thả cảm xúc lúc này');
+      }
+    }
+  };
+
   const hasDonorProfile = Boolean(comment.donor?.fullName);
   const displayName = comment.isAnonymous ? 'Nhà hảo tâm ẩn danh' : (comment.donor?.fullName ?? 'Khách vãng lai');
 
@@ -103,24 +126,67 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
             'transition-all duration-200 group-hover:border-black/10',
           )}
         >
-          {/* Header */}
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <span className="text-xs font-bold text-black leading-tight truncate">{displayName}</span>
-            <span className="text-[11px] text-black whitespace-nowrap flex-shrink-0 mt-px">
-              {relativeTime(comment.createdAt)}
-            </span>
+          {/* Header & Content combined to align with reactions */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-bold text-black leading-tight block mb-1">{displayName}</span>
+              
+              {/* Donation pill */}
+              {comment.donation && (
+                <div className="inline-flex items-center gap-1 mb-2 text-[10px] font-semibold text-rose-600 bg-rose-500/8 px-1.5 py-0.5 rounded-full border border-rose-500/15">
+                  <Heart className="w-2 h-2 fill-rose-500 text-rose-500" />
+                  Đã ủng hộ {formatVND(comment.donation.amount)}
+                </div>
+              )}
+
+              {/* Text - now aligned with the right side icons */}
+              <p className="text-[14px] sm:text-base text-black/90 leading-tight">
+                {comment.content}
+              </p>
+            </div>
+
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <span className="text-[11px] text-black/40 whitespace-nowrap">
+                {relativeTime(comment.createdAt)}
+              </span>
+              
+              {/* Reactions aligned to the right of the content */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  disabled={isReacting}
+                  className={cn(
+                    "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border",
+                    "bg-white border-black/5 hover:border-blue-500/30 hover:bg-blue-50 hover:text-blue-600 active:scale-95 disabled:opacity-50",
+                    counts['like'] > 0 && "border-blue-500/20 bg-blue-50/50 text-blue-600"
+                  )}
+                  onClick={() => handleReact('like')}
+                >
+                  <span>👍</span>
+                  <span className="tabular-nums">{counts['like'] || 0}</span>
+                </button>
+
+                <button
+                  disabled={isReacting}
+                  className={cn(
+                    "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border",
+                    "bg-white border-black/5 hover:border-rose-500/30 hover:bg-rose-50 hover:text-rose-600 active:scale-95 disabled:opacity-50",
+                    counts['heart'] > 0 && "border-rose-500/20 bg-rose-50/50 text-rose-600"
+                  )}
+                  onClick={() => handleReact('heart')}
+                >
+                  <Heart className={cn("w-3 h-3", counts['heart'] > 0 ? "fill-rose-500 text-rose-500" : "text-black/40")} />
+                  <span className="tabular-nums">{counts['heart'] || 0}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Donation pill */}
-          {comment.donation && (
-            <div className="inline-flex items-center gap-1 mb-1.5 text-[11px] font-semibold text-rose-600 bg-rose-500/8 px-2 py-0.5 rounded-full border border-rose-500/15">
-              <Heart className="w-2.5 h-2.5 fill-rose-500 text-rose-500" />
-              Đã ủng hộ {formatVND(comment.donation.amount)}
+          {/* Emoji at bottom left of bubble if exists */}
+          {comment.emoji && (
+            <div className="mt-2 text-lg leading-none" title="Cảm xúc của người tặng">
+              {comment.emoji}
             </div>
           )}
-
-          {/* Text */}
-          <p className="text-sm text-black leading-relaxed">{comment.content}</p>
         </div>
       </div>
     </div>
