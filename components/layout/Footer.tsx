@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Heart, Facebook, Twitter, Github, Mail } from 'lucide-react';
 
 const footerLinks = {
@@ -26,6 +29,13 @@ const socials = [
 ];
 
 export function Footer() {
+  const pathname = usePathname();
+  const hiddenPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+
+  if (hiddenPaths.includes(pathname)) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-dark/10 mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

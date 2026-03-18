@@ -14,7 +14,7 @@ import { getSafeApiErrorMessage } from '@/lib/api-error';
 
 const loginSchema = z.object({
   email: z.string().email('Định dạng email không hợp lệ'),
-  password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
+  password: z.string().min(1, 'Vui lòng nhập mật khẩu').max(16, 'Mật khẩu không được vượt quá 16 ký tự'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -78,6 +78,7 @@ export function LoginForm() {
           type="password"
           className="w-full bg-transparent border-b-2 border-zinc-300 py-2 text-lg text-zinc-900 focus:outline-none focus:border-rose-600 transition-colors placeholder:text-zinc-400"
           placeholder="••••••••"
+          maxLength={16}
         />
         {errors.password && <p className="text-rose-500 text-xs mt-1">{errors.password.message}</p>}
       </div>
