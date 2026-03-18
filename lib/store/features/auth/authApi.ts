@@ -26,6 +26,7 @@ interface AuthResponse {
       fullName: string;
       avatarUrl?: string;
       role: string;
+      isKycVerified: boolean;
     };
     accessToken: string;
     refreshToken: string;
