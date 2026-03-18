@@ -1,4 +1,5 @@
 import { CampaignStatus } from "@/dtos";
+import { formatVND } from '@/lib/money';
 
 export const ADMIN_CAMPAIGN_STATUS_OPTIONS = [
   { label: "Tất cả trạng thái", value: "all" },
@@ -9,10 +10,6 @@ export const ADMIN_CAMPAIGN_STATUS_OPTIONS = [
   { label: "Hoàn thành", value: CampaignStatus.COMPLETED },
   { label: "Đã rút", value: CampaignStatus.WITHDRAWN },
 ] as const;
-
-export function formatVND(value: number): string {
-  return `${value.toLocaleString("vi-VN")}₫`;
-}
 
 export function formatDateVN(iso: string): string {
   const date = new Date(iso);

@@ -10,6 +10,9 @@ import CampaignGrid from '@/components/campaign/CampaignGrid';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { CAMPAIGN_CATEGORIES } from '@/components/campaign/constants';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const MOBILE_ALL_CATEGORY_VALUE = '__all__';
 
 export default function CampaignsPage() {
   const [search, setSearch] = useState('');
@@ -47,6 +50,25 @@ export default function CampaignsPage() {
     setPage(1); // Reset page on category change
   };
 
+  const handleCategoryChange = (value: string) => {
+    if (value === MOBILE_ALL_CATEGORY_VALUE) {
+      setActiveCategory(CampaignCategory.ALL);
+      setPage(1);
+      return;
+    }
+
+    setActiveCategory(value as CampaignCategory);
+    setPage(1);
+  };
+
+  const hasActiveFilters = Boolean(search.trim()) || activeCategory !== CampaignCategory.ALL;
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setActiveCategory(CampaignCategory.ALL);
+    setPage(1);
+  };
+
   const tabs = useMemo(
     () =>
       CAMPAIGN_CATEGORIES.map((cat) => ({
@@ -78,7 +100,7 @@ export default function CampaignsPage() {
         </div>
 
         {/* Search + Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-10 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 mb-10 max-w-2xl mx-auto">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
             <input
@@ -89,13 +111,49 @@ export default function CampaignsPage() {
               className="w-full pl-10 pr-4 py-3 rounded-xl glass border border-black/10 text-black placeholder-black/30 outline-none focus:border-rose-500/50 transition-colors text-sm"
             />
           </div>
-          <button className="px-4 py-3 rounded-xl glass border border-black/10 flex items-center gap-2 text-sm text-black/60 hover:text-black hover:bg-black/10 transition-colors">
+          <button
+            onClick={handleClearFilters}
+            disabled={!hasActiveFilters}
+            className="px-4 py-3 rounded-xl glass border border-black/10 flex items-center justify-center gap-2 text-sm text-black/60 hover:text-black hover:bg-black/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <SlidersHorizontal className="w-4 h-4" />
-            Bộ Lọc
+            Xóa lọc
           </button>
+
+          {/* Mobile category selector */}
+          <div className="sm:hidden">
+            <Select value={activeCategory || MOBILE_ALL_CATEGORY_VALUE} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="w-full h-12 rounded-xl glass border-black/10 bg-transparent px-4 text-sm text-black data-[placeholder]:text-black/40 focus-visible:border-rose-500/50 focus-visible:ring-rose-500/20">
+                <SelectValue placeholder="Chọn danh mục" />
+              </SelectTrigger>
+              <SelectContent>
+                {CAMPAIGN_CATEGORIES.map((cat) => (
+                  <SelectItem
+                    key={cat.value || MOBILE_ALL_CATEGORY_VALUE}
+                    value={cat.value || MOBILE_ALL_CATEGORY_VALUE}
+                  >
+                    {cat.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <VercelTabs tabs={tabs} defaultTab={CampaignCategory.ALL} onTabChange={handleTabChange} />
+        {/* Desktop category tabs */}
+        <div className="hidden sm:block">
+          <VercelTabs
+            key={`campaign-tabs-${activeCategory}`}
+            tabs={tabs}
+            defaultTab={activeCategory}
+            onTabChange={handleTabChange}
+          />
+        </div>
+
+        {/* Mobile content */}
+        <div className="sm:hidden">
+          <CampaignGrid campaigns={campaigns} isLoading={isLoading || isFetching} />
+        </div>
 
         {/* Load More */}
         {campaigns && campaigns.length >= limit * page && (

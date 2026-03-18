@@ -180,23 +180,22 @@ export function Navbar() {
                 />
                 <span className="text-sm font-medium text-gray-700">{user?.fullName}</span>
               </div>
-              <Link
-                href="/profile"
-                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
-                onClick={() => setMobileOpen(false)}
-              >
-                <User className="w-4 h-4" /> Xem Hồ Sơ
-                <LayoutDashboard className="w-4 h-4" /> Dashboard
-              </Link>
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                  className="text-sm text-blue-600 hover:text-blue-700 py-2 transition-colors flex items-center gap-2"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <LayoutDashboard className="w-4 h-4" /> Trang quản trị admin
+                  <Lock className="w-4 h-4" /> Quản trị Admin
                 </Link>
               )}
+              <Link
+                href="/dashboard"
+                className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
+                onClick={() => setMobileOpen(false)}
+              >
+                <LayoutDashboard className="w-4 h-4" /> Quản lý chiến dịch
+              </Link>
               <Link
                 href="/dashboard/my-requests"
                 className="text-sm text-gray-600 hover:text-gray-900 py-2 transition-colors flex items-center gap-2"
@@ -225,7 +224,13 @@ export function Navbar() {
               >
                 <User className="w-4 h-4" /> Xem Hồ Sơ
               </Link>
-              <button onClick={handleLogout} className="text-sm text-rose-600 py-2 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  handleLogout();
+                }}
+                className="text-sm text-rose-600 py-2 flex items-center gap-2"
+              >
                 <LogOut className="w-4 h-4" /> Đăng Xuất
               </button>
             </>

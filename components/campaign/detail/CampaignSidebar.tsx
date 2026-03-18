@@ -23,7 +23,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { PublicCampaignDetailResponseDto } from '@/dtos/campaign';
 import type { DonationResponseDto } from '@/dtos/donation';
-import { formatVND, formatDateOnly, formatCampaignProgressPercent, resolveCampaignProgressPercent } from '@/lib/utils';
+import { formatDateOnly, formatCampaignProgressPercent, resolveCampaignProgressPercent } from '@/lib/utils';
 import { Modal } from '@/components/ui/modal';
 import { WithdrawRequestModal } from '@/components/campaign/detail/WithdrawRequestModal';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,10 +34,11 @@ import { toast } from 'sonner';
 import { getSafeApiErrorMessage } from '@/lib/api-error';
 import ReportCampaignModal from '@/components/campaigns/ReportCampaignModal';
 import { Button } from '@/components/ui/button';
+import { MIN_DONATION_AMOUNT, MAX_DONATION_AMOUNT, DONOR_PREVIEW } from '@/components/campaign/create/constants';
+import { formatVND, formatVNDInput, parseVNDInputToNumber } from '@/lib/money';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DONOR_PREVIEW = 8;
 const SUCCESS_DONATION_STATUSES = new Set(['success', 'completed', 'paid']);
 
 const DONOR_GRADIENTS = [
@@ -300,7 +301,7 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
   const handleDonateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!donateAmount || donateAmount < 10000) return;
+    if (!donateAmount || donateAmount < MIN_DONATION_AMOUNT || donateAmount > MAX_DONATION_AMOUNT) return;
     try {
       const res = await createDonation({
         campaignId: campaign.id,
@@ -576,18 +577,25 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             </label>
             <div className="relative">
               <input
-                type="number"
+                type="text"
                 required
-                min={10000}
-                step={1000}
-                value={donateAmount}
-                onChange={(e) => setDonateAmount(e.target.value ? Number(e.target.value) : '')}
+                inputMode="numeric"
+                value={donateAmount === '' ? '' : formatVNDInput(Number(donateAmount))}
+                onChange={(e) => {
+                  const parsed = parseVNDInputToNumber(e.target.value);
+                  if (!parsed) {
+                    setDonateAmount('');
+                    return;
+                  }
+                  const clamped = Math.min(parsed, MAX_DONATION_AMOUNT);
+                  setDonateAmount(clamped);
+                }}
                 className="w-full px-4 py-3 rounded-xl border border-black/10 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none text-black font-semibold pr-12 transition-colors"
                 placeholder="Ví dụ: 50000"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-black/30 font-semibold">₫</span>
             </div>
-            <p className="text-[11px] text-black/40 mt-1">Tối thiểu 10,000 VNĐ</p>
+            <p className="text-[11px] text-black/40 mt-1">Tối thiểu 10,000 VNĐ · Tối đa 1,000,000,000 VNĐ</p>
             {/* Quick amount buttons */}
             <div className="flex gap-2 mt-2">
               {[50000, 100000, 200000, 500000].map((v) => (
@@ -640,7 +648,9 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           {/* Submit */}
           <button
             type="submit"
-            disabled={isDonating || !donateAmount || donateAmount < 10000}
+            disabled={
+              isDonating || !donateAmount || donateAmount < MIN_DONATION_AMOUNT || donateAmount > MAX_DONATION_AMOUNT
+            }
             className={cn(
               'w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200',
               'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25',
@@ -653,7 +663,7 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
             ) : (
               <>
                 <Heart className="w-4 h-4 fill-white/80" />
-                {donateAmount && donateAmount >= 10000
+                {donateAmount && donateAmount >= MIN_DONATION_AMOUNT && donateAmount <= MAX_DONATION_AMOUNT
                   ? `Tiếp tục thanh toán (${formatVND(Number(donateAmount))})`
                   : 'Nhập số tiền để tiếp tục'}
               </>

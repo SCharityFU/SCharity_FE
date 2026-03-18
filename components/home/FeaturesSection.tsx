@@ -13,7 +13,7 @@ const bentoFeatures = [
   {
     icon: Zap,
     title: 'Thanh Toán Tức Thì',
-    description: 'Chuyển tiền ngay lập tức qua VNPay, Momo, ZaloPay và thẻ ngân hàng.',
+    description: 'Chuyển tiền ngay lập tức qua QR.',
     className: '',
     gradient: 'from-amber-500/20 to-orange-500/10',
   },
@@ -35,7 +35,7 @@ const bentoFeatures = [
     icon: Users,
     title: 'Cộng Đồng Mạnh Mẽ',
     description: 'Hơn 50,000 nhà hảo tâm đang cùng nhau tạo nên những điều kỳ diệu.',
-    className: 'md:col-span-2',
+    className: '',
     gradient: 'from-emerald-500/20 to-teal-500/10',
   },
 ];

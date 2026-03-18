@@ -20,6 +20,9 @@ interface StoryEditorSectionProps {
   onUploadImage: (file: File) => Promise<string>;
 }
 
+const STORY_EDITOR_MIN_HEIGHT = 220;
+const STORY_EDITOR_MAX_HEIGHT = 420;
+
 export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
   const { control, setValue } = useFormContext<CreateCampaignFormValues>();
   const story = useWatch({ control, name: 'story' }) ?? '';
@@ -70,6 +73,11 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
           },
         },
       });
+
+      // Keep the editor area compact; long content scrolls inside.
+      quill.root.style.minHeight = `${STORY_EDITOR_MIN_HEIGHT}px`;
+      quill.root.style.maxHeight = `${STORY_EDITOR_MAX_HEIGHT}px`;
+      quill.root.style.overflowY = 'auto';
 
       if (latestStoryRef.current) {
         quill.clipboard.dangerouslyPasteHTML(latestStoryRef.current);
@@ -151,7 +159,7 @@ export function StoryEditorSection({ onUploadImage }: StoryEditorSectionProps) {
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
 
       <div className="rounded-xl overflow-hidden border border-black/10 bg-white/60">
-        <div ref={editorRootRef} className="quill-editor min-h-[220px]" />
+        <div ref={editorRootRef} className="quill-editor" />
       </div>
 
       {(isUploading || uploadError) && (

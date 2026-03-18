@@ -369,5 +369,11 @@
 
 /* Custom css */
 .morphingTextLineHeight {
-  line-height: 7rem;
+  line-height: 1.12;
+}
+
+@media (min-width: 768px) {
+  .morphingTextLineHeight {
+    line-height: 1.08;
+  }
 }

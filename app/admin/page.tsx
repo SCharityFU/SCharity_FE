@@ -20,6 +20,7 @@ import { UserRole } from '@/dtos';
 import { useAppSelector } from '@/lib/store/hooks';
 import { useGetAdminDashboardChartQuery, useGetAdminDashboardQuery } from '@/lib/store/features/admin/adminApi';
 import { formatDateVN, formatVNDShort } from '@/lib/utils';
+import { formatVND } from '@/lib/money';
 import { BentoGrid } from '@/components/ui/bento-grid';
 import { NumberCounter, RollingCounter } from '@/components/ui/number-counter';
 import { VercelTabs } from '@/components/ui/vercel-tabs';
@@ -32,10 +33,6 @@ const INTERVAL_OPTIONS = [
 ] as const;
 
 type IntervalKey = (typeof INTERVAL_OPTIONS)[number]['value'];
-
-function formatCurrencyVND(amount: number): string {
-  return `${Math.round(amount).toLocaleString('vi-VN')} VND`;
-}
 
 function toSafeNumber(value: unknown): number {
   if (typeof value === 'number') {
@@ -71,14 +68,7 @@ function StatCard({
       <Icon className="w-5 h-5 text-black/40 mb-3" />
       <div className="text-2xl md:text-3xl font-black text-black mb-1 leading-tight">
         {isCurrency ? (
-          <NumberCounter
-            value={value}
-            duration={1.8}
-            separator="."
-            decimalSeparator=","
-            suffix=" VND"
-            easing="easeOut"
-          />
+          <NumberCounter value={value} duration={1.8} separator="." decimalSeparator="," suffix=" ₫" easing="easeOut" />
         ) : (
           <RollingCounter value={value} separator="." />
         )}
@@ -105,7 +95,7 @@ function ChartTooltip({
     <div className="glass-card rounded-xl p-3 text-sm shadow-lg">
       <p className="font-semibold text-black mb-1">{formatDateVN(label)}</p>
       <p className="text-rose-500">
-        Số tiền: <span className="font-bold">{formatCurrencyVND(rawAmount)}</span>
+        Số tiền: <span className="font-bold">{formatVND(rawAmount)}</span>
       </p>
       {payload[0]?.payload?.count !== undefined && (
         <p className="text-violet-500">

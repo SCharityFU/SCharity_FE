@@ -11,7 +11,7 @@ import { useSubmitCampaignRequestMutation } from '@/lib/store/features/campaign/
 import { useUploadMyAssetMutation } from '@/lib/store/features/user/userApi';
 import { useVietQRBanks } from '@/hooks/useVietQRBanks';
 import { useAuth } from '@/hooks/useAuth';
-import { BasicInfoSection } from '@/components/campaign/create/BasicInfoSection';
+import { BasicInfoSection } from '@/components/campaign/create';
 import { CreateCampaignActions } from '@/components/campaign/create/CreateCampaignActions';
 import { CreateCampaignFeedback } from '@/components/campaign/create/CreateCampaignFeedback';
 import { CreateCampaignHeader } from '@/components/campaign/create/CreateCampaignHeader';
@@ -33,19 +33,30 @@ import {
   TITLE_MAX,
 } from '@/components/campaign/create/constants';
 import type { CampaignDraft, FeedbackMessage, ProofPreview } from '@/components/campaign/create/types';
-import {
-  formatDateVN,
-  formatVND,
-  getDateAfterDaysISO,
-  getTomorrowISO,
-  shortVND,
-} from '@/components/campaign/create/utils';
+import { formatDateVN, getDateAfterDaysISO, getTomorrowISO } from '@/components/campaign/create/utils';
 import { Button } from '@/components/ui/button';
+import { formatVND, formatVNDInput } from '@/lib/money';
+import { formatVNDShort } from '@/lib/utils';
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function CreateCampaignPage() {
   const REDIRECT_SECONDS = 3;
+  const MAX_UPLOAD_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const WORD_MIME_TYPES = [
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ] as const;
+
+  const isWordFile = (file: File) => {
+    const fileName = file.name.toLowerCase();
+    return (
+      WORD_MIME_TYPES.includes(file.type as (typeof WORD_MIME_TYPES)[number]) ||
+      fileName.endsWith('.doc') ||
+      fileName.endsWith('.docx')
+    );
+  };
+
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const [submitRequest, { isLoading }] = useSubmitCampaignRequestMutation();
@@ -100,7 +111,7 @@ export default function CreateCampaignPage() {
   };
 
   const shouldBlockForKyc = isAuthenticated && !user?.isKycVerified;
-  console.log('Current user:', user);
+  // console.log('Current user:', user);
 
   // ── Load draft from localStorage on mount ─────────────────────────────────
 
@@ -147,7 +158,26 @@ export default function CreateCampaignPage() {
   }, [redirectSeconds, router]);
 
   const addFiles = useCallback((files: FileList | File[]) => {
-    const newFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    const inputFiles = Array.from(files);
+    const oversizedFiles: string[] = [];
+
+    const newFiles = inputFiles.filter((f) => {
+      if (!f.type.startsWith('image/')) return false;
+      if (f.size > MAX_UPLOAD_FILE_SIZE) {
+        oversizedFiles.push(f.name);
+        return false;
+      }
+      return true;
+    });
+
+    if (oversizedFiles.length > 0) {
+      toast.error(`Ảnh vượt quá 10MB: ${oversizedFiles.join(', ')}`);
+    }
+
+    if (newFiles.length === 0 && inputFiles.length > 0 && oversizedFiles.length === 0) {
+      toast.error('Chỉ hỗ trợ tệp ảnh cho phần hình ảnh chiến dịch.');
+    }
+
     if (newFiles.length === 0) return;
 
     setMediaFiles((prev) => [...prev, ...newFiles]);
@@ -203,7 +233,31 @@ export default function CreateCampaignPage() {
 
   // Proof document handlers
   const addProofFiles = useCallback((files: FileList | File[]) => {
-    const allowed = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type === 'application/pdf');
+    const inputFiles = Array.from(files);
+    const oversizedFiles: string[] = [];
+    const invalidFiles: string[] = [];
+
+    const allowed = inputFiles.filter((f) => {
+      const isAllowedType = f.type.startsWith('image/') || f.type === 'application/pdf' || isWordFile(f);
+      if (!isAllowedType) {
+        invalidFiles.push(f.name);
+        return false;
+      }
+      if (f.size > MAX_UPLOAD_FILE_SIZE) {
+        oversizedFiles.push(f.name);
+        return false;
+      }
+      return true;
+    });
+
+    if (invalidFiles.length > 0) {
+      toast.error(`Tệp không hợp lệ (chỉ nhận ảnh, PDF, DOC, DOCX): ${invalidFiles.join(', ')}`);
+    }
+
+    if (oversizedFiles.length > 0) {
+      toast.error(`Tài liệu vượt quá 10MB: ${oversizedFiles.join(', ')}`);
+    }
+
     if (allowed.length === 0) return;
     setProofFiles((prev) => [...prev, ...allowed]);
     allowed.forEach((file) => {
@@ -221,11 +275,12 @@ export default function CreateCampaignPage() {
         };
         reader.readAsDataURL(file);
       } else {
+        const proofType = isWordFile(file) ? 'doc' : 'pdf';
         setProofPreviews((prev) => [
           ...prev,
           {
             name: file.name,
-            type: 'pdf',
+            type: proofType,
             url: '',
           },
         ]);
@@ -324,7 +379,7 @@ export default function CreateCampaignPage() {
     const draft: CampaignDraft = {
       title: values.title,
       goalAmount: values.goalAmount,
-      goalRaw: values.goalAmount > 0 ? formatVND(values.goalAmount) : '',
+      goalRaw: values.goalAmount > 0 ? formatVNDInput(values.goalAmount) : '',
       deadline: values.deadline,
       category: (values.category as CampaignCategory | '') || '',
       storyHtml: values.story,
@@ -378,7 +433,7 @@ export default function CreateCampaignPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <FormProvider {...formMethods}>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-screen-lg mx-auto">
           {/* ── Header ────────────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -404,7 +459,7 @@ export default function CreateCampaignPage() {
               <BasicInfoSection
                 titleMax={TITLE_MAX}
                 goalPresets={GOAL_PRESETS}
-                shortVND={shortVND}
+                shortVND={formatVNDShort}
                 minDeadline={getTomorrowISO()}
                 maxDeadline={getDateAfterDaysISO(MAX_CAMPAIGN_DEADLINE_DAYS)}
                 formatDateVN={formatDateVN}

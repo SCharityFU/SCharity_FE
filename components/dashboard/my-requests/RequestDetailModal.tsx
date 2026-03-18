@@ -37,23 +37,11 @@ import { RichTextContent } from '@/components/ui/rich-text-content';
 import { CampaignMediaSection } from '@/components/campaign/detail/CampaignMediaSection';
 import { RequestStoryEditor } from '@/components/dashboard/my-requests/RequestStoryEditor';
 import { CATEGORY_LABELS, STATUS_CONFIG, fmtDate, fmtVND } from '@/components/dashboard/my-requests/constants';
+import { formatVNDInput, parseVNDInputToNumber } from '@/lib/money';
+import { formatVNDShort } from '@/lib/utils';
 
 const TITLE_MAX = 100;
 const GOAL_PRESETS = [5_000_000, 10_000_000, 50_000_000, 100_000_000];
-
-function formatVNDInput(v: number): string {
-  return v.toLocaleString('vi-VN');
-}
-
-function parseCurrencyInput(raw: string): number {
-  return Number(raw.replace(/\./g, '').replace(/\D/g, '')) || 0;
-}
-
-function shortVND(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(0)} tỷ`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} tr`;
-  return formatVNDInput(n);
-}
 
 function getTomorrowISO(): string {
   const d = new Date();
@@ -105,7 +93,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: Props) {
 
   const handleEditGoalChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    const num = parseCurrencyInput(raw);
+    const num = parseVNDInputToNumber(raw);
     setEditGoalAmount(num);
     setEditGoalRaw(num > 0 ? formatVNDInput(num) : '');
   };
@@ -478,7 +466,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: Props) {
                         onClick={() => handleEditGoalPreset(preset)}
                         className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-200 ${editGoalAmount === preset ? 'bg-rose-500 text-white shadow-sm' : 'bg-black/[0.04] border border-black/10 text-black/50 hover:text-black hover:border-rose-400/30'}`}
                       >
-                        {shortVND(preset)}
+                        {formatVNDShort(preset)}
                       </button>
                     ))}
                   </div>

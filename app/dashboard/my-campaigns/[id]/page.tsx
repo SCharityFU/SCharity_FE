@@ -41,7 +41,8 @@ import type { CampaignDto, CampaignUpdateResponseDto } from '@/dtos/campaign';
 import { CampaignStatus, WithdrawStatus } from '@/dtos/enums';
 import { CampaignImageSlider } from '@/components/campaign/detail/CampaignImageSlider';
 import { MyCampaignHeader } from '@/components/campaign/my-campaign/MyCampaignHeader';
-import { formatDate, formatVND } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import { formatVND } from '@/lib/money';
 
 // ── Skeleton Loader ────────────────────────────────────────────────────────────
 
