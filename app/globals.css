@@ -1,6 +1,6 @@
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "quill/dist/quill.snow.css";
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import 'quill/dist/quill.snow.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,14 +42,14 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family:
-      "Google Sans",
-      "Google Sans Text",
+      'Google Sans',
+      'Google Sans Text',
       system-ui,
       -apple-system,
       sans-serif;
     font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
+      'rlig' 1,
+      'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -166,6 +166,30 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
 
+  /* ── Shadcn Theme Surface ── */
+  .shadcn-theme {
+    --shadcn-surface: var(--popover);
+    --shadcn-surface-foreground: var(--popover-foreground);
+    --shadcn-border: var(--border);
+    --shadcn-brand: var(--primary);
+    --shadcn-brand-foreground: var(--primary-foreground);
+  }
+
+  .shadcn-theme [data-slot='tooltip-content'],
+  .shadcn-theme [data-slot='select-content'],
+  .shadcn-theme [data-slot='dropdown-menu-content'],
+  .shadcn-theme [data-slot='popover-content'],
+  .shadcn-theme [data-slot='dialog-content'] {
+    border-color: hsl(var(--shadcn-border));
+  }
+
+  .shadcn-tooltip-theme {
+    background: hsl(var(--shadcn-brand));
+    color: hsl(var(--shadcn-brand-foreground));
+    border-color: hsl(var(--shadcn-brand) / 0.35);
+    box-shadow: 0 16px 34px -20px hsl(var(--shadcn-brand) / 0.85);
+  }
+
   /* ── Gradient Text ── */
   .gradient-text {
     background: linear-gradient(135deg, #f43f5e 0%, #8b5cf6 50%, #3b82f6 100%);
@@ -214,8 +238,7 @@
     background:
       radial-gradient(ellipse 80% 50% at 50% -20%, rgba(244, 63, 94, 0.2), transparent),
       radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.12), transparent),
-      radial-gradient(ellipse 60% 40% at 20% 80%, rgba(59, 130, 246, 0.08), transparent),
-      hsl(var(--background));
+      radial-gradient(ellipse 60% 40% at 20% 80%, rgba(59, 130, 246, 0.08), transparent), hsl(var(--background));
   }
 
   .grid-pattern {
@@ -268,17 +291,17 @@
 
 /* ── Google Sans utilities ── */
 .google-sans {
-  font-family: "Google Sans", "Google Sans Text", system-ui, sans-serif;
+  font-family: 'Google Sans', 'Google Sans Text', system-ui, sans-serif;
   font-weight: 400;
 }
 
 .google-sans-medium {
-  font-family: "Google Sans", "Google Sans Text", system-ui, sans-serif;
+  font-family: 'Google Sans', 'Google Sans Text', system-ui, sans-serif;
   font-weight: 500;
 }
 
 .google-sans-bold {
-  font-family: "Google Sans", "Google Sans Text", system-ui, sans-serif;
+  font-family: 'Google Sans', 'Google Sans Text', system-ui, sans-serif;
   font-weight: 700;
 }
 
@@ -343,7 +366,6 @@
     background-position: 200% center;
   }
 }
-
 
 /* Custom css */
 .morphingTextLineHeight {

@@ -9,6 +9,9 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { getSafeApiErrorMessage } from '@/lib/api-error';
 
+// Guard against repeated mutation calls caused by rerenders/remounts.
+const requestedVerifyTokens = new Set<string>();
+
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -25,6 +28,13 @@ function VerifyEmailContent() {
       return;
     }
 
+    if (requestedVerifyTokens.has(token)) {
+      return;
+    }
+    requestedVerifyTokens.add(token);
+
+    let redirectTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const verify = async () => {
       try {
         await verifyEmail({ token }).unwrap();
@@ -33,7 +43,7 @@ function VerifyEmailContent() {
         toast.success('Tài khoản của bạn đã được xác thực thành công!');
 
         // Optional: auto-redirect after 3s
-        setTimeout(() => {
+        redirectTimeout = setTimeout(() => {
           router.push('/login');
         }, 3000);
       } catch (err: unknown) {
@@ -48,6 +58,12 @@ function VerifyEmailContent() {
     };
 
     verify();
+
+    return () => {
+      if (redirectTimeout) {
+        clearTimeout(redirectTimeout);
+      }
+    };
   }, [token, verifyEmail, router]);
 
   return (

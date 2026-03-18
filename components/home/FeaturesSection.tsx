@@ -1,42 +1,42 @@
-import { Shield, Zap, Globe, BarChart3, Users } from "lucide-react";
-import { BentoGrid } from "@/components/ui/bento-grid";
-import { HighlightText } from "@/components/ui/highlight-text";
+import { Shield, Zap, Globe, BarChart3, Users } from 'lucide-react';
+import { BentoGrid } from '@/components/ui/bento-grid';
+import { HighlightText } from '@/components/ui/highlight-text';
 
 const bentoFeatures = [
   {
     icon: Shield,
-    title: "Minh Bạch 100%",
-    description: "Mọi giao dịch được ghi nhận và công khai. Bạn biết rõ tiền đi đâu.",
-    className: "md:col-span-2",
-    gradient: "from-rose-500/20 to-pink-500/10",
+    title: 'Minh Bạch 100%',
+    description: 'Mọi giao dịch được ghi nhận và công khai. Bạn biết rõ tiền đi đâu.',
+    className: 'md:col-span-2',
+    gradient: 'from-rose-500/20 to-pink-500/10',
   },
   {
     icon: Zap,
-    title: "Thanh Toán Tức Thì",
-    description: "Chuyển tiền ngay lập tức qua VNPay, Momo, ZaloPay và thẻ ngân hàng.",
-    className: "",
-    gradient: "from-amber-500/20 to-orange-500/10",
+    title: 'Thanh Toán Tức Thì',
+    description: 'Chuyển tiền ngay lập tức qua VNPay, Momo, ZaloPay và thẻ ngân hàng.',
+    className: '',
+    gradient: 'from-amber-500/20 to-orange-500/10',
   },
   {
     icon: Globe,
-    title: "Phủ Sóng Toàn Quốc",
-    description: "Kết nối các chiến dịch từ 63 tỉnh thành trên cả Việt Nam.",
-    className: "",
-    gradient: "from-blue-500/20 to-indigo-500/10",
+    title: 'Phủ Sóng Toàn Quốc',
+    description: 'Kết nối các chiến dịch từ 63 tỉnh thành trên cả Việt Nam.',
+    className: '',
+    gradient: 'from-blue-500/20 to-indigo-500/10',
   },
   {
     icon: BarChart3,
-    title: "Phân Tích Thời Gian Thực",
-    description: "Dashboard chi tiết giúp nhà sáng lập theo dõi tiến độ và báo cáo minh bạch.",
-    className: "",
-    gradient: "from-violet-500/20 to-purple-500/10",
+    title: 'Phân Tích Thời Gian Thực',
+    description: 'Dashboard chi tiết giúp nhà sáng lập theo dõi tiến độ và báo cáo minh bạch.',
+    className: '',
+    gradient: 'from-violet-500/20 to-purple-500/10',
   },
   {
     icon: Users,
-    title: "Cộng Đồng Mạnh Mẽ",
-    description: "Hơn 50,000 nhà hảo tâm đang cùng nhau tạo nên những điều kỳ diệu.",
-    className: "md:col-span-2",
-    gradient: "from-emerald-500/20 to-teal-500/10",
+    title: 'Cộng Đồng Mạnh Mẽ',
+    description: 'Hơn 50,000 nhà hảo tâm đang cùng nhau tạo nên những điều kỳ diệu.',
+    className: 'md:col-span-2',
+    gradient: 'from-emerald-500/20 to-teal-500/10',
   },
 ];
 
@@ -46,14 +46,13 @@ export function FeaturesSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Tại Sao Chọn{" "}
+            Tại Sao Chọn{' '}
             <HighlightText variant="circle" color="secondary" className="gradient-text">
-              SCharity?
+              FCam?
             </HighlightText>
           </h2>
           <p className="text-black/50 max-w-xl mx-auto">
-            Chúng tôi xây dựng nền tảng với sứ mệnh tối cao: mỗi đồng quyên góp đều tạo ra tác
-            động thực sự.
+            Chúng tôi xây dựng nền tảng với sứ mệnh tối cao: mỗi đồng quyên góp đều tạo ra tác động thực sự.
           </p>
         </div>
         <BentoGrid>

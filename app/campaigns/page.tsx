@@ -9,12 +9,11 @@ import { CampaignCategory } from '@/dtos/enums';
 import CampaignGrid from '@/components/campaign/CampaignGrid';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
-
-const categories = ['Tất Cả', 'Nạn Nhân CĐDC', 'Giáo Dục', 'Y Tế', 'Môi Trường', 'Cứu Trợ', 'Xã Hội'];
+import { CAMPAIGN_CATEGORIES } from '@/components/campaign/constants';
 
 export default function CampaignsPage() {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('Tất Cả');
+  const [activeCategory, setActiveCategory] = useState<CampaignCategory>(CampaignCategory.ALL);
   const [page, setPage] = useState(1);
   const [limit] = useState(9); // Default page size
   const deferredSearch = useDeferredValue(search);
@@ -23,28 +22,6 @@ export default function CampaignsPage() {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
-
-  // Helper mapping from UI display name to the actual enum
-  const resolveCategoryEnum = (cat: string): CampaignCategory | undefined => {
-    switch (cat) {
-      case 'Tất Cả':
-        return undefined;
-      case 'Nạn Nhân CĐDC':
-        return CampaignCategory.DAVA;
-      case 'Giáo Dục':
-        return CampaignCategory.EDUCATION;
-      case 'Y Tế':
-        return CampaignCategory.MEDICAL;
-      case 'Môi Trường':
-        return CampaignCategory.ENVIRONMENT;
-      case 'Cứu Trợ':
-        return CampaignCategory.DISASTER;
-      case 'Xã Hội':
-        return CampaignCategory.COMMUNITY;
-      default:
-        return CampaignCategory.OTHER;
-    }
-  };
 
   const {
     data: campaigns,
@@ -55,7 +32,7 @@ export default function CampaignsPage() {
       limit: limit * page, // simple 'load more' technique: keep limit large or load dynamically
       page: 1,
       search: debouncedSearch.trim().length > 2 ? debouncedSearch.trim() : undefined,
-      category: resolveCategoryEnum(activeCategory),
+      category: activeCategory || undefined,
       sortBy: 'createdAt',
       sortOrder: 'DESC',
     },
@@ -66,15 +43,15 @@ export default function CampaignsPage() {
   );
 
   const handleTabChange = (value: string) => {
-    setActiveCategory(value);
+    setActiveCategory(value as CampaignCategory);
     setPage(1); // Reset page on category change
   };
 
   const tabs = useMemo(
     () =>
-      categories.map((cat) => ({
-        label: cat,
-        value: cat,
+      CAMPAIGN_CATEGORIES.map((cat) => ({
+        label: cat.displayName,
+        value: cat.value,
         content: (
           <div>
             <CampaignGrid campaigns={campaigns} isLoading={isLoading || isFetching} />
@@ -118,7 +95,7 @@ export default function CampaignsPage() {
           </button>
         </div>
 
-        <VercelTabs tabs={tabs} defaultTab="Tất Cả" onTabChange={handleTabChange} />
+        <VercelTabs tabs={tabs} defaultTab={CampaignCategory.ALL} onTabChange={handleTabChange} />
 
         {/* Load More */}
         {campaigns && campaigns.length >= limit * page && (

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Heart, MessageCircle, ChevronRight } from 'lucide-react';
 import type { PublicCampaignDetailResponseDto } from '@/dtos/campaign';
-import type { CommentResponseDto } from '@/dtos/donation';
+import type { CampaignCommentResponseDto } from '@/dtos/campaign';
 import { formatDateOnly, formatVND } from '@/lib/utils';
 import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
@@ -57,7 +57,7 @@ function EmptyState() {
 
 // ── Comment card ──────────────────────────────────────────────────────────────
 
-function CommentCard({ comment }: { comment: CommentResponseDto }) {
+function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
   const hasDonorProfile = Boolean(comment.donor?.fullName);
   const displayName = comment.isAnonymous ? 'Nhà hảo tâm ẩn danh' : (comment.donor?.fullName ?? 'Khách vãng lai');
 

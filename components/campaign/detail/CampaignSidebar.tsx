@@ -37,7 +37,7 @@ import { Button } from '@/components/ui/button';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DONOR_PREVIEW = 3;
+const DONOR_PREVIEW = 8;
 const SUCCESS_DONATION_STATUSES = new Set(['success', 'completed', 'paid']);
 
 const DONOR_GRADIENTS = [

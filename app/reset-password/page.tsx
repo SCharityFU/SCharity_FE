@@ -170,7 +170,7 @@ function ResetPasswordContent() {
         </div>
 
         <div className="text-xs text-zinc-400 font-google-sans-medium tracking-wide mt-8 text-center lg:text-left">
-          SCharity Platform © 2026
+          FCam Platform © 2026
         </div>
       </div>
 

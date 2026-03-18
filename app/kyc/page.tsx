@@ -254,8 +254,8 @@ export default function KycVerificationPage() {
               </HighlightText>
             </h1>
             <p className="text-gray-600 mb-8 leading-relaxed">
-              Để đảm bảo an toàn và tính minh bạch cho nền tảng SCharity, chúng tôi yêu cầu xác thực danh tính cho việc
-              rút quỹ và các thao tác quan trọng. Quá trình này chỉ mất khoảng 2 phút.
+              Để đảm bảo an toàn và tính minh bạch cho nền tảng FCam, chúng tôi yêu cầu xác thực danh tính cho việc rút
+              quỹ và các thao tác quan trọng. Quá trình này chỉ mất khoảng 2 phút.
             </p>
 
             <div className="w-full bg-blue-50/50 border border-blue-100 rounded-2xl p-5 mb-8 text-left">

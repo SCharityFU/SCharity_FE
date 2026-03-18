@@ -37,7 +37,7 @@ export function formatDateVN(dateStr: string): string {
 export const mapCategoryToVietnamese = (category: string) => {
   switch (category) {
     case CampaignCategory.DAVA:
-      return "Nạn Nhân Chất Độc Da Cam";
+      return "Nạn Nhân Da Cam";
     case CampaignCategory.EDUCATION:
       return "Giáo Dục";
     case CampaignCategory.MEDICAL:

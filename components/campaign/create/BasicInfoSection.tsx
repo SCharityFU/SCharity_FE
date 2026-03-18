@@ -152,15 +152,17 @@ export function BasicInfoSection({
                 <SelectValue placeholder="Chọn danh mục" />
               </SelectTrigger>
               <SelectContent className="bg-white border border-black/10 rounded-xl shadow-lg">
-                {Object.entries(categoryLabels).map(([key, label]) => (
-                  <SelectItem
-                    key={key}
-                    value={key}
-                    className="rounded-lg text-black/70 focus:bg-black/[0.04] focus:text-black"
-                  >
-                    {label}
-                  </SelectItem>
-                ))}
+                {Object.entries(categoryLabels)
+                  .filter(([key, label]) => key !== CampaignCategory.ALL && Boolean(label))
+                  .map(([key, label]) => (
+                    <SelectItem
+                      key={key}
+                      value={key}
+                      className="rounded-lg text-black/70 focus:bg-black/[0.04] focus:text-black"
+                    >
+                      {label}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           )}
