@@ -37,12 +37,15 @@ export async function generateMetadata(
     };
   }
 
-  const previousImages = (await parent).openGraph?.images || [];
-  const imageUrl = campaign.thumbnailUrl || (previousImages.length > 0 ? previousImages[0] : '/assets/share-default.png');
+  const images = [campaign.thumbnailUrl, ...(campaign.mediaUrls ?? [])].filter(
+    (u): u is string => !!u,
+  );
+  const imageUrl = images.length > 0 ? images[0] : '/assets/share-default.png';
   
   // Truncate and strip HTML from story for description
   const cleanDescription = (campaign.story || '')
     .replace(/<[^>]*>?/gm, '') // Strip HTML
+    .trim()
     .slice(0, 160)             // Truncate to 160 chars
     .concat('...');
 
@@ -52,14 +55,16 @@ export async function generateMetadata(
     openGraph: {
       title: campaign.title,
       description: cleanDescription,
-      images: [imageUrl],
-      type: 'website',
+      siteName: 'FCam',
+      locale: 'vi_VN',
+      images: images,
+      type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
       title: campaign.title,
       description: cleanDescription,
-      images: [imageUrl],
+      images: images,
     },
   };
 }
