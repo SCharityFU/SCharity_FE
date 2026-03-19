@@ -19,24 +19,24 @@ export function HeroSection() {
   const mobileStories = useMemo(
     () => [
       {
-        src: '/assets/FPT-Polytechnic_DN_ban_hang_thien_nguyen-1.png',
+        src: '/assets/slider/slide_1.jpg',
         alt: 'Khoanh khac hoat dong thien nguyen',
-        caption: 'Nhom sinh vien to chuc hoat dong gay quy tai cho.',
+        caption: 'Trường đại học FPT ủng hộ nạn nhân chất độc da cam.',
       },
       {
-        src: '/assets/image1-18.jpg',
+        src: '/assets/slider/slide_2.jpg',
         alt: 'Nhung hinh anh yeu thuong',
-        caption: 'Khoanh khac trao yeu thuong den nhung hoan canh kho khan.',
+        caption: 'Trường đại học FPT ủng hộ nạn nhân chất độc da cam.',
       },
       {
-        src: '/assets/FPT-Polytechnic_HN_thien_nguyen_xanh-.jpg',
+        src: '/assets/slider/slide_3.jpg',
         alt: 'Cong dong cung chung tay',
-        caption: 'Chien dich xanh voi su chung tay cua cong dong tre.',
+        caption: 'Trường đại học FPT ủng hộ nạn nhân chất độc da cam.',
       },
       {
-        src: '/assets/register.png',
+        src: '/assets/slider/slide_4.jpg',
         alt: 'Ky niem cung dong hanh',
-        caption: 'Them mot ky niem dep tren hanh trinh dong hanh vi cong dong.',
+        caption: 'Trường đại học FPT ủng hộ nạn nhân chất độc da cam.',
       },
     ],
     [],
@@ -79,7 +79,7 @@ export function HeroSection() {
                 <div className="absolute -top-3 left-10 h-6 w-24 rotate-[-7deg] rounded-sm border border-amber-200/70 bg-amber-100/80" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/assets/FPT-Polytechnic_DN_ban_hang_thien_nguyen-1.png"
+                  src="/assets/slider/slide_1.jpg"
                   alt="Khoanh khac hoat dong thien nguyen"
                   className="h-[150px] lg:h-[170px] xl:h-[196px] w-full rounded-[14px] object-cover"
                 />
@@ -98,7 +98,7 @@ export function HeroSection() {
                 <div className="absolute -top-2 right-8 h-5 w-20 rotate-[10deg] rounded-sm border border-sky-200/70 bg-sky-100/80" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/assets/image1-18.jpg"
+                  src="/assets/slider/slide_2.jpg"
                   alt="Nhung hinh anh yeu thuong"
                   className="h-[138px] lg:h-[160px] xl:h-[178px] w-full rounded-[14px] object-cover"
                 />
@@ -117,7 +117,7 @@ export function HeroSection() {
                 <div className="absolute -top-3 left-1/2 h-6 w-24 -translate-x-1/2 rotate-[4deg] rounded-sm border border-lime-200/70 bg-lime-100/80" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/assets/FPT-Polytechnic_HN_thien_nguyen_xanh-.jpg"
+                  src="/assets/slider/slide_3.jpg"
                   alt="Cong dong cung chung tay"
                   className="h-[155px] lg:h-[178px] xl:h-[206px] w-full rounded-[14px] object-cover"
                 />
@@ -136,7 +136,7 @@ export function HeroSection() {
                 <div className="absolute -top-2 left-12 h-5 w-20 rotate-[-9deg] rounded-sm border border-rose-200/70 bg-rose-100/80" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/assets/register.png"
+                  src="/assets/slider/slide_4.jpg"
                   alt="Ky niem cung dong hanh"
                   className="h-[138px] lg:h-[160px] xl:h-[178px] w-full rounded-[14px] object-cover"
                 />
