@@ -33,11 +33,15 @@ import {
   TITLE_MAX,
 } from '@/components/campaign/create/constants';
 import type { CampaignDraft, FeedbackMessage, ProofPreview } from '@/components/campaign/create/types';
-import { formatDateVN, getDateAfterDaysISO, getTomorrowISO } from '@/components/campaign/create/utils';
+import {
+  formatDateVN,
+  getDateAfterDaysISO,
+  getTomorrowISO,
+  normalizeDeadlineToVnIso,
+} from '@/components/campaign/create/utils';
 import { Button } from '@/components/ui/button';
 import { formatVND, formatVNDInput } from '@/lib/money';
 import { formatVNDShort } from '@/lib/utils';
-import { toVnEndOfDayIso } from '@/lib/datetime';
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
@@ -71,7 +75,7 @@ export default function CreateCampaignPage() {
     defaultValues: createCampaignFormDefaultValues,
   });
 
-  const { reset, getValues, trigger, handleSubmit: handleFormSubmit } = formMethods;
+  const { reset, getValues, trigger, setError, clearErrors, handleSubmit: handleFormSubmit } = formMethods;
 
   // Bank list from VietQR API
   const {
@@ -109,6 +113,53 @@ export default function CreateCampaignPage() {
     const err = error as { status?: number; data?: { message?: string } } | undefined;
     if (err?.status === 500) return fallback;
     return err?.data?.message || fallback;
+  };
+
+  const applyBackendValidationErrors = (error: unknown): string | null => {
+    const err = error as
+      | {
+          data?: {
+            message?: string;
+            errors?: Array<{ field?: string; message?: string }>;
+          };
+        }
+      | undefined;
+
+    const errors = err?.data?.errors ?? [];
+    if (errors.length === 0) return null;
+
+    const resolveField = (field?: string): keyof CreateCampaignFormValues | null => {
+      if (!field) return null;
+      const normalized = field.trim();
+
+      if (normalized === 'title') return 'title';
+      if (normalized === 'story') return 'story';
+      if (normalized === 'goalAmount') return 'goalAmount';
+      if (normalized === 'deadline') return 'deadline';
+      if (normalized === 'bankName' || normalized === 'bankInfo.bankName') return 'bankName';
+      if (normalized === 'accountNumber' || normalized === 'bankInfo.accountNumber') return 'accountNumber';
+      if (normalized === 'accountHolderName' || normalized === 'bankInfo.accountHolderName') return 'accountHolderName';
+      return null;
+    };
+
+    let firstMessage: string | null = null;
+
+    for (const item of errors) {
+      if (!item?.message) continue;
+      const formField = resolveField(item.field);
+      const displayMessage =
+        item.field === 'deadline' && item.message.toLowerCase().includes('invalid datetime')
+          ? 'Thời hạn chưa đúng định dạng ngày giờ. Vui lòng chọn lại ngày kết thúc.'
+          : item.message;
+
+      if (!firstMessage) firstMessage = displayMessage;
+
+      if (formField) {
+        setError(formField, { type: 'server', message: displayMessage });
+      }
+    }
+
+    return firstMessage;
   };
 
   const shouldBlockForKyc = isAuthenticated && !user?.isKycVerified;
@@ -328,6 +379,17 @@ export default function CreateCampaignPage() {
 
     submitLockRef.current = true;
     setShowConfirm(false);
+    clearErrors();
+
+    const normalizedDeadline = normalizeDeadlineToVnIso(values.deadline);
+    if (!normalizedDeadline) {
+      const message = 'Thời hạn kết thúc chưa hợp lệ. Vui lòng chọn lại ngày.';
+      setError('deadline', { type: 'manual', message });
+      setFeedbackMsg({ type: 'error', text: message });
+      toast.error(message);
+      submitLockRef.current = false;
+      return;
+    }
 
     try {
       // Separate the cover image (thumbnail) from media files
@@ -339,7 +401,7 @@ export default function CreateCampaignPage() {
           title: values.title,
           story: values.story,
           goalAmount: values.goalAmount,
-          deadline: toVnEndOfDayIso(values.deadline),
+          deadline: normalizedDeadline,
           category: categoryValue,
           bankInfo: {
             bankName: values.bankName,
@@ -362,7 +424,8 @@ export default function CreateCampaignPage() {
         duration: REDIRECT_SECONDS * 1000,
       });
     } catch (err: unknown) {
-      const message = getDisplayErrorMessage(err, 'Có lỗi xảy ra, vui lòng thử lại.');
+      const validationMessage = applyBackendValidationErrors(err);
+      const message = validationMessage || getDisplayErrorMessage(err, 'Có lỗi xảy ra, vui lòng thử lại.');
       setFeedbackMsg({
         type: 'error',
         text: message,

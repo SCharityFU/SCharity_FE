@@ -226,19 +226,11 @@ export const campaignApi = createApi({
             ApiResponseDto<WithdrawRequestResponseDto>,
             CreateWithdrawRequestDto
         >({
-            query: (body) => {
-                const payload = { campaignId: body.campaignId };
-
-                if ('bankAccountId' in (body as unknown as Record<string, unknown>) && process.env.NODE_ENV !== 'production') {
-                    console.warn('[campaignApi] Deprecated bankAccountId detected in createWithdrawRequest payload. This field is ignored.');
-                }
-
-                return {
-                    url: '/withdrawals',
-                    method: 'POST',
-                    body: payload,
-                };
-            },
+            query: ({ campaignId }) => ({
+                url: '/withdrawals',
+                method: 'POST',
+                body: { campaignId },
+            }),
             invalidatesTags: ['MyCampaign', 'Withdrawal'],
         }),
 

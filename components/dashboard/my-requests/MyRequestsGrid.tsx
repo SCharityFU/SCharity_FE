@@ -1,25 +1,11 @@
-import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Eye,
-  Landmark,
-  Tag,
-  Target,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { RichTextContent } from "@/components/ui/rich-text-content";
-import { CampaignRequestStatus } from "@/dtos/enums";
-import type { CampaignRequestResponseDto } from "@/dtos/campaign";
-import {
-  CATEGORY_LABELS,
-  STATUS_CONFIG,
-  fmtDate,
-  fmtVND,
-} from "@/components/dashboard/my-requests/constants";
+import Link from 'next/link';
+import { AnimatePresence, motion } from 'motion/react';
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Landmark, Tag, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { RichTextContent } from '@/components/ui/rich-text-content';
+import { CampaignRequestStatus } from '@/dtos/enums';
+import type { CampaignRequestResponseDto } from '@/dtos/campaign';
+import { CATEGORY_LABELS, STATUS_CONFIG, fmtDate, fmtVND } from '@/components/dashboard/my-requests/constants';
 
 interface MyRequestsGridProps {
   requests: CampaignRequestResponseDto[];
@@ -28,7 +14,6 @@ interface MyRequestsGridProps {
   totalPages: number;
   isFetching: boolean;
   onOpenDetail: (req: CampaignRequestResponseDto) => void;
-  onOpenBankModal: (req: CampaignRequestResponseDto) => void;
   onPageChange: (nextPage: number) => void;
 }
 
@@ -39,7 +24,6 @@ export function MyRequestsGrid({
   totalPages,
   isFetching,
   onOpenDetail,
-  onOpenBankModal,
   onPageChange,
 }: MyRequestsGridProps) {
   return (
@@ -59,7 +43,7 @@ export function MyRequestsGrid({
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ delay: i * 0.05 }}
                 className={`glass-card rounded-2xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col ${
-                  isActive ? "ring-2 ring-rose-400 shadow-lg shadow-rose-500/10" : ""
+                  isActive ? 'ring-2 ring-rose-400 shadow-lg shadow-rose-500/10' : ''
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-3">
@@ -77,9 +61,7 @@ export function MyRequestsGrid({
                   )}
                 </div>
 
-                <h3 className="font-bold text-black text-[15px] leading-snug mb-2 line-clamp-2">
-                  {req.title}
-                </h3>
+                <h3 className="font-bold text-black text-[15px] leading-snug mb-2 line-clamp-2">{req.title}</h3>
 
                 <div className="text-xs text-black/50 leading-relaxed mb-3 flex-1 max-h-20 overflow-hidden">
                   <RichTextContent
@@ -122,36 +104,18 @@ export function MyRequestsGrid({
                 )}
 
                 <div className="flex flex-col gap-1.5 pt-3 border-t border-black/5 mt-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs"
-                    onClick={() => onOpenDetail(req)}
-                  >
+                  <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => onOpenDetail(req)}>
                     <Eye className="w-3 h-3" />
                     Xem Chi Tiết
                   </Button>
-                  <div className="flex gap-1.5">
-                    {req.status === CampaignRequestStatus.PENDING && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-xs"
-                        onClick={() => onOpenBankModal(req)}
-                      >
-                        <Landmark className="w-3 h-3" />
-                        Sửa Bank
+                  {req.campaignId && (
+                    <Link href={`/campaigns/${req.campaignId}`} className="w-full">
+                      <Button variant="ghost" size="sm" className="w-full text-xs">
+                        <Eye className="w-3 h-3" />
+                        Xem CD
                       </Button>
-                    )}
-                    {req.campaignId && (
-                      <Link href={`/campaigns/${req.campaignId}`} className="flex-1">
-                        <Button variant="ghost" size="sm" className="w-full text-xs">
-                          <Eye className="w-3 h-3" />
-                          Xem CD
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
+                    </Link>
+                  )}
                 </div>
               </motion.div>
             );

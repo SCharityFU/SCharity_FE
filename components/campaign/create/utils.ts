@@ -23,6 +23,29 @@ export function formatDateVN(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
+export function normalizeDeadlineToVnIso(deadline: string): string | null {
+  if (!deadline) return null;
+
+  // Date picker returns YYYY-MM-DD. Convert to end-of-day in Vietnam timezone.
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(deadline);
+  if (dateOnlyMatch) {
+    const year = Number(dateOnlyMatch[1]);
+    const month = Number(dateOnlyMatch[2]);
+    const day = Number(dateOnlyMatch[3]);
+
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      return null;
+    }
+
+    // 23:59:59.999 +07:00 === 16:59:59.999Z
+    return new Date(Date.UTC(year, month - 1, day, 16, 59, 59, 999)).toISOString();
+  }
+
+  const parsed = new Date(deadline);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+}
+
 export function shortVND(n: number): string {
   return formatVNDShort(n);
 }

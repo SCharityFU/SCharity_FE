@@ -38,10 +38,11 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
   const [localError, setLocalError] = useState('');
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const { bankList } = useVietQRBanks();
+  const resolvedBankInfo = detail.campaign?.bankInfo ?? detail.bankInfo;
 
   const canProcess = detail.status === WithdrawStatus.PENDING;
   const transferReference = `WR-${detail.id.slice(0, 8).toUpperCase()}`;
-  const bankNameNormalized = detail.bankInfo.bankName.trim().toLowerCase();
+  const bankNameNormalized = resolvedBankInfo.bankName.trim().toLowerCase();
   const matchedBank = bankList.find((bank) => {
     const shortName = bank.shortName.trim().toLowerCase();
     const name = bank.name.trim().toLowerCase();
@@ -55,7 +56,7 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
   });
 
   const qrImageUrl = matchedBank
-    ? `https://img.vietqr.io/image/${matchedBank.bin}-${detail.bankInfo.accountNumber}-compact2.png?amount=${detail.amount}&addInfo=${encodeURIComponent(transferReference)}&accountName=${encodeURIComponent(detail.bankInfo.accountHolderName)}`
+    ? `https://img.vietqr.io/image/${matchedBank.bin}-${resolvedBankInfo.accountNumber}-compact2.png?amount=${detail.amount}&addInfo=${encodeURIComponent(transferReference)}&accountName=${encodeURIComponent(resolvedBankInfo.accountHolderName)}`
     : null;
 
   const handleCopy = async (value: string, label: string) => {
@@ -209,13 +210,13 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
         <section className="rounded-xl border border-black/10 bg-white p-3 md:p-4 space-y-3">
           <h2 className="text-sm font-semibold text-black">Thông tin ngân hàng & QR chuyển khoản</h2>
           <p className="text-sm text-black/60">
-            Ngân hàng: <span className="text-black">{detail.bankInfo.bankName}</span>
+            Ngân hàng: <span className="text-black">{resolvedBankInfo.bankName}</span>
           </p>
           <p className="text-sm text-black/60">
-            Số tài khoản: <span className="text-black">{detail.bankInfo.accountNumber}</span>
+            Số tài khoản: <span className="text-black">{resolvedBankInfo.accountNumber}</span>
           </p>
           <p className="text-sm text-black/60">
-            Chủ tài khoản: <span className="text-black">{detail.bankInfo.accountHolderName}</span>
+            Chủ tài khoản: <span className="text-black">{resolvedBankInfo.accountHolderName}</span>
           </p>
 
           <div className="rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-3">
@@ -245,7 +246,7 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => void handleCopy(detail.bankInfo.bankName, 'tên ngân hàng')}
+                onClick={() => void handleCopy(resolvedBankInfo.bankName, 'tên ngân hàng')}
               >
                 <Copy className="w-3.5 h-3.5" />
                 Bank
@@ -254,7 +255,7 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => void handleCopy(detail.bankInfo.accountNumber, 'số tài khoản')}
+                onClick={() => void handleCopy(resolvedBankInfo.accountNumber, 'số tài khoản')}
               >
                 <Copy className="w-3.5 h-3.5" />
                 STK
@@ -263,7 +264,7 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => void handleCopy(detail.bankInfo.accountHolderName, 'chủ tài khoản')}
+                onClick={() => void handleCopy(resolvedBankInfo.accountHolderName, 'chủ tài khoản')}
               >
                 <Copy className="w-3.5 h-3.5" />
                 Chủ TK
