@@ -34,6 +34,16 @@ export const commentReactionApi = createApi({
       invalidatesTags: (result, error, { commentId }) => [{ type: 'CommentReaction', id: commentId }],
     }),
 
+    // POST /commentreactions/cancel
+    cancelCommentReaction: builder.mutation<{ success: boolean; affected: number }, { commentId: string }>({
+      query: (body) => ({
+        url: '/cancel',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, error, { commentId }) => [{ type: 'CommentReaction', id: commentId }],
+    }),
+
     // GET /commentreactions/:commentId/reactions
     getCommentReactions: builder.query<{ success: boolean; reactions: CommentReactionResponse[] }, string>({
       query: (commentId) => `/${commentId}/reactions`,
@@ -44,5 +54,6 @@ export const commentReactionApi = createApi({
 
 export const {
   useReactToCommentMutation,
+  useCancelCommentReactionMutation,
   useGetCommentReactionsQuery,
 } = commentReactionApi;

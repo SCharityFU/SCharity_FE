@@ -7,7 +7,7 @@ import { formatDateOnly } from '@/lib/utils';
 import { formatVND } from '@/lib/money';
 import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
-import { useGetCommentReactionsQuery, useReactToCommentMutation } from '@/lib/store/features/commentreaction/commentReactionApi';
+import { useGetCommentReactionsQuery, useReactToCommentMutation, useCancelCommentReactionMutation } from '@/lib/store/features/commentreaction/commentReactionApi';
 import { toast } from 'sonner';
 
 // ── Avatar gradients ──────────────────────────────────────────────────────────
@@ -63,6 +63,7 @@ function EmptyState() {
 function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
   const { data: reactionData } = useGetCommentReactionsQuery(comment.id);
   const [reactToComment, { isLoading: isReacting }] = useReactToCommentMutation();
+  const [cancelCommentReaction, { isLoading: isCancelling }] = useCancelCommentReactionMutation();
 
   const reactions = reactionData?.reactions ?? [];
   const counts: Record<string, number> = {};
@@ -71,13 +72,22 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
   }
 
   const handleReact = async (type: string) => {
+    // Nếu đã thả emotion này rồi, hãy xóa nó. Nếu chưa, hãy thả
+    const hasReacted = counts[type] > 0;
+    
     try {
-      await reactToComment({ commentId: comment.id, type }).unwrap();
+      if (hasReacted) {
+        // Cancel reaction
+        await cancelCommentReaction({ commentId: comment.id }).unwrap();
+      } else {
+        // React to comment
+        await reactToComment({ commentId: comment.id, type }).unwrap();
+      }
     } catch (err: any) {
       if (err.status === 401) {
         toast.error('Vui lòng đăng nhập để thả cảm xúc');
       } else {
-        toast.error('Không thể thả cảm xúc lúc này');
+        toast.error('Không thể xử lý cảm xúc lúc này');
       }
     }
   };
@@ -153,7 +163,7 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
               {/* Reactions aligned to the right of the content */}
               <div className="flex items-center gap-1.5">
                 <button
-                  disabled={isReacting}
+                  disabled={isReacting || isCancelling}
                   className={cn(
                     "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border",
                     "bg-white border-black/5 hover:border-blue-500/30 hover:bg-blue-50 hover:text-blue-600 active:scale-95 disabled:opacity-50",
@@ -166,7 +176,7 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
                 </button>
 
                 <button
-                  disabled={isReacting}
+                  disabled={isReacting || isCancelling}
                   className={cn(
                     "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border",
                     "bg-white border-black/5 hover:border-rose-500/30 hover:bg-rose-50 hover:text-rose-600 active:scale-95 disabled:opacity-50",
