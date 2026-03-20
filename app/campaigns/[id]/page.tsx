@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { CampaignDetailClient } from './CampaignDetailClient';
 import type { PublicCampaignDetailResponseDto } from '@/dtos/campaign';
 
+// Force dynamic rendering để lúc nào cũng fetch data mới
+export const dynamic = 'force-dynamic';
+
 type Props = {
   params: { id: string };
 };
@@ -13,7 +16,7 @@ async function getCampaign(id: string): Promise<PublicCampaignDetailResponseDto 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
   try {
     const res = await fetch(`${apiUrl}/campaigns/${id}`, {
-      next: { revalidate: 60 },
+      cache: 'no-store', 
     });
     if (!res.ok) return null;
     const json = await res.json();

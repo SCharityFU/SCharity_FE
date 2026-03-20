@@ -13,8 +13,15 @@ function CallbackContent() {
   const [verifyPayment] = useVerifyPaymentMutation();
   const [status, setStatus] = useState<"loading" | "success" | "cancelled" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
+  const [campaignId, setCampaignId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Lấy campaignId từ sessionStorage
+    if (typeof window !== 'undefined') {
+      const storedCampaignId = sessionStorage.getItem('donatedCampaignId');
+      setCampaignId(storedCampaignId);
+    }
+
     const orderCode = searchParams.get("orderCode");
     const cancel = searchParams.get("cancel");
 
@@ -74,11 +81,20 @@ function CallbackContent() {
                 Khám phá thêm chiến dịch
               </button>
             </Link>
-            <Link href="/profile" className="block">
-              <button className="w-full py-3 rounded-xl text-sm font-semibold border border-black/10 text-black/50 hover:text-black/70 hover:border-black/20 transition-colors">
-                Về trang cá nhân
-              </button>
-            </Link>
+            <div className="flex gap-2">
+              {campaignId && (
+                <Link href={`/campaigns/${campaignId}`} className="flex-1">
+                  <button className="w-full py-3 rounded-xl text-sm font-semibold bg-rose-100 text-rose-700 hover:bg-rose-200 transition-colors">
+                    ← Chiến dịch vừa donate
+                  </button>
+                </Link>
+              )}
+              <Link href="/dashboard/mydonation" className={campaignId ? "flex-1" : "w-full"}>
+                <button className="w-full py-3 rounded-xl text-sm font-semibold border border-black/10 text-black/50 hover:text-black/70 hover:border-black/20 transition-colors">
+                  Lịch sử quyên góp
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       )}
