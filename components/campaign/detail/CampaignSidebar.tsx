@@ -310,6 +310,10 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
         isAnonymous: user ? donateAnonymous : true,
       }).unwrap();
       if (res.data?.checkoutUrl) {
+        // Lưu campaignId vào sessionStorage để callback page có thể quay về
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('donatedCampaignId', campaign.id);
+        }
         window.location.href = res.data.checkoutUrl;
       }
     } catch (err: unknown) {
