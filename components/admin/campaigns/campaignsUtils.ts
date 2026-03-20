@@ -1,9 +1,12 @@
 import { CampaignStatus } from "@/dtos";
 import { formatVND } from '@/lib/money';
 
+export { formatVND };
+
 export const ADMIN_CAMPAIGN_STATUS_OPTIONS = [
   { label: "Tất cả trạng thái", value: "all" },
   { label: "Đang chờ", value: CampaignStatus.PENDING },
+  { label: "Từ chối", value: CampaignStatus.REJECTED },
   { label: "Đang hoạt động", value: CampaignStatus.ACTIVE },
   { label: "Đã đóng", value: CampaignStatus.CLOSED },
   { label: "Tạm dừng", value: CampaignStatus.SUSPENDED },
@@ -21,6 +24,8 @@ export function campaignStatusLabel(status: string): string {
   switch (status) {
     case CampaignStatus.PENDING:
       return "Đang chờ";
+    case CampaignStatus.REJECTED:
+      return "Từ chối";
     case CampaignStatus.ACTIVE:
       return "Đang hoạt động";
     case CampaignStatus.CLOSED:
@@ -40,6 +45,8 @@ export function campaignStatusClassName(status: string): string {
   switch (status) {
     case CampaignStatus.PENDING:
       return "bg-slate-100 text-slate-700 border border-slate-200";
+    case CampaignStatus.REJECTED:
+      return "bg-rose-50 text-rose-700 border border-rose-200";
     case CampaignStatus.ACTIVE:
       return "bg-emerald-50 text-emerald-700 border border-emerald-200";
     case CampaignStatus.CLOSED:

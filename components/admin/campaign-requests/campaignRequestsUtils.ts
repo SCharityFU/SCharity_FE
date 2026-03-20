@@ -1,6 +1,8 @@
 import { CampaignRequestStatus } from "@/dtos";
 import { formatVND } from '@/lib/money';
 
+export { formatVND };
+
 export function formatDateTimeVN(value?: string | null): string {
   if (!value) return "-";
   const d = new Date(value);

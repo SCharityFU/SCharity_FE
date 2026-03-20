@@ -37,6 +37,7 @@ import { formatDateVN, getDateAfterDaysISO, getTomorrowISO } from '@/components/
 import { Button } from '@/components/ui/button';
 import { formatVND, formatVNDInput } from '@/lib/money';
 import { formatVNDShort } from '@/lib/utils';
+import { toVnEndOfDayIso } from '@/lib/datetime';
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
@@ -338,7 +339,7 @@ export default function CreateCampaignPage() {
           title: values.title,
           story: values.story,
           goalAmount: values.goalAmount,
-          deadline: new Date(values.deadline).toISOString(),
+          deadline: toVnEndOfDayIso(values.deadline),
           category: categoryValue,
           bankInfo: {
             bankName: values.bankName,

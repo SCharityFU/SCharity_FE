@@ -18,6 +18,7 @@ export enum CampaignStatus {
   SUSPENDED = 'suspended',
   COMPLETED = 'completed',
   WITHDRAWN = 'withdrawn',
+  REJECTED = 'rejected',
 }
 
 export enum CampaignCategory {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Heart, Users, Calendar, Plus, ChevronLeft, ChevronRight, Eye, Edit2 } from 'lucide-react';
+import { ArrowLeft, Heart, Users, Calendar, Plus, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { CampaignStatus, CampaignCategory } from '@/dtos/enums';
 import type { CampaignDto } from '@/dtos/campaign';
 import { HighlightText } from '@/components/ui/highlight-text';
@@ -17,6 +17,7 @@ import { formatVND } from '@/lib/money';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   [CampaignStatus.PENDING]: { label: 'Chờ duyệt', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+  [CampaignStatus.REJECTED]: { label: 'Bị từ chối', color: 'text-rose-600 bg-rose-500/10 border-rose-500/20' },
   [CampaignStatus.ACTIVE]: { label: 'Đang chạy', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
   [CampaignStatus.CLOSED]: { label: 'Đã đóng', color: 'text-gray-500 bg-gray-500/10 border-gray-500/20' },
   [CampaignStatus.SUSPENDED]: { label: 'Tạm dừng', color: 'text-red-500 bg-red-500/10 border-red-500/20' },

@@ -10,6 +10,8 @@ import type {
   AdminCampaignTransactionsQueryDto,
   AdminReportResponseDto,
   AdminReportsQueryDto,
+  AdminUserListItemDto,
+  AdminUsersQueryDto,
   AdminCampaignRequestsQueryDto,
   AdminTransactionsQueryDto,
   AdminWithdrawRequestItemDto,
@@ -58,7 +60,8 @@ export const adminApi = createApi({
     "AdminCampaignRequestDetail",
     "AdminWithdrawRequests",
     "AdminWithdrawRequestDetail",
-    "AdminDashboard"
+    "AdminDashboard",
+    "AdminUsers",
   ],
   endpoints: (builder) => ({
     getAdminDashboard: builder.query<
@@ -180,6 +183,22 @@ export const adminApi = createApi({
         },
       }),
       providesTags: ["AdminCampaigns"],
+    }),
+
+    getAdminUsers: builder.query<
+      PaginatedResponseDto<AdminUserListItemDto>,
+      AdminUsersQueryDto
+    >({
+      query: ({ page = 1, limit = 10, search, isEmailVerified } = {}) => ({
+        url: "/admin/users",
+        params: {
+          page,
+          limit,
+          ...(search ? { search } : {}),
+          ...(typeof isEmailVerified === "boolean" ? { isEmailVerified } : {}),
+        },
+      }),
+      providesTags: ["AdminUsers"],
     }),
 
     getDashboardStats: builder.query<DashboardStatsResponseDto, void>({
@@ -311,6 +330,7 @@ export const {
   useGetAdminCampaignRequestDetailQuery,
   useReviewAdminCampaignRequestMutation,
   useGetAdminCampaignsQuery,
+  useGetAdminUsersQuery,
   useGetAdminCampaignDetailQuery,
   useGetAdminCampaignAnalyticsQuery,
   useGetAdminTransactionsQuery,

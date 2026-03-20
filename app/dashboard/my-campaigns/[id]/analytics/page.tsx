@@ -43,6 +43,8 @@ function compactMoneyTick(value: number): string {
 
 function statusLabel(status: CampaignStatus): string {
   switch (status) {
+    case CampaignStatus.REJECTED:
+      return 'Từ chối';
     case CampaignStatus.ACTIVE:
       return 'Đang hoạt động';
     case CampaignStatus.CLOSED:
@@ -60,6 +62,8 @@ function statusLabel(status: CampaignStatus): string {
 
 function statusClass(status: CampaignStatus): string {
   switch (status) {
+    case CampaignStatus.REJECTED:
+      return 'bg-rose-100 text-rose-700';
     case CampaignStatus.ACTIVE:
       return 'bg-emerald-100 text-emerald-700';
     case CampaignStatus.CLOSED:

@@ -128,33 +128,20 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <section className="rounded-xl border border-black/10 bg-white p-3 md:p-4 space-y-2">
-          <h2 className="text-sm font-semibold text-black">Thông tin người yêu cầu</h2>
-          <p className="text-sm text-black/60">
-            ID: <span className="text-black">{detail.requesterId}</span>
-          </p>
-          <p className="text-sm text-black/60">
-            Tên: <span className="text-black">{detail.requester?.fullName || '-'}</span>
-          </p>
-          <p className="text-sm text-black/60">
-            Email: <span className="text-black">{detail.requester?.email || '-'}</span>
-          </p>
-        </section>
+      <section className="rounded-xl border border-black/10 bg-white p-3 md:p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-black">Thông tin người yêu cầu</h2>
+        <p className="text-sm text-black/60">
+          ID: <span className="text-black">{detail.requesterId}</span>
+        </p>
+        <p className="text-sm text-black/60">
+          Tên: <span className="text-black">{detail.requester?.fullName || '-'}</span>
+        </p>
+        <p className="text-sm text-black/60">
+          Email: <span className="text-black">{detail.requester?.email || '-'}</span>
+        </p>
+      </section>
 
-        <section className="rounded-xl border border-black/10 bg-white p-3 md:p-4 space-y-2">
-          <h2 className="text-sm font-semibold text-black">Thông tin ngân hàng</h2>
-          <p className="text-sm text-black/60">
-            Ngân hàng: <span className="text-black">{detail.bankInfo.bankName}</span>
-          </p>
-          <p className="text-sm text-black/60">
-            Số tài khoản: <span className="text-black">{detail.bankInfo.accountNumber}</span>
-          </p>
-          <p className="text-sm text-black/60">
-            Chủ tài khoản: <span className="text-black">{detail.bankInfo.accountHolderName}</span>
-          </p>
-        </section>
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         <section className="rounded-xl border border-black/10 bg-white p-3 md:p-4 space-y-2">
           <h2 className="text-sm font-semibold text-black">Xử lý</h2>
           <p className="text-sm text-black/60">
@@ -167,76 +154,6 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
           <p className="text-sm text-black/60">
             Lý do từ chối: <span className="text-black">{detail.rejectReason || '-'}</span>
           </p>
-
-          {canProcess && (
-            <div className="rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-3">
-              <div className="flex items-center gap-2">
-                <QrCode className="w-4 h-4 text-violet-600" />
-                <p className="text-xs font-semibold text-violet-800">QR chuyển khoản tham khảo</p>
-              </div>
-
-              {qrImageUrl ? (
-                <div className="bg-white rounded-md border border-violet-100 p-2 flex justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={qrImageUrl} alt="QR chuyển khoản" className="w-44 h-44 object-contain" />
-                </div>
-              ) : (
-                <p className="text-[11px] text-violet-700">
-                  Không map được mã ngân hàng từ dữ liệu hiện tại, vui lòng dùng thông tin copy bên dưới để chuyển khoản
-                  thủ công.
-                </p>
-              )}
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void handleCopy(detail.bankInfo.bankName, 'tên ngân hàng')}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  Bank
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void handleCopy(detail.bankInfo.accountNumber, 'số tài khoản')}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  STK
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void handleCopy(detail.bankInfo.accountHolderName, 'chủ tài khoản')}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  Chủ TK
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void handleCopy(String(detail.amount), 'số tiền')}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  Số tiền
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="col-span-2"
-                  onClick={() => void handleCopy(transferReference, 'nội dung chuyển khoản')}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  Nội dung: {transferReference}
-                </Button>
-              </div>
-            </div>
-          )}
 
           <div className="border-t border-black/10 pt-3 space-y-2">
             <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
@@ -284,6 +201,91 @@ export function WithdrawRequestDetailView({ detail, submitting, onProcess }: Wit
                 }}
               >
                 Từ chối yêu cầu
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-black/10 bg-white p-3 md:p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-black">Thông tin ngân hàng & QR chuyển khoản</h2>
+          <p className="text-sm text-black/60">
+            Ngân hàng: <span className="text-black">{detail.bankInfo.bankName}</span>
+          </p>
+          <p className="text-sm text-black/60">
+            Số tài khoản: <span className="text-black">{detail.bankInfo.accountNumber}</span>
+          </p>
+          <p className="text-sm text-black/60">
+            Chủ tài khoản: <span className="text-black">{detail.bankInfo.accountHolderName}</span>
+          </p>
+
+          <div className="rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-violet-600" />
+              <p className="text-xs font-semibold text-violet-800">QR chuyển khoản (ưu tiên quét bằng camera)</p>
+            </div>
+
+            {qrImageUrl ? (
+              <div className="bg-white rounded-md border border-violet-100 p-3 flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrImageUrl}
+                  alt="QR chuyển khoản"
+                  className="w-full max-w-[360px] aspect-square object-contain"
+                />
+              </div>
+            ) : (
+              <p className="text-[11px] text-violet-700">
+                Không map được mã ngân hàng từ dữ liệu hiện tại, vui lòng dùng thông tin copy bên dưới để chuyển khoản
+                thủ công.
+              </p>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleCopy(detail.bankInfo.bankName, 'tên ngân hàng')}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Bank
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleCopy(detail.bankInfo.accountNumber, 'số tài khoản')}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                STK
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleCopy(detail.bankInfo.accountHolderName, 'chủ tài khoản')}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Chủ TK
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleCopy(String(detail.amount), 'số tiền')}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Số tiền
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="col-span-2"
+                onClick={() => void handleCopy(transferReference, 'nội dung chuyển khoản')}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Nội dung: {transferReference}
               </Button>
             </div>
           </div>
