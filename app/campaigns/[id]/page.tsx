@@ -8,7 +8,7 @@ import type { PublicCampaignDetailResponseDto } from '@/dtos/campaign';
 export const dynamic = 'force-dynamic';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 // ── Data Fetching ─────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ async function getCampaign(id: string): Promise<PublicCampaignDetailResponseDto 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
   try {
     const res = await fetch(`${apiUrl}/campaigns/${id}`, {
-      cache: 'no-store', 
+      cache: 'no-store',
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -28,11 +28,9 @@ async function getCampaign(id: string): Promise<PublicCampaignDetailResponseDto 
 }
 
 // ── Dynamic Metadata ──────────────────────────────────────────────────────────
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
-  const campaign = await getCampaign(params.id);
+export async function generateMetadata({ params }: Props, parent: ResolvingMetadata): Promise<Metadata> {
+  const { id } = await params;
+  const campaign = await getCampaign(id);
 
   if (!campaign) {
     return {
@@ -40,14 +38,12 @@ export async function generateMetadata(
     };
   }
 
-  const images = [...(campaign.mediaUrls ?? []), campaign.thumbnailUrl].filter(
-    (u): u is string => !!u,
-  );
-  
+  const images = [...(campaign.mediaUrls ?? []), campaign.thumbnailUrl].filter((u): u is string => !!u);
+
   // Truncate and strip HTML from story for description
   const cleanDescription = (campaign.story || '')
     .replace(/<[^>]*>?/gm, '') // Strip HTML
-    .replace(/\s+/g, ' ')      // Collapse multiple spaces/newlines
+    .replace(/\s+/g, ' ') // Collapse multiple spaces/newlines
     .trim()
     .slice(0, 150);
 
@@ -73,7 +69,8 @@ export async function generateMetadata(
 
 // ── Server Component ──────────────────────────────────────────────────────────
 export default async function CampaignDetailPage({ params }: Props) {
-  const campaign = await getCampaign(params.id);
+  const { id } = await params;
+  const campaign = await getCampaign(id);
 
   // ── Error / Not Found ────────────────────────────────────────────────────────
   if (!campaign) {

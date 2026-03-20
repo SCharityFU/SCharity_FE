@@ -7,7 +7,11 @@ import { formatDateOnly } from '@/lib/utils';
 import { formatVND } from '@/lib/money';
 import { Modal } from '@/components/ui/modal';
 import { cn } from '@/lib/utils';
-import { useGetCommentReactionsQuery, useReactToCommentMutation, useCancelCommentReactionMutation } from '@/lib/store/features/commentreaction/commentReactionApi';
+import {
+  useGetCommentReactionsQuery,
+  useReactToCommentMutation,
+  useCancelCommentReactionMutation,
+} from '@/lib/store/features/commentreaction/commentReactionApi';
 import { toast } from 'sonner';
 
 // ── Avatar gradients ──────────────────────────────────────────────────────────
@@ -76,7 +80,7 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
   const handleReact = async (type: string) => {
     // Nếu đã thả emotion này rồi, hãy xóa nó. Nếu chưa, hãy thả
     const hasReacted = counts[type] > 0;
-    
+
     try {
       if (hasReacted) {
         // Cancel reaction

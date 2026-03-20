@@ -234,13 +234,21 @@ export default function CreateCampaignPage() {
 
     setMediaFiles((prev) => [...prev, ...newFiles]);
 
-    newFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setMediaPreviews((prev) => [...prev, ev.target?.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    const readAsDataUrl = (file: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve((ev.target?.result as string) ?? '');
+        reader.onerror = () => reject(new Error(`Không thể đọc tệp ${file.name}`));
+        reader.readAsDataURL(file);
+      });
+
+    void Promise.all(newFiles.map((file) => readAsDataUrl(file)))
+      .then((previews) => {
+        setMediaPreviews((prev) => [...prev, ...previews]);
+      })
+      .catch(() => {
+        toast.error('Không thể đọc một số ảnh đã chọn. Vui lòng thử lại.');
+      });
   }, []);
 
   const removeMedia = (idx: number) => {
