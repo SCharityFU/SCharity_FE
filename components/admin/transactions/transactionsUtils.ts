@@ -1,6 +1,8 @@
 import type { AdminDonationItem } from "@/lib/store/features/admin/adminApi";
 import { formatVND } from '@/lib/money';
 
+export { formatVND };
+
 export function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";

@@ -5,7 +5,6 @@ import {
   Users,
   Clock,
   Share2,
-  Check,
   Trophy,
   Flame,
   ChevronRight,
@@ -18,6 +17,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Flag,
+  SquareChartGantt,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -106,34 +106,14 @@ function StatChip({
 
 // ── Donor row ─────────────────────────────────────────────────────────────────
 
-function DonorRow({ donation, rank }: { donation: DonationResponseDto; rank: number }) {
+function DonorRow({ donation }: { donation: DonationResponseDto }) {
   const name = donation.donorDisplayName ?? 'Nhà hảo tâm ẩn danh';
   const gradient = donorGradient(name);
   const initial = name.charAt(0).toUpperCase();
   const avatarUrl = !donation.isAnonymous ? (donation.donor?.avatarUrl ?? undefined) : undefined;
 
-  const rankStyles: Record<number, string> = {
-    0: 'bg-amber-400/20 text-amber-600 border border-amber-400/40',
-    1: 'bg-black/6 text-black border border-black/10',
-    2: 'bg-amber-700/10 text-amber-700 border border-amber-600/25',
-  };
-
   return (
     <div className="flex items-center gap-3">
-      {/* Rank / index */}
-      {rank < 3 ? (
-        <div
-          className={cn(
-            'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0',
-            rankStyles[rank],
-          )}
-        >
-          {rank + 1}
-        </div>
-      ) : (
-        <div className="w-5 flex-shrink-0" />
-      )}
-
       {/* Avatar */}
       {avatarUrl ? (
         <img
@@ -336,10 +316,28 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
     ? Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
-  const isUrgent = daysLeft > 0 && daysLeft <= 7 && campaign.status === 'active';
-  const isActive = campaign.status === 'active';
-  const isClosed = campaign.status === 'closed';
-  const isSuspended = campaign.status === 'suspended';
+  const normalizedCampaignStatus = String(campaign.status ?? '').toLowerCase();
+  const isUrgent = daysLeft > 0 && daysLeft <= 7 && normalizedCampaignStatus === 'active';
+  const isActive = normalizedCampaignStatus === 'active';
+  const isClosed = normalizedCampaignStatus === 'closed';
+  const isSuspended = normalizedCampaignStatus === 'suspended';
+  const isCompleted = normalizedCampaignStatus === 'completed';
+  const isWithdrawn = normalizedCampaignStatus === 'withdrawn';
+  const isRejected = normalizedCampaignStatus === 'rejected';
+
+  const canDonate = isActive;
+
+  const donateButtonLabel = canDonate
+    ? 'Quyên Góp Ngay'
+    : isWithdrawn
+      ? 'Đã giải ngân'
+      : isCompleted
+        ? 'Đã kết thúc quyên góp'
+        : isSuspended
+          ? 'Đang tạm ngưng'
+          : isRejected
+            ? 'Chưa được phê duyệt'
+            : 'Chiến dịch đã đóng';
 
   const successDonations = (campaign.donations ?? []).filter((d) => {
     // Campaign detail payload may omit donation status; in that case, keep item visible.
@@ -390,12 +388,12 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           )}
 
           {/* Suspended notice */}
-          {isSuspended && (
+          {/* {isSuspended && (
             <div className="flex items-center gap-2 p-2.5 mb-4 rounded-xl bg-red-500/8 border border-red-500/20">
               <AlertOctagon className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
               <p className="text-[11px] font-semibold text-red-700">Chiến dịch đang tạm ngưng, không nhận quyên góp.</p>
             </div>
-          )}
+          )} */}
 
           {/* Closed notice */}
           {isClosed && (
@@ -444,16 +442,16 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           {/* ── Donate button ─────────────────────────────────────────────── */}
           <button
             onClick={() => setDonateModalOpen(true)}
-            disabled={!isActive}
+            disabled={!canDonate}
             className={cn(
               'w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200',
-              isActive
+              canDonate
                 ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/25 hover:shadow-rose-500/40 hover:from-rose-600 hover:to-rose-700 hover:scale-[1.01] active:scale-[0.99]'
                 : 'bg-black/6 text-black/60 cursor-not-allowed',
             )}
           >
-            <Heart className={cn('w-4 h-4', isActive ? 'fill-white/80 text-white' : 'text-black/60')} />
-            {isActive ? 'Quyên Góp Ngay' : isSuspended ? 'Đang tạm ngưng' : 'Chiến dịch đã đóng'}
+            <Heart className={cn('w-4 h-4', canDonate ? 'fill-white/80 text-white' : 'text-black/60')} />
+            {donateButtonLabel}
           </button>
 
           {/* ── Share button ───────────────────────────────────────────────── */}
@@ -477,8 +475,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
           {isOwner && (
             <Link href={`/dashboard/my-campaigns/${campaign.id}`} className="block mt-2.5">
               <Button variant="outline" className="w-full">
-                <Wallet className="w-4 h-4" />
-                Quản lý rút tiền
+                <SquareChartGantt className="w-4 h-4" />
+                Quản lý chiến dịch này
               </Button>
             </Link>
           )}
@@ -518,8 +516,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
 
             {/* List */}
             <div className="px-5 py-4 space-y-3.5">
-              {previewDonors.map((d, i) => (
-                <DonorRow key={d.id} donation={d} rank={i} />
+              {previewDonors.map((d) => (
+                <DonorRow key={d.id} donation={d} />
               ))}
             </div>
 
@@ -556,8 +554,8 @@ export function CampaignSidebar({ campaign }: { campaign: PublicCampaignDetailRe
         subtitle={`${successDonations.length} lượt quyên góp`}
       >
         <div className="space-y-4">
-          {successDonations.map((d, i) => (
-            <DonorRow key={d.id} donation={d} rank={i} />
+          {successDonations.map((d) => (
+            <DonorRow key={d.id} donation={d} />
           ))}
         </div>
       </Modal>

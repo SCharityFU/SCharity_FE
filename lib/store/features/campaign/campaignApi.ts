@@ -226,10 +226,10 @@ export const campaignApi = createApi({
             ApiResponseDto<WithdrawRequestResponseDto>,
             CreateWithdrawRequestDto
         >({
-            query: (body) => ({
+            query: ({ campaignId }) => ({
                 url: '/withdrawals',
                 method: 'POST',
-                body,
+                body: { campaignId },
             }),
             invalidatesTags: ['MyCampaign', 'Withdrawal'],
         }),

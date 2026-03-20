@@ -86,6 +86,7 @@ export interface CampaignDto {
   reportCount: number;
   creatorId: string;
   creator?: UserPublicDto;
+  bankInfo: BankInfoDto | null;
   createdAt: string;
   updatedAt: string;
   comments: CampaignCommentResponseDto[] | null;

@@ -2,6 +2,8 @@ import { CampaignStatus } from "@/dtos";
 import type { AdminDonationItem } from "@/lib/store/features/admin/adminApi";
 import { formatVND } from '@/lib/money';
 
+export { formatVND };
+
 export function formatDateTimeVN(value?: string | null): string {
   if (!value) return "-";
   const d = new Date(value);
@@ -40,6 +42,8 @@ export function statusClassName(status: string): string {
   switch (status) {
     case CampaignStatus.PENDING:
       return "bg-slate-100 text-slate-700 border border-slate-200";
+    case CampaignStatus.REJECTED:
+      return "bg-rose-50 text-rose-700 border border-rose-200";
     case CampaignStatus.ACTIVE:
       return "bg-emerald-50 text-emerald-700 border border-emerald-200";
     case CampaignStatus.CLOSED:
@@ -59,6 +63,8 @@ export function statusLabel(status: string): string {
   switch (status) {
     case CampaignStatus.PENDING:
       return "Đang chờ";
+    case CampaignStatus.REJECTED:
+      return "Từ chối";
     case CampaignStatus.ACTIVE:
       return "Đang hoạt động";
     case CampaignStatus.CLOSED:

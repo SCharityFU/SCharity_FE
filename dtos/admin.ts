@@ -8,7 +8,7 @@ import {
   ReportStatus,
   ReportReason,
 } from './enums';
-import { DonationChartDataPointDto } from './campaign';
+import { BankInfoDto, DonationChartDataPointDto } from './campaign';
 import { UserPublicDto } from './auth';
 
 // ── Request DTOs ────────────────────────────────────────────────────────────
@@ -128,6 +128,7 @@ export interface AdminWithdrawBankInfoDto {
 export interface AdminWithdrawRelatedCampaignDto {
   id: string;
   title?: string;
+  bankInfo?: BankInfoDto | null;
 }
 
 export interface AdminWithdrawRelatedUserDto {
@@ -184,6 +185,7 @@ export interface AdminCampaignDetailDto {
     fullName: string;
     avatarUrl: string | null;
   };
+  bankInfo: BankInfoDto | null;
   publicView?: {
     campaignId: string;
     endpoint: string;

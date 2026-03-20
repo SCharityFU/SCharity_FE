@@ -30,7 +30,9 @@ function getGradient(seed: string) {
 // ── Relative time ─────────────────────────────────────────────────────────────
 
 function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() + 7); // Adjust to VN timezone
+  const diff = Date.now() - date.getTime();
   const minutes = Math.floor(diff / 60_000);
   const hours = Math.floor(diff / 3_600_000);
   const days = Math.floor(diff / 86_400_000);
@@ -140,7 +142,7 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <span className="text-xs font-bold text-black leading-tight block mb-1">{displayName}</span>
-              
+
               {/* Donation pill */}
               {comment.donation && (
                 <div className="inline-flex items-center gap-1 mb-2 text-[10px] font-semibold text-rose-600 bg-rose-500/8 px-1.5 py-0.5 rounded-full border border-rose-500/15">
@@ -150,24 +152,20 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
               )}
 
               {/* Text - now aligned with the right side icons */}
-              <p className="text-[14px] sm:text-base text-black/90 leading-tight">
-                {comment.content}
-              </p>
+              <p className="text-[14px] sm:text-base text-black/90 leading-tight">{comment.content}</p>
             </div>
 
             <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <span className="text-[11px] text-black/40 whitespace-nowrap">
-                {relativeTime(comment.createdAt)}
-              </span>
-              
+              <span className="text-[11px] text-black/40 whitespace-nowrap">{relativeTime(comment.createdAt)}</span>
+
               {/* Reactions aligned to the right of the content */}
               <div className="flex items-center gap-1.5">
                 <button
                   disabled={isReacting || isCancelling}
                   className={cn(
-                    "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border",
-                    "bg-white border-black/5 hover:border-blue-500/30 hover:bg-blue-50 hover:text-blue-600 active:scale-95 disabled:opacity-50",
-                    counts['like'] > 0 && "border-blue-500/20 bg-blue-50/50 text-blue-600"
+                    'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border',
+                    'bg-white border-black/5 hover:border-blue-500/30 hover:bg-blue-50 hover:text-blue-600 active:scale-95 disabled:opacity-50',
+                    counts['like'] > 0 && 'border-blue-500/20 bg-blue-50/50 text-blue-600',
                   )}
                   onClick={() => handleReact('like')}
                 >
@@ -178,13 +176,15 @@ function CommentCard({ comment }: { comment: CampaignCommentResponseDto }) {
                 <button
                   disabled={isReacting || isCancelling}
                   className={cn(
-                    "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border",
-                    "bg-white border-black/5 hover:border-rose-500/30 hover:bg-rose-50 hover:text-rose-600 active:scale-95 disabled:opacity-50",
-                    counts['heart'] > 0 && "border-rose-500/20 bg-rose-50/50 text-rose-600"
+                    'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200 border',
+                    'bg-white border-black/5 hover:border-rose-500/30 hover:bg-rose-50 hover:text-rose-600 active:scale-95 disabled:opacity-50',
+                    counts['heart'] > 0 && 'border-rose-500/20 bg-rose-50/50 text-rose-600',
                   )}
                   onClick={() => handleReact('heart')}
                 >
-                  <Heart className={cn("w-3 h-3", counts['heart'] > 0 ? "fill-rose-500 text-rose-500" : "text-black/40")} />
+                  <Heart
+                    className={cn('w-3 h-3', counts['heart'] > 0 ? 'fill-rose-500 text-rose-500' : 'text-black/40')}
+                  />
                   <span className="tabular-nums">{counts['heart'] || 0}</span>
                 </button>
               </div>

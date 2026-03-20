@@ -5,7 +5,6 @@ import { NumberCounter } from '@/components/ui/number-counter';
 import { HighlightText } from '@/components/ui/highlight-text';
 import { useState } from 'react';
 import type { CampaignDto } from '@/dtos/campaign';
-import { CampaignCategory } from '@/dtos/enums';
 import {
   formatAmountByMagnitude,
   formatCampaignProgressPercent,

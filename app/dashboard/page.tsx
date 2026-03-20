@@ -242,7 +242,7 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="mb-10">
+        <div className="mb-10 hidden">
           <div
             className={`rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between border shadow-lg ${
               (dashboard?.kyc.isKycVerified ?? user?.isKycVerified)
